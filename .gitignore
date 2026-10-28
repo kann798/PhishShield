@@ -19,6 +19,8 @@ backend/*/__pycache__/
 backend/.pytest_cache/
 
 # Frontend Build
+dist/
+build/
 frontend/dist/
 frontend/build/
 
