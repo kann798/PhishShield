@@ -1,6 +1,7 @@
 /**
  * Unified API Client for PhishShield Backend.
- * Connects React UI to the Flask threat engine with resilient client-side heuristic fallbacks.
+ * Connects React UI to the Flask threat engine with resilient client-side heuristic fallbacks
+ * and reactive local persistence for real-time dashboard updates.
  */
 
 export function getApiBaseUrl() {
@@ -47,73 +48,161 @@ async function request(endpoint, options = {}) {
 
     return data;
   } catch (err) {
-    // If backend is not available (404 or connection refused), throw to trigger graceful fallback
+    // Re-throw so caller can trigger graceful fallback
     throw err;
   }
 }
 
-// Default realistic sample stats for demo/offline resilience
-export const DEFAULT_DASHBOARD_STATS = {
-  total_scans: 14,
-  total_urls: 9,
-  total_emails: 5,
-  suspicious_count: 6,
-  clean_count: 8,
-  risk_distribution: { Low: 8, Medium: 3, High: 2, Critical: 1 },
-  sample_records_count: 14,
-  recent_scans: [
-    {
-      id: 1,
-      scan_type: "url",
-      target_identifier: "http://192.168.1.45/paypal-login/verify.php",
-      risk_score: 85,
-      classification: "Critical",
-      indicator_count: 3,
-      is_sample: true,
-      created_at: new Date(Date.now() - 3 * 60 * 1000).toISOString().replace('T', ' ').slice(0, 19),
-      created_at_iso: new Date(Date.now() - 3 * 60 * 1000).toISOString()
-    },
-    {
-      id: 2,
-      scan_type: "email",
-      target_identifier: "URGENT: Your Account Has Been Suspended",
-      risk_score: 75,
-      classification: "Critical",
-      indicator_count: 4,
-      is_sample: true,
-      created_at: new Date(Date.now() - 15 * 60 * 1000).toISOString().replace('T', ' ').slice(0, 19),
-      created_at_iso: new Date(Date.now() - 15 * 60 * 1000).toISOString()
-    },
-    {
-      id: 3,
-      scan_type: "url",
-      target_identifier: "http://paypa1-security-update.com/signin",
-      risk_score: 65,
-      classification: "High",
-      indicator_count: 2,
-      is_sample: true,
-      created_at: new Date(Date.now() - 40 * 60 * 1000).toISOString().replace('T', ' ').slice(0, 19),
-      created_at_iso: new Date(Date.now() - 40 * 60 * 1000).toISOString()
-    },
-    {
-      id: 4,
-      scan_type: "url",
-      target_identifier: "https://www.google.com/search?q=cybersecurity",
-      risk_score: 5,
-      classification: "Low",
-      indicator_count: 0,
-      is_sample: true,
-      created_at: new Date(Date.now() - 90 * 60 * 1000).toISOString().replace('T', ' ').slice(0, 19),
-      created_at_iso: new Date(Date.now() - 90 * 60 * 1000).toISOString()
+// Baseline starting scans for initial dashboard demonstration
+export const DEFAULT_BASE_SCANS = [
+  {
+    id: 101,
+    scan_type: "url",
+    target_identifier: "http://192.168.1.45/paypal-login/verify.php",
+    risk_score: 85,
+    classification: "Critical",
+    indicator_count: 3,
+    is_sample: true,
+    created_at: new Date(Date.now() - 4 * 60 * 1000).toISOString().replace('T', ' ').slice(0, 19),
+    created_at_iso: new Date(Date.now() - 4 * 60 * 1000).toISOString()
+  },
+  {
+    id: 102,
+    scan_type: "email",
+    target_identifier: "URGENT: Your Account Has Been Suspended",
+    risk_score: 75,
+    classification: "Critical",
+    indicator_count: 4,
+    is_sample: true,
+    created_at: new Date(Date.now() - 15 * 60 * 1000).toISOString().replace('T', ' ').slice(0, 19),
+    created_at_iso: new Date(Date.now() - 15 * 60 * 1000).toISOString()
+  },
+  {
+    id: 103,
+    scan_type: "url",
+    target_identifier: "http://paypa1-security-update.com/signin",
+    risk_score: 65,
+    classification: "High",
+    indicator_count: 2,
+    is_sample: true,
+    created_at: new Date(Date.now() - 40 * 60 * 1000).toISOString().replace('T', ' ').slice(0, 19),
+    created_at_iso: new Date(Date.now() - 40 * 60 * 1000).toISOString()
+  },
+  {
+    id: 104,
+    scan_type: "url",
+    target_identifier: "https://www.google.com/search?q=cybersecurity",
+    risk_score: 5,
+    classification: "Low",
+    indicator_count: 0,
+    is_sample: true,
+    created_at: new Date(Date.now() - 90 * 60 * 1000).toISOString().replace('T', ' ').slice(0, 19),
+    created_at_iso: new Date(Date.now() - 90 * 60 * 1000).toISOString()
+  }
+];
+
+const STORAGE_KEY_USER_SCANS = 'phishshield_live_user_scans';
+
+export function getLocalUserScans() {
+  if (typeof window === 'undefined') return [];
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY_USER_SCANS);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+export function saveLocalUserScan(scanRecord) {
+  if (typeof window === 'undefined' || !scanRecord) return;
+  try {
+    const scans = getLocalUserScans();
+    // Ensure accurate creation timestamp
+    const record = {
+      ...scanRecord,
+      created_at: scanRecord.created_at || new Date().toISOString().replace('T', ' ').slice(0, 19),
+      created_at_iso: scanRecord.created_at_iso || new Date().toISOString(),
+    };
+    const updated = [record, ...scans];
+    localStorage.setItem(STORAGE_KEY_USER_SCANS, JSON.stringify(updated));
+    // Notify all listeners (Dashboard, History) of new scan
+    window.dispatchEvent(new CustomEvent('phishshield:new-scan', { detail: record }));
+  } catch (err) {
+    console.error('Failed to save local user scan:', err);
+  }
+}
+
+export function deleteLocalUserScan(id) {
+  if (typeof window === 'undefined') return;
+  try {
+    const scans = getLocalUserScans();
+    const updated = scans.filter(s => s.id !== id && s.id !== Number(id));
+    localStorage.setItem(STORAGE_KEY_USER_SCANS, JSON.stringify(updated));
+    window.dispatchEvent(new CustomEvent('phishshield:new-scan', { detail: { action: 'delete', id } }));
+  } catch (err) {
+    console.error('Failed to delete local scan:', err);
+  }
+}
+
+export function clearAllLocalUserScans() {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.removeItem(STORAGE_KEY_USER_SCANS);
+    window.dispatchEvent(new CustomEvent('phishshield:new-scan', { detail: { action: 'clear' } }));
+  } catch (err) {
+    console.error('Failed to clear local scans:', err);
+  }
+}
+
+// Compute dynamic stats by merging baseline starting data with user scans
+export function computeDynamicDashboardStats() {
+  const userScans = getLocalUserScans();
+
+  let total_urls = 9;
+  let total_emails = 5;
+  let suspicious_count = 6;
+  let clean_count = 8;
+  const risk_distribution = { Low: 8, Medium: 3, High: 2, Critical: 1 };
+
+  for (const s of userScans) {
+    if (s.scan_type === 'url') total_urls += 1;
+    if (s.scan_type === 'email') total_emails += 1;
+
+    const cls = s.classification || (s.risk_score >= 70 ? 'Critical' : s.risk_score >= 35 ? 'Medium' : 'Low');
+    if (cls === 'Critical' || cls === 'High' || s.risk_score >= 50) {
+      suspicious_count += 1;
+    } else if (cls === 'Low' || s.risk_score < 35) {
+      clean_count += 1;
+    } else {
+      suspicious_count += 1;
     }
-  ],
-  chart_distribution: [
-    { name: "Low Risk", value: 8, color: "#10b981" },
-    { name: "Medium Risk", value: 3, color: "#f59e0b" },
-    { name: "High Risk", value: 2, color: "#f97316" },
-    { name: "Critical Risk", value: 1, color: "#ef4444" }
-  ]
-};
+
+    if (risk_distribution[cls] !== undefined) {
+      risk_distribution[cls] += 1;
+    } else {
+      risk_distribution['Medium'] += 1;
+    }
+  }
+
+  const combinedRecent = [...userScans, ...DEFAULT_BASE_SCANS].slice(0, 10);
+
+  return {
+    total_scans: total_urls + total_emails,
+    total_urls,
+    total_emails,
+    suspicious_count,
+    clean_count,
+    risk_distribution,
+    sample_records_count: DEFAULT_BASE_SCANS.length,
+    recent_scans: combinedRecent,
+    chart_distribution: [
+      { name: "Low Risk", value: risk_distribution["Low"], color: "#10b981" },
+      { name: "Medium Risk", value: risk_distribution["Medium"], color: "#f59e0b" },
+      { name: "High Risk", value: risk_distribution["High"], color: "#f97316" },
+      { name: "Critical Risk", value: risk_distribution["Critical"], color: "#ef4444" }
+    ]
+  };
+}
 
 // Client-side fallback URL heuristic analyzer
 export function clientAnalyzeUrl(url) {
@@ -192,33 +281,38 @@ export function clientAnalyzeUrl(url) {
     verdict = 'Suspicious Link';
   }
 
+  const resultData = {
+    id: Date.now(),
+    target_identifier: url,
+    scan_type: 'url',
+    risk_score: score,
+    classification: classification,
+    verdict: verdict,
+    indicator_count: indicators.length,
+    indicators: indicators,
+    created_at: new Date().toISOString().replace('T', ' ').slice(0, 19),
+    created_at_iso: new Date().toISOString(),
+    recommendations: score >= 50
+      ? [
+          { action: 'Block Domain', detail: 'Do not click or enter login credentials on this website. Block domain on firewall.' },
+          { action: 'Security Alert', detail: 'Notify incident response team regarding active phishing infrastructure.' }
+        ]
+      : [
+          { action: 'Safe Access', detail: 'No high-risk threat indicators found. Exercise routine caution.' }
+        ],
+    ml_analysis: {
+      phishing_probability: score >= 50 ? 0.89 : 0.06,
+      confidence_score: 0.94,
+      prediction: score >= 50 ? 'Phishing / Malicious' : 'Safe / Benign'
+    }
+  };
+
+  // Automatically save to local scan history so Dashboard updates instantly
+  saveLocalUserScan(resultData);
+
   return {
     success: true,
-    data: {
-      id: Date.now(),
-      target_identifier: url,
-      scan_type: 'url',
-      risk_score: score,
-      classification: classification,
-      verdict: verdict,
-      indicator_count: indicators.length,
-      indicators: indicators,
-      created_at: new Date().toISOString().replace('T', ' ').slice(0, 19),
-      created_at_iso: new Date().toISOString(),
-      recommendations: score >= 50
-        ? [
-            { action: 'Block Domain', detail: 'Do not click or enter login credentials on this website. Block domain on firewall.' },
-            { action: 'Security Alert', detail: 'Notify incident response team regarding active phishing infrastructure.' }
-          ]
-        : [
-            { action: 'Safe Access', detail: 'No high-risk threat indicators found. Exercise routine caution.' }
-          ],
-      ml_analysis: {
-        phishing_probability: score >= 50 ? 0.89 : 0.06,
-        confidence_score: 0.94,
-        prediction: score >= 50 ? 'Phishing / Malicious' : 'Safe / Benign'
-      }
-    }
+    data: resultData
   };
 }
 
@@ -294,36 +388,40 @@ export function clientAnalyzeEmail(content) {
     verdict = 'Suspicious Email';
   }
 
-  return {
-    success: true,
-    data: {
-      id: Date.now(),
-      target_identifier: text.slice(0, 45) || 'Suspicious Email Subject',
-      scan_type: 'email',
-      risk_score: score,
-      classification: classification,
-      verdict: verdict,
-      indicator_count: indicators.length,
-      indicators: indicators,
-      created_at: new Date().toISOString().replace('T', ' ').slice(0, 19),
-      created_at_iso: new Date().toISOString(),
-      recommendations: score >= 50
-        ? [
-            { action: 'Do Not Click', detail: 'Do not click attachments or embedded verification links.' },
-            { action: 'Report to SOC', detail: 'Report email to security operations team.' }
-          ]
-        : [
-            { action: 'Routine Caution', detail: 'Verify sender authenticity through an independent channel.' }
-          ],
-      ml_analysis: {
-        phishing_probability: score >= 50 ? 0.91 : 0.05,
-        confidence_score: 0.93,
-        prediction: score >= 50 ? 'Phishing / Coercive' : 'Legitimate / Safe'
-      }
+  const resultData = {
+    id: Date.now(),
+    target_identifier: text.slice(0, 45) || 'Suspicious Email Subject',
+    scan_type: 'email',
+    risk_score: score,
+    classification: classification,
+    verdict: verdict,
+    indicator_count: indicators.length,
+    indicators: indicators,
+    created_at: new Date().toISOString().replace('T', ' ').slice(0, 19),
+    created_at_iso: new Date().toISOString(),
+    recommendations: score >= 50
+      ? [
+          { action: 'Do Not Click', detail: 'Do not click attachments or embedded verification links.' },
+          { action: 'Report to SOC', detail: 'Report email to security operations team.' }
+        ]
+      : [
+          { action: 'Routine Caution', detail: 'Verify sender authenticity through an independent channel.' }
+        ],
+    ml_analysis: {
+      phishing_probability: score >= 50 ? 0.91 : 0.05,
+      confidence_score: 0.93,
+      prediction: score >= 50 ? 'Phishing / Coercive' : 'Legitimate / Safe'
     }
   };
-}
 
+  // Automatically save to local scan history so Dashboard updates instantly
+  saveLocalUserScan(resultData);
+
+  return {
+    success: true,
+    data: resultData
+  };
+}
 
 export const api = {
   // Backend Health
@@ -335,60 +433,54 @@ export const api = {
     }
   },
 
-  // Dashboard Stats with graceful fallback
+  // Dashboard Stats with dynamic real-time recalculation
   async getDashboardStats() {
     try {
       const res = await request('/dashboard/stats');
       return res;
     } catch {
-      // Return cached/sample stats so the dashboard never renders blank or with ugly 404 error
-      return { success: true, data: DEFAULT_DASHBOARD_STATS, isFallback: true };
+      // Return dynamic stats incorporating all completed user scans
+      return { success: true, data: computeDynamicDashboardStats(), isFallback: true };
     }
   },
 
-  // URL Analysis with graceful fallback
+  // URL Analysis with graceful fallback and reactive persistence
   async analyzeUrl(url) {
     try {
       const res = await request('/analyze/url', {
         method: 'POST',
         body: JSON.stringify({ url }),
       });
-      if (res && res.success && typeof window !== 'undefined') {
-        window.dispatchEvent(new CustomEvent('phishshield:new-scan', { detail: res.data }));
+      if (res && res.success && res.data) {
+        saveLocalUserScan(res.data);
       }
       return res;
     } catch (err) {
       console.warn('Backend unavailable, running client-side heuristic engine:', err);
       const fallbackResult = clientAnalyzeUrl(url);
-      if (typeof window !== 'undefined') {
-        window.dispatchEvent(new CustomEvent('phishshield:new-scan', { detail: fallbackResult.data }));
-      }
       return fallbackResult;
     }
   },
 
-  // Email Analysis with graceful fallback
+  // Email Analysis with graceful fallback and reactive persistence
   async analyzeEmail(emailContent) {
     try {
       const res = await request('/analyze/email', {
         method: 'POST',
         body: JSON.stringify({ email_content: emailContent }),
       });
-      if (res && res.success && typeof window !== 'undefined') {
-        window.dispatchEvent(new CustomEvent('phishshield:new-scan', { detail: res.data }));
+      if (res && res.success && res.data) {
+        saveLocalUserScan(res.data);
       }
       return res;
     } catch (err) {
       console.warn('Backend unavailable, running client-side heuristic engine:', err);
       const fallbackResult = clientAnalyzeEmail(emailContent);
-      if (typeof window !== 'undefined') {
-        window.dispatchEvent(new CustomEvent('phishshield:new-scan', { detail: fallbackResult.data }));
-      }
       return fallbackResult;
     }
   },
 
-  // Scans List with filters
+  // Scans List with dynamic local fallback
   async getScans({ type, risk, search, limit = 50, offset = 0 } = {}) {
     try {
       const params = new URLSearchParams();
@@ -400,7 +492,18 @@ export const api = {
 
       return await request(`/scans?${params.toString()}`);
     } catch {
-      return { success: true, data: DEFAULT_DASHBOARD_STATS.recent_scans, total: DEFAULT_DASHBOARD_STATS.recent_scans.length };
+      let list = [...getLocalUserScans(), ...DEFAULT_BASE_SCANS];
+      if (type && type !== 'all') {
+        list = list.filter(s => s.scan_type === type);
+      }
+      if (risk && risk !== 'all') {
+        list = list.filter(s => (s.classification || '').toLowerCase() === risk.toLowerCase());
+      }
+      if (search && search.trim()) {
+        const q = search.trim().toLowerCase();
+        list = list.filter(s => (s.target_identifier || '').toLowerCase().includes(q));
+      }
+      return { success: true, data: list.slice(offset, offset + limit), total: list.length };
     }
   },
 
@@ -409,27 +512,32 @@ export const api = {
     try {
       return await request(`/scans/${id}`);
     } catch {
-      const found = DEFAULT_DASHBOARD_STATS.recent_scans.find(s => s.id === Number(id));
-      return { success: true, data: found || DEFAULT_DASHBOARD_STATS.recent_scans[0] };
+      const all = [...getLocalUserScans(), ...DEFAULT_BASE_SCANS];
+      const found = all.find(s => s.id === id || s.id === Number(id));
+      return { success: true, data: found || all[0] };
     }
   },
 
   // Delete Single Scan
   async deleteScan(id) {
     try {
-      return await request(`/scans/${id}`, { method: 'DELETE' });
+      await request(`/scans/${id}`, { method: 'DELETE' });
     } catch {
-      return { success: true };
+      // In offline/fallback mode, remove from local storage
     }
+    deleteLocalUserScan(id);
+    return { success: true };
   },
 
   // Clear All History
   async clearAllScans() {
     try {
-      return await request('/scans', { method: 'DELETE' });
+      await request('/scans', { method: 'DELETE' });
     } catch {
-      return { success: true };
+      // In offline/fallback mode, clear from local storage
     }
+    clearAllLocalUserScans();
+    return { success: true };
   },
 
   // Set Custom Backend URL
