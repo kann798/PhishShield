@@ -1,0 +1,36 @@
+# Python Virtual Environment
+venv/
+backend/venv/
+.env
+env/
+ENV/
+
+# Node Modules
+node_modules/
+frontend/node_modules/
+
+# Python Cache & Bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+backend/__pycache__/
+backend/*/__pycache__/
+.pytest_cache/
+backend/.pytest_cache/
+
+# Frontend Build
+frontend/dist/
+frontend/build/
+
+# Database files
+*.db
+backend/*.db
+
+# Temporary test files
+test_*.pdf
+
+# Operating System & IDE
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

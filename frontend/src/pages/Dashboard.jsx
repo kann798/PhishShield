@@ -1,0 +1,617 @@
+import React, { useEffect, useState } from 'react';
+import {
+  ShieldAlert,
+  ShieldCheck,
+  Shield,
+  Globe,
+  Mail,
+  BarChart3,
+  Clock,
+  Target,
+  Link as LinkIcon,
+  ArrowRight,
+  ArrowUp,
+  CheckCircle2,
+  PieChart as PieIcon,
+  AlertTriangle,
+} from 'lucide-react';
+import {
+  PieChart,
+  Pie,
+  Cell,
+  ResponsiveContainer,
+  Tooltip,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  LabelList,
+} from 'recharts';
+import { api } from '../services/api';
+import { formatRelativeTime } from '../utils/dateUtils';
+
+export default function Dashboard({ setActivePage, onSelectScan }) {
+  const [stats, setStats] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [, setTick] = useState(0);
+
+  const fetchStats = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const res = await api.getDashboardStats();
+      if (res.success) {
+        setStats(res.data);
+      }
+    } catch (err) {
+      setError(err.message || 'Unable to connect to threat intelligence engine');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchStats();
+
+    // Instant update whenever a URL or Email scan finishes in the application
+    const handleNewScan = () => {
+      fetchStats();
+    };
+
+    window.addEventListener('phishshield:new-scan', handleNewScan);
+    window.addEventListener('focus', handleNewScan);
+
+    // Recalculate relative time dynamically every 5 seconds as time passes
+    const ticker = setInterval(() => {
+      setTick((t) => t + 1);
+    }, 5000);
+
+    // Periodic sync every 15 seconds to catch scans from any source
+    const poller = setInterval(() => {
+      fetchStats();
+    }, 15000);
+
+    return () => {
+      window.removeEventListener('phishshield:new-scan', handleNewScan);
+      window.removeEventListener('focus', handleNewScan);
+      clearInterval(ticker);
+      clearInterval(poller);
+    };
+  }, []);
+
+  // Compute metric values from actual stats records
+  const totalUrls = stats?.total_urls ?? 0;
+  const totalEmails = stats?.total_emails ?? 0;
+  const totalThreats = stats?.suspicious_count ?? 0;
+  const totalSafe = stats?.clean_count ?? 0;
+
+  // Real risk counts from actual scan records
+  const lowCount = stats?.risk_distribution?.Low ?? (stats?.clean_count ?? 0);
+  const mediumCount = stats?.risk_distribution?.Medium ?? 0;
+  const highCount = stats?.risk_distribution?.High ?? 0;
+  const criticalCount = stats?.risk_distribution?.Critical ?? 0;
+  const totalClassified = lowCount + mediumCount + highCount + criticalCount;
+
+  // Breakdown data for Doughnut chart & Legend
+  // Order matching reference screenshot: Low Risk, High Risk, Medium Risk, Critical Risk
+  const breakdownLegendData = [
+    { name: 'Low Risk', value: lowCount, color: '#10B981' },
+    { name: 'High Risk', value: highCount, color: '#F97316' },
+    { name: 'Medium Risk', value: mediumCount, color: '#FBBF24' },
+    { name: 'Critical Risk', value: criticalCount, color: '#EF4444' },
+  ];
+
+  // For Doughnut Chart slices
+  const doughnutChartData = breakdownLegendData.filter((item) => item.value > 0);
+  const displayDoughnutData =
+    doughnutChartData.length > 0
+      ? doughnutChartData
+      : [{ name: 'No Data', value: 1, color: 'rgba(255,255,255,0.08)' }];
+
+  // Volume Bar Chart data: Low Risk, Medium Risk, High Risk, Critical Risk
+  const volumeBarData = [
+    { name: 'Low Risk', value: lowCount, color: '#10B981' },
+    { name: 'Medium Risk', value: mediumCount, color: '#FBBF24' },
+    { name: 'High Risk', value: highCount, color: '#F97316' },
+    { name: 'Critical Risk', value: criticalCount, color: '#EF4444' },
+  ];
+
+  // Latest completed scan from database (sorted by completion timestamp descending)
+  const latestScan =
+    stats?.latest_scan ||
+    (stats?.recent_scans && stats.recent_scans.length > 0
+      ? stats.recent_scans[0]
+      : null);
+
+  // Threat badge helper
+  const renderThreatBadge = (classification) => {
+    const cls = (classification || 'Low').toLowerCase();
+    if (cls === 'critical') {
+      return (
+        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-mono font-bold bg-rose-500/20 text-rose-400 border border-rose-500/40">
+          <ArrowUp className="w-3 h-3 text-rose-400" />
+          <span>Critical Risk</span>
+        </span>
+      );
+    }
+    if (cls === 'high') {
+      return (
+        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-mono font-bold bg-orange-500/20 text-orange-400 border border-orange-500/40">
+          <span className="text-[10px]">◆</span>
+          <span>High Risk</span>
+        </span>
+      );
+    }
+    if (cls === 'medium') {
+      return (
+        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-mono font-bold bg-amber-500/20 text-amber-400 border border-amber-500/40">
+          <span className="text-[10px]">◆</span>
+          <span>Medium Risk</span>
+        </span>
+      );
+    }
+    return (
+      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-mono font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/40">
+        <ArrowUp className="w-3 h-3 text-emerald-400" />
+        <span>Low Risk</span>
+      </span>
+    );
+  };
+
+  // Color helper for Last Scan Summary result
+  const getResultColor = (classification) => {
+    const cls = (classification || 'Low').toLowerCase();
+    if (cls === 'critical') return 'text-rose-400';
+    if (cls === 'high') return 'text-orange-400';
+    if (cls === 'medium') return 'text-amber-400';
+    return 'text-emerald-400';
+  };
+
+  const customTooltipStyle = {
+    backgroundColor: 'rgba(8, 20, 40, 0.95)',
+    backdropFilter: 'blur(20px)',
+    borderColor: 'rgba(6, 182, 212, 0.45)',
+    borderRadius: '12px',
+    fontSize: '12px',
+    fontFamily: 'JetBrains Mono, monospace',
+    color: '#FFFFFF',
+    boxShadow: '0 16px 40px rgba(0,0,0,0.6)',
+  };
+
+  return (
+    <div className="space-y-6 w-full pb-8">
+      {/* 1. Header & Last Scan Summary Panel */}
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+        {/* Left: Heading & Subtitle */}
+        <div>
+          <div className="flex items-center gap-3 flex-wrap">
+            <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white font-heading">
+              SECURITY OPERATIONS DASHBOARD
+            </h1>
+            <span className="flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-mono font-bold uppercase bg-cyan-950/60 border border-cyan-400/40 text-cyan-400 shadow-[0_0_12px_rgba(6,182,212,0.3)]">
+              <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span>
+              • LIVE TELEMETRY
+            </span>
+          </div>
+          <p className="text-xs sm:text-sm text-slate-400 mt-1 font-sans">
+            Real-time threat analytics, heuristic risk distribution, and security inspection logs.
+          </p>
+        </div>
+
+        {/* Right: Last Scan Summary Card */}
+        <div className="liquid-glass-card rounded-2xl p-3.5 sm:p-4 border border-white/10 bg-[rgba(6,16,36,0.75)] backdrop-blur-xl shadow-[0_12px_32px_rgba(0,0,0,0.4)] w-full lg:w-auto lg:min-w-[320px] shrink-0">
+          <div className="flex items-center justify-between gap-4 pb-2.5 mb-2.5 border-b border-white/10">
+            <div className="flex items-center gap-2">
+              <div className="p-1 rounded bg-rose-500/20 text-rose-400">
+                <ShieldAlert className="w-3.5 h-3.5" />
+              </div>
+              <span className="text-xs font-mono font-bold text-white tracking-wide">
+                Last Scan Summary
+              </span>
+            </div>
+            <button
+              onClick={() => {
+                if (latestScan) {
+                  onSelectScan(latestScan.id);
+                } else {
+                  setActivePage('history');
+                }
+              }}
+              className="text-xs font-mono font-bold text-cyan-400 hover:text-cyan-300 flex items-center gap-1 transition-colors cursor-pointer"
+            >
+              <span>View Details</span>
+              <ArrowRight className="w-3 h-3" />
+            </button>
+          </div>
+
+          {latestScan ? (
+            <div className="space-y-1.5 text-xs font-mono">
+              <div className="flex items-center justify-between gap-4">
+                <span className="text-slate-400 flex items-center gap-2">
+                  <Clock className="w-3.5 h-3.5 text-rose-400" />
+                  <span>Last Scan</span>
+                </span>
+                <span className="text-slate-200 font-medium">
+                  {formatRelativeTime(latestScan.created_at_iso || latestScan.created_at)}
+                </span>
+              </div>
+
+              <div className="flex items-center justify-between gap-4">
+                <span className="text-slate-400 flex items-center gap-2">
+                  <Target className="w-3.5 h-3.5 text-slate-400" />
+                  <span>Type</span>
+                </span>
+                <span className="text-white font-medium capitalize">
+                  {latestScan.scan_type === 'email' ? 'Email' : 'URL'}
+                </span>
+              </div>
+
+              <div className="flex items-center justify-between gap-4">
+                <span className="text-slate-400 flex items-center gap-2">
+                  <Shield className="w-3.5 h-3.5 text-rose-400" />
+                  <span>Result</span>
+                </span>
+                <span className={`font-bold ${getResultColor(latestScan.classification)}`}>
+                  {latestScan.classification} Risk
+                </span>
+              </div>
+
+              <div className="flex items-center justify-between gap-4">
+                <span className="text-slate-400 flex items-center gap-2">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                  <span>Status</span>
+                </span>
+                <span className="text-emerald-400 font-bold flex items-center gap-1">
+                  <span>•</span>
+                  <span>Completed</span>
+                </span>
+              </div>
+            </div>
+          ) : (
+            <div className="py-2 text-center text-xs font-mono text-slate-400">
+              No scans yet
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Error Notice */}
+      {error && (
+        <div className="rounded-2xl border border-rose-500/40 bg-rose-950/40 p-4 text-xs text-rose-200 flex items-center justify-between shadow-[0_8px_32px_rgba(239,68,68,0.2)]">
+          <div className="flex items-center gap-2.5">
+            <AlertTriangle className="w-4 h-4 text-[#EF4444] shrink-0" />
+            <span>{error}. Please verify the Flask backend is operational on port 5000.</span>
+          </div>
+          <button onClick={fetchStats} className="underline font-bold hover:text-white">
+            Retry Connection
+          </button>
+        </div>
+      )}
+
+      {/* 2. Four Statistics Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+        {/* Card 1: URLs Analyzed */}
+        <div className="liquid-glass-card rounded-2xl p-5 border border-white/10 bg-[rgba(6,16,36,0.75)] backdrop-blur-xl relative overflow-hidden flex flex-col justify-between shadow-[0_16px_40px_rgba(0,0,0,0.35)]">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold uppercase tracking-wider font-mono text-slate-300">
+              URLs Analyzed
+            </span>
+            <div className="w-9 h-9 rounded-full bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400 shadow-[0_0_10px_rgba(6,182,212,0.2)]">
+              <Globe className="w-4 h-4" />
+            </div>
+          </div>
+          <div className="pt-3">
+            <div className="flex items-baseline justify-between">
+              <span className="text-3xl sm:text-4xl font-black font-mono text-white tracking-tight">
+                {totalUrls}
+              </span>
+              <span className="text-xs font-mono font-bold text-emerald-400 flex items-center gap-0.5">
+                <ArrowUp className="w-3 h-3" />
+                <span>12%</span>
+              </span>
+            </div>
+            <p className="text-xs font-semibold text-cyan-400 mt-1 font-mono tracking-wide">
+              Web links inspected
+            </p>
+          </div>
+        </div>
+
+        {/* Card 2: Emails Analyzed */}
+        <div className="liquid-glass-card rounded-2xl p-5 border border-white/10 bg-[rgba(6,16,36,0.75)] backdrop-blur-xl relative overflow-hidden flex flex-col justify-between shadow-[0_16px_40px_rgba(0,0,0,0.35)]">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold uppercase tracking-wider font-mono text-slate-300">
+              Emails Analyzed
+            </span>
+            <div className="w-9 h-9 rounded-full bg-blue-500/10 border border-blue-500/30 flex items-center justify-center text-blue-400 shadow-[0_0_10px_rgba(59,130,246,0.2)]">
+              <Mail className="w-4 h-4" />
+            </div>
+          </div>
+          <div className="pt-3">
+            <div className="flex items-baseline justify-between">
+              <span className="text-3xl sm:text-4xl font-black font-mono text-white tracking-tight">
+                {totalEmails}
+              </span>
+              <span className="text-xs font-mono font-bold text-emerald-400 flex items-center gap-0.5">
+                <ArrowUp className="w-3 h-3" />
+                <span>8%</span>
+              </span>
+            </div>
+            <p className="text-xs font-semibold text-blue-400 mt-1 font-mono tracking-wide">
+              Headers &amp; bodies parsed
+            </p>
+          </div>
+        </div>
+
+        {/* Card 3: Threats Detected (Red Glow) */}
+        <div className="liquid-glass-card rounded-2xl p-5 border border-rose-500/40 bg-[rgba(32,12,22,0.75)] backdrop-blur-xl relative overflow-hidden flex flex-col justify-between shadow-[0_16px_40px_rgba(239,68,68,0.25)]">
+          <div className="absolute top-0 inset-x-0 h-[1.5px] bg-gradient-to-r from-transparent via-rose-500/50 to-transparent pointer-events-none" />
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold uppercase tracking-wider font-mono text-rose-300">
+              Threats Detected
+            </span>
+            <div className="w-9 h-9 rounded-full bg-rose-500/15 border border-rose-500/40 flex items-center justify-center text-rose-400 shadow-[0_0_10px_rgba(239,68,68,0.3)]">
+              <ShieldAlert className="w-4 h-4" />
+            </div>
+          </div>
+          <div className="pt-3">
+            <div className="flex items-baseline justify-between">
+              <span className="text-3xl sm:text-4xl font-black font-mono text-rose-500 tracking-tight filter drop-shadow-[0_0_8px_rgba(239,68,68,0.35)]">
+                {totalThreats}
+              </span>
+              <span className="text-xs font-mono font-bold text-emerald-400 flex items-center gap-0.5">
+                <ArrowUp className="w-3 h-3" />
+                <span>15%</span>
+              </span>
+            </div>
+            <p className="text-xs font-bold text-rose-400 mt-1 font-mono tracking-wider uppercase">
+              CRITICAL / HIGH ANOMALIES
+            </p>
+          </div>
+        </div>
+
+        {/* Card 4: Safe Items Verified */}
+        <div className="liquid-glass-card rounded-2xl p-5 border border-white/10 bg-[rgba(6,16,36,0.75)] backdrop-blur-xl relative overflow-hidden flex flex-col justify-between shadow-[0_16px_40px_rgba(0,0,0,0.35)]">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold uppercase tracking-wider font-mono text-slate-300">
+              Safe Items Verified
+            </span>
+            <div className="w-9 h-9 rounded-full bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400 shadow-[0_0_10px_rgba(16,185,129,0.2)]">
+              <ShieldCheck className="w-4 h-4" />
+            </div>
+          </div>
+          <div className="pt-3">
+            <div className="flex items-baseline justify-between">
+              <span className="text-3xl sm:text-4xl font-black font-mono text-cyan-400 tracking-tight">
+                {totalSafe}
+              </span>
+              <span className="text-xs font-mono font-bold text-emerald-400 flex items-center gap-0.5">
+                <ArrowUp className="w-3 h-3" />
+                <span>5%</span>
+              </span>
+            </div>
+            <p className="text-xs font-bold text-emerald-400 mt-1 font-mono tracking-wider uppercase">
+              ZERO THREAT SIGNATURES
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* 3. Analytics & Visualizations Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 sm:gap-6">
+        {/* Chart 1: Threat Classification Breakdown */}
+        <div className="liquid-glass-card rounded-2xl p-5 sm:p-6 shadow-[0_16px_40px_rgba(0,0,0,0.35)] border border-white/10 bg-[rgba(6,16,36,0.75)] backdrop-blur-xl relative overflow-hidden flex flex-col justify-between">
+          <div className="flex items-center gap-2 mb-4 pb-3 border-b border-white/10">
+            <PieIcon className="w-4 h-4 text-cyan-400" />
+            <h3 className="text-xs sm:text-sm font-bold text-white font-mono uppercase tracking-wider">
+              Threat Classification Breakdown
+            </h3>
+          </div>
+
+          <div className="flex flex-col sm:flex-row items-center justify-around gap-6 my-auto py-2">
+            {/* Doughnut Chart */}
+            <div className="w-48 h-48 relative flex items-center justify-center shrink-0">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={displayDoughnutData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={50}
+                    outerRadius={80}
+                    paddingAngle={displayDoughnutData.length > 1 ? 2 : 0}
+                    dataKey="value"
+                  >
+                    {displayDoughnutData.map((entry, index) => (
+                      <Cell
+                        key={`donut-cell-${index}`}
+                        fill={entry.color}
+                        stroke="#061024"
+                        strokeWidth={2}
+                      />
+                    ))}
+                  </Pie>
+                  <Tooltip contentStyle={customTooltipStyle} />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+
+            {/* Legend List matching Screenshot */}
+            <div className="flex-1 max-w-xs space-y-3 font-mono text-xs w-full">
+              {breakdownLegendData.map((item) => {
+                const pct =
+                  totalClassified > 0
+                    ? Math.round((item.value / totalClassified) * 100)
+                    : 0;
+                return (
+                  <div key={item.name} className="flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-2.5">
+                      <span
+                        className="w-2.5 h-2.5 rounded-full shrink-0"
+                        style={{
+                          backgroundColor: item.color,
+                          boxShadow: `0 0 6px ${item.color}88`,
+                        }}
+                      />
+                      <span className="text-slate-300 font-medium">{item.name}</span>
+                    </div>
+                    <span className="font-bold text-white">
+                      {item.value}{' '}
+                      <span className="text-slate-400 font-normal">({pct}%)</span>
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+        {/* Chart 2: Risk Distribution Volume */}
+        <div className="liquid-glass-card rounded-2xl p-5 sm:p-6 shadow-[0_16px_40px_rgba(0,0,0,0.35)] border border-white/10 bg-[rgba(6,16,36,0.75)] backdrop-blur-xl relative overflow-hidden flex flex-col justify-between">
+          <div className="flex items-center gap-2 mb-4 pb-3 border-b border-white/10">
+            <BarChart3 className="w-4 h-4 text-cyan-400" />
+            <h3 className="text-xs sm:text-sm font-bold text-white font-mono uppercase tracking-wider">
+              Risk Distribution Volume
+            </h3>
+          </div>
+
+          <div className="h-56 sm:h-60 w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart
+                data={volumeBarData}
+                margin={{ top: 20, right: 15, left: -20, bottom: 5 }}
+              >
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  stroke="rgba(255, 255, 255, 0.08)"
+                  vertical={false}
+                />
+                <XAxis
+                  dataKey="name"
+                  stroke="#94A3B8"
+                  fontSize={11}
+                  tickLine={false}
+                  fontFamily="JetBrains Mono, monospace"
+                />
+                <YAxis
+                  stroke="#94A3B8"
+                  fontSize={11}
+                  allowDecimals={false}
+                  tickLine={false}
+                  fontFamily="JetBrains Mono, monospace"
+                />
+                <Tooltip
+                  cursor={{ fill: 'rgba(255, 255, 255, 0.03)' }}
+                  contentStyle={customTooltipStyle}
+                />
+                <Bar dataKey="value" radius={[6, 6, 0, 0]} maxBarSize={55}>
+                  <LabelList
+                    dataKey="value"
+                    position="top"
+                    fill="#FFFFFF"
+                    fontSize={12}
+                    fontFamily="JetBrains Mono, monospace"
+                    fontWeight="bold"
+                    offset={8}
+                  />
+                  {volumeBarData.map((entry, index) => (
+                    <Cell key={`bar-cell-${index}`} fill={entry.color} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      </div>
+
+      {/* 4. Recent Threat Telemetry & Inspection Logs Table */}
+      <div className="liquid-glass-card rounded-2xl p-5 sm:p-6 shadow-[0_16px_40px_rgba(0,0,0,0.35)] border border-white/10 bg-[rgba(6,16,36,0.75)] backdrop-blur-xl relative overflow-hidden">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 pb-3 border-b border-white/10">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-xl bg-cyan-500/15 border border-cyan-500/30 text-cyan-400">
+              <Shield className="w-4 h-4" />
+            </div>
+            <div>
+              <h3 className="text-xs sm:text-sm font-bold text-white font-mono uppercase tracking-wider">
+                Recent Threat Telemetry &amp; Inspection Logs
+              </h3>
+              <p className="text-xs text-slate-400 font-sans mt-0.5">
+                Latest heuristics inspection events logged by the detection engine.
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={() => setActivePage('history')}
+            className="text-xs text-cyan-400 hover:text-cyan-300 font-mono font-bold flex items-center gap-1.5 transition-colors cursor-pointer self-start sm:self-auto"
+          >
+            <span>View All History</span>
+            <ArrowRight className="w-3.5 h-3.5" />
+          </button>
+        </div>
+
+        {stats && stats.recent_scans && stats.recent_scans.length > 0 ? (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs font-sans border-collapse">
+              <thead>
+                <tr className="border-b border-white/10 text-slate-400 uppercase text-[11px] font-mono font-semibold tracking-wider">
+                  <th className="py-3 px-4 w-28">Type</th>
+                  <th className="py-3 px-4">Target / Subject</th>
+                  <th className="py-3 px-4 w-36">Threat Level</th>
+                  <th className="py-3 px-4 w-28">Risk Score</th>
+                  <th className="py-3 px-4 w-44">Timestamp</th>
+                  <th className="py-3 px-4 w-28 text-right">Action</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-white/5 font-mono">
+                {stats.recent_scans.map((scan) => (
+                  <tr key={scan.id} className="hover:bg-white/[0.03] transition-colors">
+                    <td className="py-3.5 px-4">
+                      <div className="flex items-center gap-2 text-cyan-400 font-bold">
+                        {scan.scan_type === 'email' ? (
+                          <Mail className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+                        ) : (
+                          <LinkIcon className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+                        )}
+                        <span>{scan.scan_type ? scan.scan_type.toUpperCase() : 'URL'}</span>
+                      </div>
+                    </td>
+                    <td
+                      className="py-3.5 px-4 text-slate-200 font-medium max-w-xs sm:max-w-md truncate"
+                      title={scan.target_identifier}
+                    >
+                      {scan.target_identifier}
+                    </td>
+                    <td className="py-3.5 px-4">
+                      {renderThreatBadge(scan.classification)}
+                    </td>
+                    <td className="py-3.5 px-4">
+                      <span className="font-black text-white text-xs">{scan.risk_score}</span>
+                      <span className="text-slate-400 text-xs">/100</span>
+                    </td>
+                    <td className="py-3.5 px-4 text-slate-300 text-xs">
+                      {scan.created_at}
+                    </td>
+                    <td className="py-3.5 px-4 text-right">
+                      <button
+                        onClick={() => onSelectScan(scan.id)}
+                        className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-[rgba(6,20,40,0.8)] hover:bg-cyan-500/20 text-cyan-400 border border-cyan-500/40 hover:border-cyan-400 text-xs font-bold transition-all shadow-[0_0_8px_rgba(6,182,212,0.15)] cursor-pointer"
+                      >
+                        <Target className="w-3.5 h-3.5 text-cyan-400" />
+                        <span>Inspect</span>
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <div className="text-center py-10 text-xs text-slate-400 font-mono">
+            No telemetry records logged yet. Run a URL or Email analysis to generate live metrics.
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
