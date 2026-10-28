@@ -7,7 +7,7 @@ import {
 } from 'lucide-react';
 import AlertBanner from '../components/AlertBanner';
 import AnalysisResultView from '../components/AnalysisResultView';
-import { api } from '../services/api';
+import { api, clientAnalyzeEmail } from '../services/api';
 
 export default function EmailAnalyzer({ onSelectScan }) {
   const [emailText, setEmailText] = useState('');
@@ -94,15 +94,19 @@ The Internal Security Engineering Team`,
     try {
       setLoading(true);
       setError(null);
+      setResult(null);
 
       const res = await api.analyzeEmail(content.trim());
-      if (res.success) {
+      if (res && (res.success || res.data)) {
         setResult(res.data);
       } else {
-        setError(res.error || 'Failed to inspect email content.');
+        const fallback = clientAnalyzeEmail(content.trim());
+        setResult(fallback.data);
       }
     } catch (err) {
-      setError(err.message || 'Error communicating with analysis engine.');
+      console.warn('Email analyze error, using client fallback:', err);
+      const fallback = clientAnalyzeEmail(content.trim());
+      setResult(fallback.data);
     } finally {
       setLoading(false);
     }

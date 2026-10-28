@@ -7,7 +7,7 @@ import {
 } from 'lucide-react';
 import AlertBanner from '../components/AlertBanner';
 import AnalysisResultView from '../components/AnalysisResultView';
-import { api } from '../services/api';
+import { api, clientAnalyzeUrl } from '../services/api';
 
 export default function UrlAnalyzer({ onSelectScan }) {
   const [urlInput, setUrlInput] = useState('');
@@ -37,13 +37,16 @@ export default function UrlAnalyzer({ onSelectScan }) {
       setResult(null);
 
       const res = await api.analyzeUrl(urlToTest.trim());
-      if (res.success) {
+      if (res && (res.success || res.data)) {
         setResult(res.data);
       } else {
-        setError(res.error || 'Analysis failed. Please check the URL format.');
+        const fallback = clientAnalyzeUrl(urlToTest.trim());
+        setResult(fallback.data);
       }
     } catch (err) {
-      setError(err.message || 'Error communicating with analysis backend.');
+      console.warn('URL analyze error, using client fallback:', err);
+      const fallback = clientAnalyzeUrl(urlToTest.trim());
+      setResult(fallback.data);
     } finally {
       setLoading(false);
     }
