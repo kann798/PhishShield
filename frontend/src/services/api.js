@@ -2,7 +2,11 @@
  * Unified API Client for PhishShield Backend.
  * Connects React UI to the Flask threat engine.
  */
-const API_BASE_URL = 'http://127.0.0.1:5000/api';
+const API_BASE_URL = (import.meta.env && import.meta.env.VITE_API_URL)
+  ? `${import.meta.env.VITE_API_URL.replace(/\/$/, '')}/api`
+  : (typeof window !== 'undefined' && window.location.hostname === 'localhost'
+      ? 'http://127.0.0.1:5000/api'
+      : '/api');
 
 /**
  * Helper to handle fetch responses and standardize errors.

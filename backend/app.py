@@ -4,11 +4,12 @@ Flask REST API powering the Phishing Detection Tool.
 Provides endpoints for URL and Email inspection, scan history persistence,
 threat metrics dashboard, and downloadable security reports.
 """
+import os
 import io
 import csv
 import json
 import logging
-from flask import Flask, request, jsonify, Response
+from flask import Flask, request, jsonify, Response, send_from_directory
 from flask_cors import CORS
 from analyzers.url_analyzer import URLAnalyzer
 from analyzers.email_analyzer import EmailAnalyzer
@@ -469,6 +470,46 @@ def export_report(scan_id):
         mimetype="application/json",
         headers={"Content-Disposition": f"attachment; filename=phishshield_report_{scan_id}.json"}
     )
+
+
+@app.route('/', defaults={'path': ''})
+@app.route('/<path:path>')
+def serve_frontend_or_api_info(path):
+    """
+    Serves the React frontend SPA if compiled in frontend/dist,
+    otherwise provides a helpful online JSON status page instead of a 404 error.
+    """
+    if path.startswith('api/'):
+        return jsonify({
+            "error": f"API endpoint /{path} not found on PhishShield Threat Intelligence API",
+            "available_endpoints": ["/api/health", "/api/analyze/url", "/api/analyze/email", "/api/scans", "/api/stats"]
+        }), 404
+
+    frontend_dist = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'frontend', 'dist'))
+    
+    if path != "":
+        requested_file = os.path.join(frontend_dist, path)
+        if os.path.exists(requested_file) and not os.path.isdir(requested_file):
+            return send_from_directory(frontend_dist, path)
+
+    index_html = os.path.join(frontend_dist, 'index.html')
+    if os.path.exists(index_html):
+        return send_from_directory(frontend_dist, 'index.html')
+
+    # Friendly status response if backend URL is opened directly in browser
+    return jsonify({
+        "service": "PhishShield Threat Intelligence Engine",
+        "status": "online",
+        "version": "1.1.0",
+        "message": "PhishShield Backend API is running successfully on Render!",
+        "endpoints": {
+            "health_check": "/api/health",
+            "url_analysis": "/api/analyze/url",
+            "email_analysis": "/api/analyze/email",
+            "scan_history": "/api/scans",
+            "metrics_stats": "/api/stats"
+        }
+    }), 200
 
 
 if __name__ == '__main__':
