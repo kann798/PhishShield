@@ -10,6 +10,7 @@ import {
   Compass,
   HelpCircle,
   MessageSquare,
+  ShieldCheck,
 } from 'lucide-react';
 
 export default function Sidebar({ activePage, setActivePage, mobileMenuOpen, setMobileMenuOpen }) {
@@ -168,6 +169,40 @@ export default function Sidebar({ activePage, setActivePage, mobileMenuOpen, set
                 </button>
               );
             })}
+          </div>
+        </div>
+      </div>
+
+      {/* SECTION 3: Zero-SSRF Sandbox Status Card */}
+      <div className="pt-4 mt-6 border-t border-slate-200/80 dark:border-white/10 shrink-0">
+        <div className="liquid-glass-card rounded-xl border border-emerald-500/25 dark:border-emerald-500/30 bg-slate-100/70 dark:bg-[rgba(10,24,52,0.75)] p-3.5 space-y-2 relative overflow-hidden shadow-sm dark:shadow-[0_4px_20px_rgba(0,0,0,0.35)]">
+          {/* Top Specular Line */}
+          <div className="absolute top-0 inset-x-0 h-[1px] bg-gradient-to-r from-transparent via-emerald-400/40 to-transparent pointer-events-none" />
+
+          <div className="flex items-center justify-between gap-1.5">
+            <div className="flex items-center gap-2">
+              <div className="p-1 rounded-md bg-emerald-500/15 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400">
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+              </div>
+              <span className="text-xs font-bold text-slate-800 dark:text-slate-100 font-sans tracking-tight">
+                Zero-SSRF Sandbox
+              </span>
+            </div>
+            <span className="text-[9px] font-mono font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30">
+              ISOLATED
+            </span>
+          </div>
+
+          <p className="text-[11px] leading-relaxed text-slate-600 dark:text-slate-300">
+            Strict offline memory execution with zero outbound redirects.
+          </p>
+
+          <div className="pt-1.5 flex items-center justify-between text-[10px] font-mono text-slate-500 dark:text-slate-400 border-t border-slate-200/60 dark:border-white/5">
+            <span className="uppercase tracking-wider">RUNTIME</span>
+            <span className="text-emerald-700 dark:text-emerald-400 font-bold flex items-center gap-1">
+              <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_6px_#10B981]" />
+              ACTIVE
+            </span>
           </div>
         </div>
       </div>
