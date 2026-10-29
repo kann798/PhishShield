@@ -1,4 +1,4 @@
-// PhishGuard Extension Background Service Worker
+// PhishShield Extension Background Service Worker
 chrome.runtime.onInstalled.addListener(() => {
-  console.log('PhishGuard Security Extension successfully installed.');
+  console.log('PhishShield Security Extension successfully installed.');
 });

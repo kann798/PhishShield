@@ -16,6 +16,7 @@ import {
   Info,
 } from 'lucide-react';
 import { api, getApiBaseUrl } from '../services/api';
+import { downloadExtensionZipPackage } from '../utils/extensionBundle';
 
 // Browser SVG Icons
 function ChromeIcon({ className = 'w-5 h-5' }) {
@@ -173,18 +174,15 @@ export default function ExtensionPreviewModal({ isOpen, onClose }) {
     }
   };
 
-  const handleDownloadExtension = () => {
-    const downloadUrl = `${getApiBaseUrl()}/extension/download`;
-    const link = document.createElement('a');
-    link.href = downloadUrl;
-    link.setAttribute('download', 'phishshield-extension.zip');
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-
-    setDownloadSuccess(true);
-    setActiveTab('install');
-    setTimeout(() => setDownloadSuccess(false), 5000);
+  const handleDownloadExtension = async () => {
+    try {
+      await downloadExtensionZipPackage(getApiBaseUrl());
+      setDownloadSuccess(true);
+      setActiveTab('install');
+      setTimeout(() => setDownloadSuccess(false), 5000);
+    } catch (err) {
+      console.error('Failed to download extension package:', err);
+    }
   };
 
   const handleCopyPath = () => {
