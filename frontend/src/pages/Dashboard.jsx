@@ -97,10 +97,10 @@ export default function Dashboard({ setActivePage, onSelectScan }) {
   // Breakdown data for Doughnut chart & Legend
   // Order matching reference screenshot: Low Risk, High Risk, Medium Risk, Critical Risk
   const breakdownLegendData = [
-    { name: 'Low Risk', value: lowCount, color: '#10B981' },
-    { name: 'High Risk', value: highCount, color: '#F97316' },
-    { name: 'Medium Risk', value: mediumCount, color: '#FBBF24' },
-    { name: 'Critical Risk', value: criticalCount, color: '#EF4444' },
+    { name: 'Low Risk', value: lowCount, color: '#7B9669' },
+    { name: 'High Risk', value: highCount, color: '#EA580C' },
+    { name: 'Medium Risk', value: mediumCount, color: '#D97706' },
+    { name: 'Critical Risk', value: criticalCount, color: '#DC2626' },
   ];
 
   // For Doughnut Chart slices
@@ -108,14 +108,14 @@ export default function Dashboard({ setActivePage, onSelectScan }) {
   const displayDoughnutData =
     doughnutChartData.length > 0
       ? doughnutChartData
-      : [{ name: 'No Data', value: 1, color: 'rgba(255,255,255,0.08)' }];
+      : [{ name: 'No Data', value: 1, color: 'rgba(64, 78, 59, 0.1)' }];
 
   // Volume Bar Chart data: Low Risk, Medium Risk, High Risk, Critical Risk
   const volumeBarData = [
-    { name: 'Low Risk', value: lowCount, color: '#10B981' },
-    { name: 'Medium Risk', value: mediumCount, color: '#FBBF24' },
-    { name: 'High Risk', value: highCount, color: '#F97316' },
-    { name: 'Critical Risk', value: criticalCount, color: '#EF4444' },
+    { name: 'Low Risk', value: lowCount, color: '#7B9669' },
+    { name: 'Medium Risk', value: mediumCount, color: '#D97706' },
+    { name: 'High Risk', value: highCount, color: '#EA580C' },
+    { name: 'Critical Risk', value: criticalCount, color: '#DC2626' },
   ];
 
   // Latest completed scan from database (sorted by completion timestamp descending)
@@ -130,15 +130,15 @@ export default function Dashboard({ setActivePage, onSelectScan }) {
     const cls = (classification || 'Low').toLowerCase();
     if (cls === 'critical') {
       return (
-        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-mono font-bold bg-rose-500/20 text-rose-400 border border-rose-500/40">
-          <ArrowUp className="w-3 h-3 text-rose-400" />
+        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-mono font-bold bg-rose-50 text-rose-700 border border-rose-300">
+          <ArrowUp className="w-3 h-3 text-rose-600" />
           <span>Critical Risk</span>
         </span>
       );
     }
     if (cls === 'high') {
       return (
-        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-mono font-bold bg-orange-500/20 text-orange-400 border border-orange-500/40">
+        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-mono font-bold bg-orange-50 text-orange-700 border border-orange-300">
           <span className="text-[10px]">◆</span>
           <span>High Risk</span>
         </span>
@@ -146,15 +146,15 @@ export default function Dashboard({ setActivePage, onSelectScan }) {
     }
     if (cls === 'medium') {
       return (
-        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-mono font-bold bg-amber-500/20 text-amber-400 border border-amber-500/40">
+        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-mono font-bold bg-amber-50 text-amber-700 border border-amber-300">
           <span className="text-[10px]">◆</span>
           <span>Medium Risk</span>
         </span>
       );
     }
     return (
-      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-mono font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/40">
-        <ArrowUp className="w-3 h-3 text-emerald-400" />
+      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-mono font-bold bg-[#7B9669]/15 text-[#404E3B] border border-[#7B9669]/30">
+        <ArrowUp className="w-3 h-3 text-[#7B9669]" />
         <span>Low Risk</span>
       </span>
     );
@@ -163,21 +163,20 @@ export default function Dashboard({ setActivePage, onSelectScan }) {
   // Color helper for Last Scan Summary result
   const getResultColor = (classification) => {
     const cls = (classification || 'Low').toLowerCase();
-    if (cls === 'critical') return 'text-rose-400';
-    if (cls === 'high') return 'text-orange-400';
-    if (cls === 'medium') return 'text-amber-400';
-    return 'text-emerald-400';
+    if (cls === 'critical') return 'text-rose-600';
+    if (cls === 'high') return 'text-orange-600';
+    if (cls === 'medium') return 'text-amber-600';
+    return 'text-[#7B9669]';
   };
 
   const customTooltipStyle = {
-    backgroundColor: 'rgba(8, 20, 40, 0.95)',
-    backdropFilter: 'blur(20px)',
-    borderColor: 'rgba(6, 182, 212, 0.45)',
+    backgroundColor: '#FFFFFF',
+    borderColor: 'rgba(64, 78, 59, 0.2)',
     borderRadius: '12px',
     fontSize: '12px',
     fontFamily: 'JetBrains Mono, monospace',
-    color: '#FFFFFF',
-    boxShadow: '0 16px 40px rgba(0,0,0,0.6)',
+    color: '#404E3B',
+    boxShadow: '0 8px 24px rgba(64, 78, 59, 0.15)',
   };
 
   return (
@@ -187,27 +186,27 @@ export default function Dashboard({ setActivePage, onSelectScan }) {
         {/* Left: Heading & Subtitle */}
         <div>
           <div className="flex items-center gap-3 flex-wrap">
-            <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white font-heading">
+            <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-[#404E3B] font-heading">
               SECURITY OPERATIONS DASHBOARD
             </h1>
-            <span className="flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-mono font-bold uppercase bg-cyan-950/60 border border-cyan-400/40 text-cyan-400 shadow-[0_0_12px_rgba(6,182,212,0.3)]">
-              <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span>
+            <span className="flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-mono font-bold uppercase bg-[#7B9669]/15 border border-[#7B9669]/35 text-[#404E3B]">
+              <span className="w-2 h-2 rounded-full bg-[#7B9669]"></span>
               • LIVE TELEMETRY
             </span>
           </div>
-          <p className="text-xs sm:text-sm text-slate-400 mt-1 font-sans">
+          <p className="text-xs sm:text-sm text-[#6C8480] mt-1 font-sans">
             Real-time threat analytics, heuristic risk distribution, and security inspection logs.
           </p>
         </div>
 
         {/* Right: Last Scan Summary Card */}
-        <div className="liquid-glass-card rounded-2xl p-3.5 sm:p-4 border border-white/10 bg-[rgba(6,16,36,0.75)] backdrop-blur-xl shadow-[0_12px_32px_rgba(0,0,0,0.4)] w-full lg:w-auto lg:min-w-[320px] shrink-0">
-          <div className="flex items-center justify-between gap-4 pb-2.5 mb-2.5 border-b border-white/10">
+        <div className="rounded-2xl p-3.5 sm:p-4 border border-[#404E3B]/15 bg-white shadow-sm w-full lg:w-auto lg:min-w-[320px] shrink-0">
+          <div className="flex items-center justify-between gap-4 pb-2.5 mb-2.5 border-b border-[#404E3B]/10">
             <div className="flex items-center gap-2">
-              <div className="p-1 rounded bg-rose-500/20 text-rose-400">
-                <ShieldAlert className="w-3.5 h-3.5" />
+              <div className="p-1 rounded bg-[#7B9669]/15 text-[#404E3B]">
+                <ShieldAlert className="w-3.5 h-3.5 text-[#7B9669]" />
               </div>
-              <span className="text-xs font-mono font-bold text-white tracking-wide">
+              <span className="text-xs font-mono font-bold text-[#404E3B] tracking-wide">
                 Last Scan Summary
               </span>
             </div>
@@ -219,7 +218,7 @@ export default function Dashboard({ setActivePage, onSelectScan }) {
                   setActivePage('history');
                 }
               }}
-              className="text-xs font-mono font-bold text-cyan-400 hover:text-cyan-300 flex items-center gap-1 transition-colors cursor-pointer"
+              className="text-xs font-mono font-bold text-[#7B9669] hover:text-[#404E3B] flex items-center gap-1 transition-colors cursor-pointer"
             >
               <span>View Details</span>
               <ArrowRight className="w-3 h-3" />
@@ -229,28 +228,28 @@ export default function Dashboard({ setActivePage, onSelectScan }) {
           {latestScan ? (
             <div className="space-y-1.5 text-xs font-mono">
               <div className="flex items-center justify-between gap-4">
-                <span className="text-slate-400 flex items-center gap-2">
-                  <Clock className="w-3.5 h-3.5 text-rose-400" />
+                <span className="text-[#6C8480] flex items-center gap-2">
+                  <Clock className="w-3.5 h-3.5 text-[#6C8480]" />
                   <span>Last Scan</span>
                 </span>
-                <span className="text-slate-200 font-medium">
+                <span className="text-[#404E3B] font-medium">
                   {formatRelativeTime(latestScan.created_at_iso || latestScan.created_at)}
                 </span>
               </div>
 
               <div className="flex items-center justify-between gap-4">
-                <span className="text-slate-400 flex items-center gap-2">
-                  <Target className="w-3.5 h-3.5 text-slate-400" />
+                <span className="text-[#6C8480] flex items-center gap-2">
+                  <Target className="w-3.5 h-3.5 text-[#6C8480]" />
                   <span>Type</span>
                 </span>
-                <span className="text-white font-medium capitalize">
+                <span className="text-[#404E3B] font-medium capitalize">
                   {latestScan.scan_type === 'email' ? 'Email' : 'URL'}
                 </span>
               </div>
 
               <div className="flex items-center justify-between gap-4">
-                <span className="text-slate-400 flex items-center gap-2">
-                  <Shield className="w-3.5 h-3.5 text-rose-400" />
+                <span className="text-[#6C8480] flex items-center gap-2">
+                  <Shield className="w-3.5 h-3.5 text-[#6C8480]" />
                   <span>Result</span>
                 </span>
                 <span className={`font-bold ${getResultColor(latestScan.classification)}`}>
@@ -259,18 +258,18 @@ export default function Dashboard({ setActivePage, onSelectScan }) {
               </div>
 
               <div className="flex items-center justify-between gap-4">
-                <span className="text-slate-400 flex items-center gap-2">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                <span className="text-[#6C8480] flex items-center gap-2">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-[#7B9669]" />
                   <span>Status</span>
                 </span>
-                <span className="text-emerald-400 font-bold flex items-center gap-1">
+                <span className="text-[#7B9669] font-bold flex items-center gap-1">
                   <span>•</span>
                   <span>Completed</span>
                 </span>
               </div>
             </div>
           ) : (
-            <div className="py-2 text-center text-xs font-mono text-slate-400">
+            <div className="py-2 text-center text-xs font-mono text-[#6C8480]">
               No scans yet
             </div>
           )}
@@ -279,12 +278,12 @@ export default function Dashboard({ setActivePage, onSelectScan }) {
 
       {/* Error Notice */}
       {error && (
-        <div className="rounded-2xl border border-rose-500/40 bg-rose-950/40 p-4 text-xs text-rose-200 flex items-center justify-between shadow-[0_8px_32px_rgba(239,68,68,0.2)]">
+        <div className="rounded-2xl border border-rose-300 bg-rose-50 p-4 text-xs text-rose-800 flex items-center justify-between shadow-sm">
           <div className="flex items-center gap-2.5">
-            <AlertTriangle className="w-4 h-4 text-[#EF4444] shrink-0" />
+            <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0" />
             <span>{error}. Please verify the Flask backend is operational on port 5000.</span>
           </div>
-          <button onClick={fetchStats} className="underline font-bold hover:text-white">
+          <button onClick={fetchStats} className="underline font-bold hover:text-rose-950">
             Retry Connection
           </button>
         </div>
@@ -293,105 +292,105 @@ export default function Dashboard({ setActivePage, onSelectScan }) {
       {/* 2. Four Statistics Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
         {/* Card 1: URLs Analyzed */}
-        <div className="liquid-glass-card rounded-2xl p-5 border border-white/10 bg-[rgba(6,16,36,0.75)] backdrop-blur-xl relative overflow-hidden flex flex-col justify-between shadow-[0_16px_40px_rgba(0,0,0,0.35)]">
+        <div className="rounded-2xl p-5 border border-[#404E3B]/12 bg-white relative overflow-hidden flex flex-col justify-between shadow-sm">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold uppercase tracking-wider font-mono text-slate-300">
+            <span className="text-xs font-bold uppercase tracking-wider font-mono text-[#6C8480]">
               URLs Analyzed
             </span>
-            <div className="w-9 h-9 rounded-full bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400 shadow-[0_0_10px_rgba(6,182,212,0.2)]">
+            <div className="w-9 h-9 rounded-full bg-[#7B9669]/15 border border-[#7B9669]/30 flex items-center justify-center text-[#404E3B]">
               <Globe className="w-4 h-4" />
             </div>
           </div>
           <div className="pt-3">
             <div className="flex items-baseline justify-between">
-              <span className="text-3xl sm:text-4xl font-black font-mono text-white tracking-tight">
+              <span className="text-3xl sm:text-4xl font-black font-mono text-[#404E3B] tracking-tight">
                 {totalUrls}
               </span>
-              <span className="text-xs font-mono font-bold text-emerald-400 flex items-center gap-0.5">
+              <span className="text-xs font-mono font-bold text-[#7B9669] flex items-center gap-0.5">
                 <ArrowUp className="w-3 h-3" />
                 <span>12%</span>
               </span>
             </div>
-            <p className="text-xs font-semibold text-cyan-400 mt-1 font-mono tracking-wide">
+            <p className="text-xs font-semibold text-[#7B9669] mt-1 font-mono tracking-wide">
               Web links inspected
             </p>
           </div>
         </div>
 
         {/* Card 2: Emails Analyzed */}
-        <div className="liquid-glass-card rounded-2xl p-5 border border-white/10 bg-[rgba(6,16,36,0.75)] backdrop-blur-xl relative overflow-hidden flex flex-col justify-between shadow-[0_16px_40px_rgba(0,0,0,0.35)]">
+        <div className="rounded-2xl p-5 border border-[#404E3B]/12 bg-white relative overflow-hidden flex flex-col justify-between shadow-sm">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold uppercase tracking-wider font-mono text-slate-300">
+            <span className="text-xs font-bold uppercase tracking-wider font-mono text-[#6C8480]">
               Emails Analyzed
             </span>
-            <div className="w-9 h-9 rounded-full bg-blue-500/10 border border-blue-500/30 flex items-center justify-center text-blue-400 shadow-[0_0_10px_rgba(59,130,246,0.2)]">
+            <div className="w-9 h-9 rounded-full bg-[#6C8480]/15 border border-[#6C8480]/30 flex items-center justify-center text-[#404E3B]">
               <Mail className="w-4 h-4" />
             </div>
           </div>
           <div className="pt-3">
             <div className="flex items-baseline justify-between">
-              <span className="text-3xl sm:text-4xl font-black font-mono text-white tracking-tight">
+              <span className="text-3xl sm:text-4xl font-black font-mono text-[#404E3B] tracking-tight">
                 {totalEmails}
               </span>
-              <span className="text-xs font-mono font-bold text-emerald-400 flex items-center gap-0.5">
+              <span className="text-xs font-mono font-bold text-[#7B9669] flex items-center gap-0.5">
                 <ArrowUp className="w-3 h-3" />
                 <span>8%</span>
               </span>
             </div>
-            <p className="text-xs font-semibold text-blue-400 mt-1 font-mono tracking-wide">
+            <p className="text-xs font-semibold text-[#6C8480] mt-1 font-mono tracking-wide">
               Headers &amp; bodies parsed
             </p>
           </div>
         </div>
 
-        {/* Card 3: Threats Detected (Red Glow) */}
-        <div className="liquid-glass-card rounded-2xl p-5 border border-rose-500/40 bg-[rgba(32,12,22,0.75)] backdrop-blur-xl relative overflow-hidden flex flex-col justify-between shadow-[0_16px_40px_rgba(239,68,68,0.25)]">
-          <div className="absolute top-0 inset-x-0 h-[1.5px] bg-gradient-to-r from-transparent via-rose-500/50 to-transparent pointer-events-none" />
+        {/* Card 3: Threats Detected */}
+        <div className="rounded-2xl p-5 border border-rose-200 bg-white relative overflow-hidden flex flex-col justify-between shadow-sm">
+          <div className="absolute top-0 inset-x-0 h-[2px] bg-rose-500 pointer-events-none" />
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold uppercase tracking-wider font-mono text-rose-300">
+            <span className="text-xs font-bold uppercase tracking-wider font-mono text-rose-700">
               Threats Detected
             </span>
-            <div className="w-9 h-9 rounded-full bg-rose-500/15 border border-rose-500/40 flex items-center justify-center text-rose-400 shadow-[0_0_10px_rgba(239,68,68,0.3)]">
+            <div className="w-9 h-9 rounded-full bg-rose-100 border border-rose-300 flex items-center justify-center text-rose-600">
               <ShieldAlert className="w-4 h-4" />
             </div>
           </div>
           <div className="pt-3">
             <div className="flex items-baseline justify-between">
-              <span className="text-3xl sm:text-4xl font-black font-mono text-rose-500 tracking-tight filter drop-shadow-[0_0_8px_rgba(239,68,68,0.35)]">
+              <span className="text-3xl sm:text-4xl font-black font-mono text-rose-600 tracking-tight">
                 {totalThreats}
               </span>
-              <span className="text-xs font-mono font-bold text-emerald-400 flex items-center gap-0.5">
+              <span className="text-xs font-mono font-bold text-rose-600 flex items-center gap-0.5">
                 <ArrowUp className="w-3 h-3" />
                 <span>15%</span>
               </span>
             </div>
-            <p className="text-xs font-bold text-rose-400 mt-1 font-mono tracking-wider uppercase">
+            <p className="text-xs font-bold text-rose-600 mt-1 font-mono tracking-wider uppercase">
               CRITICAL / HIGH ANOMALIES
             </p>
           </div>
         </div>
 
         {/* Card 4: Safe Items Verified */}
-        <div className="liquid-glass-card rounded-2xl p-5 border border-white/10 bg-[rgba(6,16,36,0.75)] backdrop-blur-xl relative overflow-hidden flex flex-col justify-between shadow-[0_16px_40px_rgba(0,0,0,0.35)]">
+        <div className="rounded-2xl p-5 border border-[#404E3B]/12 bg-white relative overflow-hidden flex flex-col justify-between shadow-sm">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold uppercase tracking-wider font-mono text-slate-300">
+            <span className="text-xs font-bold uppercase tracking-wider font-mono text-[#6C8480]">
               Safe Items Verified
             </span>
-            <div className="w-9 h-9 rounded-full bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400 shadow-[0_0_10px_rgba(16,185,129,0.2)]">
+            <div className="w-9 h-9 rounded-full bg-[#7B9669]/15 border border-[#7B9669]/30 flex items-center justify-center text-[#7B9669]">
               <ShieldCheck className="w-4 h-4" />
             </div>
           </div>
           <div className="pt-3">
             <div className="flex items-baseline justify-between">
-              <span className="text-3xl sm:text-4xl font-black font-mono text-cyan-400 tracking-tight">
+              <span className="text-3xl sm:text-4xl font-black font-mono text-[#404E3B] tracking-tight">
                 {totalSafe}
               </span>
-              <span className="text-xs font-mono font-bold text-emerald-400 flex items-center gap-0.5">
+              <span className="text-xs font-mono font-bold text-[#7B9669] flex items-center gap-0.5">
                 <ArrowUp className="w-3 h-3" />
                 <span>5%</span>
               </span>
             </div>
-            <p className="text-xs font-bold text-emerald-400 mt-1 font-mono tracking-wider uppercase">
+            <p className="text-xs font-bold text-[#7B9669] mt-1 font-mono tracking-wider uppercase">
               ZERO THREAT SIGNATURES
             </p>
           </div>
@@ -401,10 +400,10 @@ export default function Dashboard({ setActivePage, onSelectScan }) {
       {/* 3. Analytics & Visualizations Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 sm:gap-6">
         {/* Chart 1: Threat Classification Breakdown */}
-        <div className="liquid-glass-card rounded-2xl p-5 sm:p-6 shadow-[0_16px_40px_rgba(0,0,0,0.35)] border border-white/10 bg-[rgba(6,16,36,0.75)] backdrop-blur-xl relative overflow-hidden flex flex-col justify-between">
-          <div className="flex items-center gap-2 mb-4 pb-3 border-b border-white/10">
-            <PieIcon className="w-4 h-4 text-cyan-400" />
-            <h3 className="text-xs sm:text-sm font-bold text-white font-mono uppercase tracking-wider">
+        <div className="rounded-2xl p-5 sm:p-6 shadow-sm border border-[#404E3B]/12 bg-white relative overflow-hidden flex flex-col justify-between">
+          <div className="flex items-center gap-2 mb-4 pb-3 border-b border-[#404E3B]/10">
+            <PieIcon className="w-4 h-4 text-[#7B9669]" />
+            <h3 className="text-xs sm:text-sm font-bold text-[#404E3B] font-mono uppercase tracking-wider">
               Threat Classification Breakdown
             </h3>
           </div>
@@ -427,7 +426,7 @@ export default function Dashboard({ setActivePage, onSelectScan }) {
                       <Cell
                         key={`donut-cell-${index}`}
                         fill={entry.color}
-                        stroke="#061024"
+                        stroke="#FFFFFF"
                         strokeWidth={2}
                       />
                     ))}
@@ -437,7 +436,7 @@ export default function Dashboard({ setActivePage, onSelectScan }) {
               </ResponsiveContainer>
             </div>
 
-            {/* Legend List matching Screenshot */}
+            {/* Legend List */}
             <div className="flex-1 max-w-xs space-y-3 font-mono text-xs w-full">
               {breakdownLegendData.map((item) => {
                 const pct =
@@ -451,14 +450,13 @@ export default function Dashboard({ setActivePage, onSelectScan }) {
                         className="w-2.5 h-2.5 rounded-full shrink-0"
                         style={{
                           backgroundColor: item.color,
-                          boxShadow: `0 0 6px ${item.color}88`,
                         }}
                       />
-                      <span className="text-slate-300 font-medium">{item.name}</span>
+                      <span className="text-[#404E3B] font-medium">{item.name}</span>
                     </div>
-                    <span className="font-bold text-white">
+                    <span className="font-bold text-[#404E3B]">
                       {item.value}{' '}
-                      <span className="text-slate-400 font-normal">({pct}%)</span>
+                      <span className="text-[#6C8480] font-normal">({pct}%)</span>
                     </span>
                   </div>
                 );
@@ -468,10 +466,10 @@ export default function Dashboard({ setActivePage, onSelectScan }) {
         </div>
 
         {/* Chart 2: Risk Distribution Volume */}
-        <div className="liquid-glass-card rounded-2xl p-5 sm:p-6 shadow-[0_16px_40px_rgba(0,0,0,0.35)] border border-white/10 bg-[rgba(6,16,36,0.75)] backdrop-blur-xl relative overflow-hidden flex flex-col justify-between">
-          <div className="flex items-center gap-2 mb-4 pb-3 border-b border-white/10">
-            <BarChart3 className="w-4 h-4 text-cyan-400" />
-            <h3 className="text-xs sm:text-sm font-bold text-white font-mono uppercase tracking-wider">
+        <div className="rounded-2xl p-5 sm:p-6 shadow-sm border border-[#404E3B]/12 bg-white relative overflow-hidden flex flex-col justify-between">
+          <div className="flex items-center gap-2 mb-4 pb-3 border-b border-[#404E3B]/10">
+            <BarChart3 className="w-4 h-4 text-[#7B9669]" />
+            <h3 className="text-xs sm:text-sm font-bold text-[#404E3B] font-mono uppercase tracking-wider">
               Risk Distribution Volume
             </h3>
           </div>
@@ -484,32 +482,32 @@ export default function Dashboard({ setActivePage, onSelectScan }) {
               >
                 <CartesianGrid
                   strokeDasharray="3 3"
-                  stroke="rgba(255, 255, 255, 0.08)"
+                  stroke="rgba(64, 78, 59, 0.08)"
                   vertical={false}
                 />
                 <XAxis
                   dataKey="name"
-                  stroke="#94A3B8"
+                  stroke="#6C8480"
                   fontSize={11}
                   tickLine={false}
                   fontFamily="JetBrains Mono, monospace"
                 />
                 <YAxis
-                  stroke="#94A3B8"
+                  stroke="#6C8480"
                   fontSize={11}
                   allowDecimals={false}
                   tickLine={false}
                   fontFamily="JetBrains Mono, monospace"
                 />
                 <Tooltip
-                  cursor={{ fill: 'rgba(255, 255, 255, 0.03)' }}
+                  cursor={{ fill: 'rgba(64, 78, 59, 0.04)' }}
                   contentStyle={customTooltipStyle}
                 />
                 <Bar dataKey="value" radius={[6, 6, 0, 0]} maxBarSize={55}>
                   <LabelList
                     dataKey="value"
                     position="top"
-                    fill="#FFFFFF"
+                    fill="#404E3B"
                     fontSize={12}
                     fontFamily="JetBrains Mono, monospace"
                     fontWeight="bold"
@@ -526,24 +524,24 @@ export default function Dashboard({ setActivePage, onSelectScan }) {
       </div>
 
       {/* 4. Recent Threat Telemetry & Inspection Logs Table */}
-      <div className="liquid-glass-card rounded-2xl p-5 sm:p-6 shadow-[0_16px_40px_rgba(0,0,0,0.35)] border border-white/10 bg-[rgba(6,16,36,0.75)] backdrop-blur-xl relative overflow-hidden">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 pb-3 border-b border-white/10">
+      <div className="rounded-2xl p-5 sm:p-6 shadow-sm border border-[#404E3B]/12 bg-white relative overflow-hidden">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 pb-3 border-b border-[#404E3B]/10">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-cyan-500/15 border border-cyan-500/30 text-cyan-400">
-              <Shield className="w-4 h-4" />
+            <div className="p-2 rounded-xl bg-[#7B9669]/15 border border-[#7B9669]/30 text-[#404E3B]">
+              <Shield className="w-4 h-4 text-[#7B9669]" />
             </div>
             <div>
-              <h3 className="text-xs sm:text-sm font-bold text-white font-mono uppercase tracking-wider">
+              <h3 className="text-xs sm:text-sm font-bold text-[#404E3B] font-mono uppercase tracking-wider">
                 Recent Threat Telemetry &amp; Inspection Logs
               </h3>
-              <p className="text-xs text-slate-400 font-sans mt-0.5">
+              <p className="text-xs text-[#6C8480] font-sans mt-0.5">
                 Latest heuristics inspection events logged by the detection engine.
               </p>
             </div>
           </div>
           <button
             onClick={() => setActivePage('history')}
-            className="text-xs text-cyan-400 hover:text-cyan-300 font-mono font-bold flex items-center gap-1.5 transition-colors cursor-pointer self-start sm:self-auto"
+            className="text-xs text-[#7B9669] hover:text-[#404E3B] font-mono font-bold flex items-center gap-1.5 transition-colors cursor-pointer self-start sm:self-auto"
           >
             <span>View All History</span>
             <ArrowRight className="w-3.5 h-3.5" />
@@ -554,7 +552,7 @@ export default function Dashboard({ setActivePage, onSelectScan }) {
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs font-sans border-collapse">
               <thead>
-                <tr className="border-b border-white/10 text-slate-400 uppercase text-[11px] font-mono font-semibold tracking-wider">
+                <tr className="bg-[#EEF3EC] border-b border-[#404E3B]/15 text-[#404E3B] uppercase text-[11px] font-mono font-semibold tracking-wider">
                   <th className="py-3 px-4 w-28">Type</th>
                   <th className="py-3 px-4">Target / Subject</th>
                   <th className="py-3 px-4 w-36">Threat Level</th>
@@ -563,21 +561,21 @@ export default function Dashboard({ setActivePage, onSelectScan }) {
                   <th className="py-3 px-4 w-28 text-right">Action</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-white/5 font-mono">
+              <tbody className="divide-y divide-[#404E3B]/10 font-mono">
                 {stats.recent_scans.map((scan) => (
-                  <tr key={scan.id} className="hover:bg-white/[0.03] transition-colors">
+                  <tr key={scan.id} className="hover:bg-[#F4F7F4] transition-colors">
                     <td className="py-3.5 px-4">
-                      <div className="flex items-center gap-2 text-cyan-400 font-bold">
+                      <div className="flex items-center gap-2 text-[#404E3B] font-bold">
                         {scan.scan_type === 'email' ? (
-                          <Mail className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+                          <Mail className="w-3.5 h-3.5 text-[#6C8480] shrink-0" />
                         ) : (
-                          <LinkIcon className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+                          <LinkIcon className="w-3.5 h-3.5 text-[#7B9669] shrink-0" />
                         )}
                         <span>{scan.scan_type ? scan.scan_type.toUpperCase() : 'URL'}</span>
                       </div>
                     </td>
                     <td
-                      className="py-3.5 px-4 text-slate-200 font-medium max-w-xs sm:max-w-md truncate"
+                      className="py-3.5 px-4 text-[#2C3527] font-medium max-w-xs sm:max-w-md truncate"
                       title={scan.target_identifier}
                     >
                       {scan.target_identifier}
@@ -586,18 +584,18 @@ export default function Dashboard({ setActivePage, onSelectScan }) {
                       {renderThreatBadge(scan.classification)}
                     </td>
                     <td className="py-3.5 px-4">
-                      <span className="font-black text-white text-xs">{scan.risk_score}</span>
-                      <span className="text-slate-400 text-xs">/100</span>
+                      <span className="font-black text-[#404E3B] text-xs">{scan.risk_score}</span>
+                      <span className="text-[#6C8480] text-xs">/100</span>
                     </td>
-                    <td className="py-3.5 px-4 text-slate-300 text-xs">
+                    <td className="py-3.5 px-4 text-[#6C8480] text-xs">
                       {scan.created_at}
                     </td>
                     <td className="py-3.5 px-4 text-right">
                       <button
                         onClick={() => onSelectScan(scan.id)}
-                        className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-[rgba(6,20,40,0.8)] hover:bg-cyan-500/20 text-cyan-400 border border-cyan-500/40 hover:border-cyan-400 text-xs font-bold transition-all shadow-[0_0_8px_rgba(6,182,212,0.15)] cursor-pointer"
+                        className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-[#EEF3EC] hover:bg-[#7B9669] hover:text-white text-[#404E3B] border border-[#404E3B]/20 text-xs font-bold transition-all shadow-sm cursor-pointer"
                       >
-                        <Target className="w-3.5 h-3.5 text-cyan-400" />
+                        <Target className="w-3.5 h-3.5" />
                         <span>Inspect</span>
                       </button>
                     </td>
@@ -607,7 +605,7 @@ export default function Dashboard({ setActivePage, onSelectScan }) {
             </table>
           </div>
         ) : (
-          <div className="text-center py-10 text-xs text-slate-400 font-mono">
+          <div className="text-center py-10 text-xs text-[#6C8480] font-mono">
             No telemetry records logged yet. Run a URL or Email analysis to generate live metrics.
           </div>
         )}

@@ -63,16 +63,28 @@ export default function Sidebar({ activePage, setActivePage, mobileMenuOpen, set
   };
 
   return (
-    <aside className="hidden md:flex flex-col justify-between w-[272px] shrink-0 border-r border-slate-200/80 dark:border-white/10 bg-slate-50/80 dark:bg-[rgba(6,16,36,0.72)] backdrop-blur-[24px] p-4 min-h-[calc(100vh-4rem)] shadow-[4px_0_30px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_30px_rgba(0,0,0,0.4)] select-none liquid-glass-sidebar relative overflow-y-auto no-scrollbar">
-      {/* Right Specular Edge Line */}
-      <div className="absolute top-0 right-0 w-[1px] inset-y-0 bg-gradient-to-b from-transparent via-emerald-400/25 to-transparent pointer-events-none" />
-
+    <aside className="hidden md:flex flex-col justify-between w-[272px] shrink-0 border-r border-[#303B2C]/40 bg-[#404E3B] p-4 min-h-[calc(100vh-4rem)] shadow-sidebar select-none relative overflow-y-auto no-scrollbar text-[#E6E6E6]">
       <div className="space-y-6">
+        {/* Sidebar Brand Header */}
+        <div className="px-2 pt-1 pb-3 border-b border-[#BAC8B1]/20 flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl bg-[#7B9669] flex items-center justify-center text-white shadow-sm shrink-0">
+            <ShieldCheck className="w-5 h-5 text-white" />
+          </div>
+          <div>
+            <h2 className="text-base font-black tracking-tight text-white font-heading">
+              PHISH<span className="text-[#BAC8B1]">SHIELD</span>
+            </h2>
+            <p className="text-[10px] font-mono uppercase tracking-wider text-[#BAC8B1]/80">
+              Threat Intelligence
+            </p>
+          </div>
+        </div>
+
         {/* SECTION 1: Main Navigation Headers (Vertical Order) */}
         <div>
-          <div className="px-2 py-1 flex items-center justify-between border-b border-slate-200/80 dark:border-white/10 pb-2 mb-3">
-            <span className="text-[11px] font-mono uppercase tracking-wider text-slate-700 dark:text-slate-300 font-bold flex items-center gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#10B981] shadow-[0_0_8px_#10B981]"></span>
+          <div className="px-2 py-1 flex items-center justify-between border-b border-[#BAC8B1]/15 pb-2 mb-3">
+            <span className="text-[11px] font-mono uppercase tracking-wider text-[#BAC8B1] font-bold flex items-center gap-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#7B9669]"></span>
               <span>Navigation</span>
             </span>
           </div>
@@ -86,18 +98,16 @@ export default function Sidebar({ activePage, setActivePage, mobileMenuOpen, set
                 <button
                   key={item.id}
                   onClick={() => handleNavClick(item.id)}
-                  className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13px] font-semibold transition-all duration-200 border group backdrop-blur-md relative ${
+                  className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13px] font-semibold transition-all duration-200 border relative ${
                     isActive
-                      ? 'bg-emerald-500/15 border-emerald-600/45 text-emerald-950 font-bold dark:bg-[rgba(16,185,129,0.14)] dark:border-emerald-500/45 dark:text-white shadow-[0_2px_12px_rgba(16,185,129,0.18)] dark:shadow-[0_0_16px_rgba(16,185,129,0.22),inset_0_1px_0_rgba(255,255,255,0.15)]'
-                      : 'border-transparent text-slate-700 hover:text-slate-950 hover:bg-slate-200/60 dark:text-[rgba(255,255,255,0.75)] dark:hover:text-white dark:hover:bg-white/5 hover:border-slate-300/80 dark:hover:border-white/10'
+                      ? 'bg-[#7B9669] border-[#7B9669] text-white shadow-sm font-bold'
+                      : 'border-transparent text-[#E6E6E6]/85 hover:text-white hover:bg-white/10'
                   }`}
                 >
                   <div className="flex items-center gap-2.5">
                     <Icon
                       className={`w-4 h-4 shrink-0 transition-colors duration-200 ${
-                        isActive
-                          ? 'text-emerald-700 dark:text-[#10B981] filter drop-shadow-[0_0_6px_rgba(16,185,129,0.6)]'
-                          : 'text-slate-500 dark:text-slate-400 group-hover:text-emerald-600 dark:group-hover:text-[#10B981]'
+                        isActive ? 'text-white' : 'text-[#BAC8B1] group-hover:text-white'
                       }`}
                     />
                     <span className="font-sans tracking-wide">{item.label}</span>
@@ -107,8 +117,8 @@ export default function Sidebar({ activePage, setActivePage, mobileMenuOpen, set
                     <span
                       className={`text-[10px] uppercase font-mono px-2 py-0.5 rounded-full font-bold ${
                         isActive
-                          ? 'bg-emerald-600/15 text-emerald-800 border border-emerald-600/30 dark:bg-emerald-500/20 dark:text-[#10B981] dark:border-emerald-500/40'
-                          : 'bg-slate-200/90 text-slate-700 border border-slate-300/80 dark:bg-black/40 dark:text-slate-400 dark:border-white/10'
+                          ? 'bg-[#404E3B] text-white border border-white/20'
+                          : 'bg-black/25 text-[#BAC8B1] border border-white/10'
                       }`}
                     >
                       {item.badge}
@@ -122,9 +132,9 @@ export default function Sidebar({ activePage, setActivePage, mobileMenuOpen, set
 
         {/* SECTION 2: Resources & Knowledge (Vertical Order) */}
         <div>
-          <div className="px-2 py-1 flex items-center justify-between border-b border-slate-200/80 dark:border-white/10 pb-2 mb-3">
-            <span className="text-[11px] font-mono uppercase tracking-wider text-slate-700 dark:text-slate-300 font-bold flex items-center gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#10B981]"></span>
+          <div className="px-2 py-1 flex items-center justify-between border-b border-[#BAC8B1]/15 pb-2 mb-3">
+            <span className="text-[11px] font-mono uppercase tracking-wider text-[#BAC8B1] font-bold flex items-center gap-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#7B9669]"></span>
               <span>Resources &amp; Support</span>
             </span>
           </div>
@@ -138,18 +148,16 @@ export default function Sidebar({ activePage, setActivePage, mobileMenuOpen, set
                 <button
                   key={item.id}
                   onClick={() => handleNavClick(item.id)}
-                  className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13px] font-semibold transition-all duration-200 border group backdrop-blur-md relative ${
+                  className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13px] font-semibold transition-all duration-200 border relative ${
                     isActive
-                      ? 'bg-emerald-500/15 border-emerald-600/45 text-emerald-950 font-bold dark:bg-[rgba(16,185,129,0.14)] dark:border-emerald-500/45 dark:text-white shadow-[0_2px_12px_rgba(16,185,129,0.18)] dark:shadow-[0_0_16px_rgba(16,185,129,0.22),inset_0_1px_0_rgba(255,255,255,0.15)]'
-                      : 'border-transparent text-slate-700 hover:text-slate-950 hover:bg-slate-200/60 dark:text-[rgba(255,255,255,0.75)] dark:hover:text-white dark:hover:bg-white/5 hover:border-slate-300/80 dark:hover:border-white/10'
+                      ? 'bg-[#7B9669] border-[#7B9669] text-white shadow-sm font-bold'
+                      : 'border-transparent text-[#E6E6E6]/85 hover:text-white hover:bg-white/10'
                   }`}
                 >
                   <div className="flex items-center gap-2.5">
                     <Icon
                       className={`w-4 h-4 shrink-0 transition-colors duration-200 ${
-                        isActive
-                          ? 'text-emerald-700 dark:text-[#10B981] filter drop-shadow-[0_0_6px_rgba(16,185,129,0.6)]'
-                          : 'text-slate-500 dark:text-slate-400 group-hover:text-emerald-600 dark:group-hover:text-[#10B981]'
+                        isActive ? 'text-white' : 'text-[#BAC8B1] group-hover:text-white'
                       }`}
                     />
                     <span className="font-sans tracking-wide">{item.label}</span>
@@ -159,8 +167,8 @@ export default function Sidebar({ activePage, setActivePage, mobileMenuOpen, set
                     <span
                       className={`text-[10px] uppercase font-mono px-2 py-0.5 rounded-full font-bold ${
                         isActive
-                          ? 'bg-emerald-600/15 text-emerald-800 border border-emerald-600/30 dark:bg-emerald-500/20 dark:text-[#10B981] dark:border-emerald-500/40'
-                          : 'bg-slate-200/90 text-slate-700 border border-slate-300/80 dark:bg-black/40 dark:text-slate-400 dark:border-white/10'
+                          ? 'bg-[#404E3B] text-white border border-white/20'
+                          : 'bg-black/25 text-[#BAC8B1] border border-white/10'
                       }`}
                     >
                       {item.badge}
@@ -174,33 +182,30 @@ export default function Sidebar({ activePage, setActivePage, mobileMenuOpen, set
       </div>
 
       {/* SECTION 3: Zero-SSRF Sandbox Status Card */}
-      <div className="pt-4 mt-6 border-t border-slate-200/80 dark:border-white/10 shrink-0">
-        <div className="liquid-glass-card rounded-xl border border-emerald-500/25 dark:border-emerald-500/30 bg-slate-100/70 dark:bg-[rgba(10,24,52,0.75)] p-3.5 space-y-2 relative overflow-hidden shadow-sm dark:shadow-[0_4px_20px_rgba(0,0,0,0.35)]">
-          {/* Top Specular Line */}
-          <div className="absolute top-0 inset-x-0 h-[1px] bg-gradient-to-r from-transparent via-emerald-400/40 to-transparent pointer-events-none" />
-
+      <div className="pt-4 mt-6 border-t border-[#BAC8B1]/15 shrink-0">
+        <div className="rounded-xl border border-[#BAC8B1]/25 bg-[#303B2C] p-3.5 space-y-2 relative overflow-hidden shadow-sm">
           <div className="flex items-center justify-between gap-1.5">
             <div className="flex items-center gap-2">
-              <div className="p-1 rounded-md bg-emerald-500/15 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400">
-                <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+              <div className="p-1 rounded-md bg-[#7B9669]/25 border border-[#7B9669]/40 text-[#BAC8B1]">
+                <ShieldCheck className="w-3.5 h-3.5 text-[#BAC8B1]" />
               </div>
-              <span className="text-xs font-bold text-slate-800 dark:text-slate-100 font-sans tracking-tight">
+              <span className="text-xs font-bold text-white font-sans tracking-tight">
                 Zero-SSRF Sandbox
               </span>
             </div>
-            <span className="text-[9px] font-mono font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30">
+            <span className="text-[9px] font-mono font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-[#7B9669]/30 text-white border border-[#7B9669]/50">
               ISOLATED
             </span>
           </div>
 
-          <p className="text-[11px] leading-relaxed text-slate-600 dark:text-slate-300">
+          <p className="text-[11px] leading-relaxed text-[#E6E6E6]/80 font-sans">
             Strict offline memory execution with zero outbound redirects.
           </p>
 
-          <div className="pt-1.5 flex items-center justify-between text-[10px] font-mono text-slate-500 dark:text-slate-400 border-t border-slate-200/60 dark:border-white/5">
+          <div className="pt-1.5 flex items-center justify-between text-[10px] font-mono text-[#BAC8B1] border-t border-white/10">
             <span className="uppercase tracking-wider">RUNTIME</span>
-            <span className="text-emerald-700 dark:text-emerald-400 font-bold flex items-center gap-1">
-              <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_6px_#10B981]" />
+            <span className="text-white font-bold flex items-center gap-1">
+              <span className="inline-block w-1.5 h-1.5 rounded-full bg-[#7B9669]" />
               ACTIVE
             </span>
           </div>

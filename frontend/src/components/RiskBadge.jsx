@@ -6,26 +6,26 @@ export default function RiskBadge({ classification = 'Low', size = 'md' }) {
 
   const configs = {
     low: {
-      style: 'bg-emerald-500/15 border-emerald-400/50 text-emerald-300 shadow-[0_0_12px_rgba(16,185,129,0.25)]',
-      dot: 'bg-emerald-400 shadow-[0_0_10px_#10B981]',
+      style: 'bg-[#7B9669]/15 border-[#7B9669]/40 text-[#404E3B]',
+      dot: 'bg-[#7B9669]',
       icon: ShieldCheck,
       label: 'Low Risk',
     },
     medium: {
-      style: 'bg-amber-500/15 border-amber-400/50 text-amber-300 shadow-[0_0_12px_rgba(245,158,11,0.25)]',
-      dot: 'bg-amber-400 shadow-[0_0_10px_#F59E0B]',
+      style: 'bg-amber-50 border-amber-300 text-amber-800',
+      dot: 'bg-amber-500',
       icon: AlertTriangle,
       label: 'Medium Risk',
     },
     high: {
-      style: 'bg-orange-500/15 border-orange-400/50 text-orange-300 shadow-[0_0_12px_rgba(249,115,22,0.25)]',
-      dot: 'bg-orange-400 shadow-[0_0_10px_#F97316]',
+      style: 'bg-orange-50 border-orange-300 text-orange-800',
+      dot: 'bg-orange-500',
       icon: AlertCircle,
       label: 'High Risk',
     },
     critical: {
-      style: 'bg-rose-500/20 border-rose-400/60 text-rose-300 shadow-[0_0_15px_rgba(239,68,68,0.35)]',
-      dot: 'bg-rose-500 shadow-[0_0_12px_#EF4444] animate-pulse',
+      style: 'bg-rose-50 border-rose-300 text-rose-800',
+      dot: 'bg-rose-600',
       icon: ShieldAlert,
       label: 'Critical Risk',
     },

@@ -194,17 +194,17 @@ export default function FAQ({ setActivePage }) {
   return (
     <div className="space-y-6 w-full pb-8 animate-fadeIn">
       {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/10 pb-5">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#404E3B]/15 pb-5">
         <div>
           <div className="flex items-center gap-3">
-            <div className="p-3 bg-cyan-500/15 border border-cyan-500/35 rounded-2xl text-cyan-400 shadow-[0_0_15px_rgba(6,182,212,0.2)]">
-              <HelpCircle className="w-5 h-5 text-cyan-400" />
+            <div className="p-3 bg-[#7B9669]/20 border border-[#7B9669]/40 rounded-2xl text-[#404E3B] shadow-sm">
+              <HelpCircle className="w-5 h-5 text-[#404E3B]" />
             </div>
             <div>
-              <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white font-heading">
+              <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#404E3B] font-heading">
                 Frequently Asked Questions
               </h1>
-              <p className="text-xs sm:text-sm text-slate-400 mt-0.5 font-sans">
+              <p className="text-xs sm:text-sm text-[#6C8480] mt-0.5 font-sans">
                 Find answers to common questions about PhishShield, its features, and how it works.
               </p>
             </div>
@@ -218,13 +218,13 @@ export default function FAQ({ setActivePage }) {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search questions..."
-            className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-[rgba(6,16,36,0.75)] border border-white/10 text-xs text-white font-sans placeholder:text-slate-500 focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400/40 transition-all shadow-inner"
+            className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-[#F4F7F4] border border-[#404E3B]/20 text-xs text-[#2C3527] font-sans placeholder:text-[#6C8480] focus:outline-none focus:border-[#7B9669] focus:ring-1 focus:ring-[#7B9669]/40 transition-all"
           />
-          <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+          <Search className="w-4 h-4 text-[#6C8480] absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
           {searchQuery && (
             <button
               onClick={() => setSearchQuery('')}
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] font-mono text-slate-400 hover:text-white px-1.5 py-0.5 rounded bg-white/5"
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] font-mono text-[#6C8480] hover:text-[#404E3B] px-1.5 py-0.5 rounded bg-[#EEF3EC]"
             >
               Clear
             </button>
@@ -241,23 +241,23 @@ export default function FAQ({ setActivePage }) {
             return (
               <div
                 key={faq.id}
-                className="liquid-glass-card rounded-2xl border border-white/10 bg-[rgba(6,16,36,0.75)] backdrop-blur-xl shadow-[0_8px_24px_rgba(0,0,0,0.3)] transition-all overflow-hidden"
+                className="rounded-2xl border border-[#404E3B]/15 bg-white shadow-sm transition-all overflow-hidden"
               >
                 <button
                   onClick={() => toggleExpand(faq.id)}
                   aria-expanded={isExpanded}
-                  className="w-full p-4 sm:p-5 flex items-center justify-between gap-4 text-left cursor-pointer group hover:bg-white/[0.02] transition-colors"
+                  className="w-full p-4 sm:p-5 flex items-center justify-between gap-4 text-left cursor-pointer group hover:bg-[#F4F7F4] transition-colors"
                 >
-                  <h3 className="text-xs sm:text-sm font-bold font-mono text-white group-hover:text-cyan-400 transition-colors flex items-center gap-2.5">
+                  <h3 className="text-xs sm:text-sm font-bold font-mono text-[#404E3B] group-hover:text-[#7B9669] transition-colors flex items-center gap-2.5">
                     <span>{faq.question}</span>
                   </h3>
-                  <div className="p-1 rounded-lg bg-white/5 group-hover:bg-cyan-500/20 text-slate-400 group-hover:text-cyan-400 transition-colors shrink-0">
+                  <div className="p-1 rounded-lg bg-[#EEF3EC] text-[#404E3B] group-hover:bg-[#7B9669] group-hover:text-white transition-colors shrink-0">
                     {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                   </div>
                 </button>
 
                 {isExpanded && (
-                  <div className="px-4 sm:px-5 pb-5 pt-1 border-t border-white/5 text-xs sm:text-sm text-slate-300 font-sans leading-relaxed animate-fadeIn">
+                  <div className="px-4 sm:px-5 pb-5 pt-1 border-t border-[#404E3B]/10 text-xs sm:text-sm text-[#2C3527] font-sans leading-relaxed animate-fadeIn">
                     {faq.answer}
                   </div>
                 )}
@@ -265,23 +265,23 @@ export default function FAQ({ setActivePage }) {
             );
           })
         ) : (
-          <div className="liquid-glass-card rounded-2xl border border-white/10 p-8 text-center text-slate-400 font-mono text-xs">
+          <div className="rounded-2xl border border-[#404E3B]/15 bg-white p-8 text-center text-[#6C8480] font-mono text-xs">
             No questions matching &quot;{searchQuery}&quot;. Try a different search keyword.
           </div>
         )}
       </div>
 
       {/* Helpful Next Steps Banner */}
-      <div className="p-5 rounded-2xl border border-cyan-500/30 bg-cyan-950/20 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm">
+      <div className="p-5 rounded-2xl border border-[#7B9669]/30 bg-[#EEF3EC] flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm">
         <div className="flex items-center gap-3">
-          <div className="p-2 rounded-xl bg-cyan-500/20 text-cyan-400">
-            <Sparkles className="w-5 h-5" />
+          <div className="p-2 rounded-xl bg-[#7B9669]/20 text-[#404E3B]">
+            <Sparkles className="w-5 h-5 text-[#7B9669]" />
           </div>
           <div>
-            <h4 className="text-xs font-bold font-mono text-white uppercase tracking-wider">
+            <h4 className="text-xs font-bold font-mono text-[#404E3B] uppercase tracking-wider">
               Need personalized assistance or found an issue?
             </h4>
-            <p className="text-xs text-slate-400 font-sans mt-0.5">
+            <p className="text-xs text-[#6C8480] font-sans mt-0.5">
               Explore step-by-step guides or send our security team a direct inquiry.
             </p>
           </div>
@@ -289,14 +289,14 @@ export default function FAQ({ setActivePage }) {
         <div className="flex items-center gap-2.5">
           <button
             onClick={() => setActivePage('help')}
-            className="px-4 py-2 rounded-xl bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 font-mono text-xs font-bold border border-cyan-500/40 transition-all cursor-pointer flex items-center gap-1.5"
+            className="px-4 py-2 rounded-xl bg-[#7B9669] hover:bg-[#688258] text-white font-mono text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 shadow-sm"
           >
             <span>User Guides</span>
             <ArrowRight className="w-3.5 h-3.5" />
           </button>
           <button
             onClick={() => setActivePage('contact')}
-            className="px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-white font-mono text-xs font-bold border border-white/10 transition-all cursor-pointer"
+            className="px-4 py-2 rounded-xl bg-white hover:bg-[#BAC8B1]/30 text-[#404E3B] font-mono text-xs font-bold border border-[#404E3B]/20 transition-all cursor-pointer"
           >
             Contact Team
           </button>

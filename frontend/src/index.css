@@ -4,62 +4,76 @@
 
 @layer base {
   :root {
-    /* Original Theme Tokens from chandureddy142/Phishing-email-detection-using-ML-project */
-    --page-bg:       #07111f;
-    --glass:         rgba(255, 255, 255, 0.07);
-    --glass-mid:     rgba(255, 255, 255, 0.10);
-    --glass-strong:  rgba(255, 255, 255, 0.14);
-    --glass-hover:   rgba(255, 255, 255, 0.12);
-    --glass-card:    rgba(8, 20, 40, 0.55);
-    --glass-card-hover: rgba(12, 28, 56, 0.65);
-    --border:        rgba(255, 255, 255, 0.13);
-    --border-em:     rgba(16, 185, 129, 0.45);
-    --border-accent: rgba(16, 185, 129, 0.35);
-    --txt:           rgba(255, 255, 255, 0.92);
-    --txt-2:         rgba(255, 255, 255, 0.60);
-    --txt-3:         rgba(255, 255, 255, 0.35);
-    --accent:        #10b981;
-    --accent-dim:    rgba(16, 185, 129, 0.18);
-    --accent-glow:   rgba(16, 185, 129, 0.40);
-    --accent-dark:   #059669;
-    --danger:        #f87171;
-    --danger-dim:    rgba(248, 113, 113, 0.14);
-    --warning:       #fbbf24;
-    --warning-dim:   rgba(251, 191, 36, 0.12);
+    /* Exact Nature Palette */
+    --forest:        #404E3B; /* Dark Forest Green */
+    --sage:          #7B9669; /* Sage Green */
+    --slate-green:   #6C8480; /* Slate Green */
+    --pale-sage:     #BAC8B1; /* Pale Sage */
+    --light-gray:    #E6E6E6; /* Light Gray */
+
+    /* Global Application Theme Tokens */
+    --page-bg:       #F4F7F4; /* Soft off-white with subtle green tint */
+    --card-bg:       #FFFFFF;
+    --card-border:   rgba(64, 78, 59, 0.12);
+    --card-shadow:   0 2px 14px rgba(64, 78, 59, 0.05);
+
+    --sidebar-bg:    #404E3B; /* Dark Forest Green */
+    --sidebar-text:  #E6E6E6;
+    --sidebar-active:#7B9669; /* Sage Green */
+
+    --heading-color: #404E3B; /* Dark Forest Green */
+    --text-color:    #2C3527; /* Dark Gray for readability */
+    --text-muted:    #6C8480; /* Slate Green */
+
+    --accent:        #7B9669;
+    --accent-dark:   #404E3B;
+    --accent-dim:    rgba(123, 150, 105, 0.15);
+    --accent-glow:   rgba(123, 150, 105, 0.25);
+
+    --danger:        #DC2626;
+    --danger-dim:    rgba(220, 38, 38, 0.12);
+    --warning:       #D97706;
+    --warning-dim:   rgba(217, 119, 6, 0.12);
 
     /* Compatibility Aliases */
     --bg:                 var(--page-bg);
     --bg-main:            var(--page-bg);
-    --bg-surface:         rgba(8, 20, 40, 0.55);
-    --bg-surface-elevated:rgba(12, 28, 56, 0.82);
-    --border-color:       var(--border);
-    --border-highlight:   var(--border-em);
-    --text-primary:       var(--txt);
-    --text-secondary:     var(--txt-2);
-    --text-muted:         var(--txt-3);
-    --accent-cyan:        #10b981;
-    --accent-blue:        #059669;
+    --bg-surface:         #FFFFFF;
+    --bg-surface-elevated:#FFFFFF;
+    --border:             var(--card-border);
+    --border-em:          rgba(123, 150, 105, 0.35);
+    --border-accent:      rgba(123, 150, 105, 0.35);
+    --border-color:       var(--card-border);
+    --border-highlight:   rgba(123, 150, 105, 0.40);
+    --txt:                var(--text-color);
+    --txt-2:              #4D5C4A;
+    --txt-3:              var(--text-muted);
+    --text-primary:       var(--text-color);
+    --text-secondary:     #4D5C4A;
+    --text-muted:         var(--text-muted);
+    --accent-cyan:        #7B9669;
+    --accent-blue:        #6C8480;
   }
 
   body {
     background-color: var(--page-bg);
-    color: var(--txt);
+    color: var(--text-color);
     font-family: 'DM Sans', sans-serif;
     font-size: 15px;
     line-height: 1.6;
     min-height: 100vh;
     overflow-x: hidden;
-    transition: background-color 0.5s ease;
+    transition: background-color 0.3s ease;
   }
 
-  /* Typography Hierarchy from Original Repository */
+  /* Typography Hierarchy */
   h1, h2, h3, h4, h5, h6,
   .font-heading,
   .font-display,
   .logo-main,
-  .logo-text-glow,
   .stat-counter {
     font-family: 'Bricolage Grotesque', sans-serif !important;
+    color: var(--heading-color);
   }
 
   body, p, span, button, input, textarea, label, a, .font-sans {
@@ -72,7 +86,7 @@
 }
 
 /* =========================================================================
-   1. ORIGINAL LIQUID GLASS BACKGROUND & ATMOSPHERIC GLOW (Deep Navy & Emerald)
+   1. SOFT ATMOSPHERIC BACKGROUND (Off-White with Sage Tint)
    ========================================================================= */
 body::before {
   content: '';
@@ -80,38 +94,23 @@ body::before {
   inset: 0;
   z-index: 0;
   background:
-    radial-gradient(ellipse 80% 60% at 15% 5%,  rgba(16, 185, 129, 0.07) 0%, transparent 55%),
-    radial-gradient(ellipse 60% 50% at 85% 95%, rgba(16, 185, 129, 0.04) 0%, transparent 55%);
+    radial-gradient(ellipse 80% 60% at 15% 5%,  rgba(123, 150, 105, 0.05) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 50% at 85% 95%, rgba(108, 132, 128, 0.04) 0%, transparent 60%);
   pointer-events: none;
 }
 
 .liquid-glass-bg,
-.cyber-canvas-bg {
-  background-color: #07111f;
-  background-image: 
-    radial-gradient(ellipse 80% 60% at 15% 5%,  rgba(16, 185, 129, 0.07) 0%, transparent 55%),
-    radial-gradient(ellipse 60% 50% at 85% 95%, rgba(16, 185, 129, 0.04) 0%, transparent 55%);
-  background-attachment: fixed;
-}
-
-/* Original Light Mode Background */
-body.light-mode::before,
-.light::before {
-  background:
-    radial-gradient(ellipse 80% 60% at 15% 5%,  rgba(5, 150, 105, 0.06) 0%, transparent 55%),
-    radial-gradient(ellipse 60% 50% at 85% 95%, rgba(5, 150, 105, 0.04) 0%, transparent 55%) !important;
-}
-
+.cyber-canvas-bg,
 .light-liquid-bg {
-  background-color: #eef2f7;
+  background-color: #F4F7F4;
   background-image: 
-    radial-gradient(ellipse 80% 60% at 15% 5%,  rgba(5, 150, 105, 0.06) 0%, transparent 55%),
-    radial-gradient(ellipse 60% 50% at 85% 95%, rgba(5, 150, 105, 0.04) 0%, transparent 55%);
+    radial-gradient(ellipse 80% 60% at 15% 5%,  rgba(123, 150, 105, 0.05) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 50% at 85% 95%, rgba(108, 132, 128, 0.04) 0%, transparent 60%);
   background-attachment: fixed;
 }
 
 /* =========================================================================
-   2. ORIGINAL LIQUID GLASS CARD SYSTEM (Translucent Navy + Specular Reflections)
+   2. CLEAN NATURE CARD SYSTEM (White & Light Gray with Subtle Borders)
    ========================================================================= */
 .liquid-glass-card,
 .glass-card-cyber,
@@ -120,23 +119,12 @@ body.light-mode::before,
 .info-card,
 .about-card,
 .glass-terminal {
-  background: rgba(8, 20, 40, 0.55);
-  backdrop-filter: blur(28px) saturate(180%);
-  -webkit-backdrop-filter: blur(28px) saturate(180%);
-  border: 1px solid rgba(255, 255, 255, 0.13);
-  border-radius: 1.25rem;
-  box-shadow: 
-    0 32px 64px rgba(0, 0, 0, 0.35),
-    inset 0 1px 0 rgba(255, 255, 255, 0.06);
-  background-image: linear-gradient(
-    135deg,
-    rgba(255, 255, 255, 0.04) 0%,
-    transparent 60%
-  );
-  transition: background 0.25s cubic-bezier(0.16, 1, 0.3, 1),
-              border-color 0.25s cubic-bezier(0.16, 1, 0.3, 1),
-              box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1),
-              transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  background: #FFFFFF !important;
+  border: 1px solid rgba(64, 78, 59, 0.12) !important;
+  border-radius: 1rem !important;
+  box-shadow: 0 2px 14px rgba(64, 78, 59, 0.05) !important;
+  color: #2C3527 !important;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   position: relative;
 }
 
@@ -146,128 +134,98 @@ body.light-mode::before,
 .stat-card:hover,
 .info-card:hover,
 .about-card:hover {
-  background: rgba(12, 28, 56, 0.65);
-  border-color: rgba(16, 185, 129, 0.35);
-  box-shadow: 
-    0 36px 70px rgba(0, 0, 0, 0.45),
-    0 0 24px rgba(16, 185, 129, 0.15),
-    inset 0 1px 0 rgba(255, 255, 255, 0.10);
-  transform: translateY(-2px);
+  border-color: rgba(123, 150, 105, 0.35) !important;
+  box-shadow: 0 6px 20px rgba(64, 78, 59, 0.08) !important;
 }
 
-/* Elevated Glass (Modals, Active Focus Panels, Dropdowns) */
+/* Elevated Cards (Modals, Details) */
 .liquid-glass-elevated,
 .glass-panel-elevated,
 .modal-panel {
-  background: rgba(8, 20, 40, 0.82);
-  backdrop-filter: blur(32px) saturate(200%);
-  -webkit-backdrop-filter: blur(32px) saturate(200%);
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  border-radius: 1.5rem;
-  box-shadow: 
-    0 40px 80px rgba(0, 0, 0, 0.5),
-    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  background: #FFFFFF !important;
+  border: 1px solid rgba(64, 78, 59, 0.16) !important;
+  border-radius: 1.25rem !important;
+  box-shadow: 0 16px 40px rgba(64, 78, 59, 0.12) !important;
+  color: #2C3527 !important;
 }
 
-/* Glass Header & Navigation */
+/* Header & Top Navigation */
 .liquid-glass-nav,
 header,
 nav {
   font-family: 'DM Sans', sans-serif;
-  background: rgba(7, 17, 31, 0.65) !important;
-  backdrop-filter: blur(24px) saturate(180%) !important;
-  -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.13) !important;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+  background: #EEF3EC !important;
+  border-bottom: 1px solid rgba(64, 78, 59, 0.12) !important;
+  box-shadow: 0 2px 10px rgba(64, 78, 59, 0.04) !important;
+  color: #2C3527 !important;
 }
 
+/* Sidebar Navigation (Dark Forest Green) */
 .liquid-glass-sidebar,
 aside {
-  background: rgba(6, 16, 36, 0.72) !important;
-  backdrop-filter: blur(28px) saturate(180%) !important;
-  -webkit-backdrop-filter: blur(28px) saturate(180%) !important;
-  border-right: 1px solid rgba(255, 255, 255, 0.10) !important;
-  box-shadow: 4px 0 30px rgba(0, 0, 0, 0.4);
+  background: #404E3B !important;
+  border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
+  box-shadow: 4px 0 24px rgba(64, 78, 59, 0.08) !important;
+  color: #E6E6E6 !important;
 }
 
-/* Active Nav Glow Pill Indicator (Emerald Liquid Glass Capsule) */
+/* Active Nav Pill (Sage Green) */
 .nav-item-active {
-  background: rgba(16, 185, 129, 0.14) !important;
-  border: 1px solid rgba(16, 185, 129, 0.45) !important;
+  background: #7B9669 !important;
+  border: 1px solid rgba(123, 150, 105, 0.4) !important;
   color: #FFFFFF !important;
-  box-shadow: 
-    0 0 16px rgba(16, 185, 129, 0.22),
-    inset 0 1px 0 rgba(255, 255, 255, 0.15) !important;
-  position: relative;
+  box-shadow: 0 2px 8px rgba(123, 150, 105, 0.25) !important;
 }
 
-/* Global Overrides for Page Cards, Panels, and Inputs */
-.dark .bg-\[\#0c1424\],
-.dark [class*="dark:bg-[#0c1424]"] {
-  background: rgba(8, 20, 40, 0.55) !important;
-  backdrop-filter: blur(28px) saturate(180%) !important;
-  -webkit-backdrop-filter: blur(28px) saturate(180%) !important;
-  border-color: rgba(255, 255, 255, 0.13) !important;
-  box-shadow: 
-    0 32px 64px rgba(0, 0, 0, 0.35),
-    inset 0 1px 0 rgba(255, 255, 255, 0.06) !important;
-}
-
-.dark input[type="text"],
-.dark input[type="email"],
-.dark input[type="search"],
-.dark textarea,
+/* Clean Input Styling */
 input[type="text"],
 input[type="email"],
 input[type="search"],
 textarea {
-  background: rgba(6, 16, 36, 0.75) !important;
-  border: 1px solid rgba(255, 255, 255, 0.13) !important;
-  color: #ffffff !important;
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.4) !important;
-  border-radius: 12px;
+  background: #FFFFFF !important;
+  border: 1px solid rgba(64, 78, 59, 0.18) !important;
+  color: #2C3527 !important;
+  box-shadow: inset 0 1px 3px rgba(64, 78, 59, 0.04) !important;
+  border-radius: 10px !important;
 }
 
-.dark input[type="text"]:focus,
-.dark input[type="email"]:focus,
-.dark input[type="search"]:focus,
-.dark textarea:focus,
 input[type="text"]:focus,
 input[type="email"]:focus,
 input[type="search"]:focus,
 textarea:focus {
-  border-color: #10b981 !important;
-  box-shadow: 0 0 16px rgba(16, 185, 129, 0.35), inset 0 2px 4px rgba(0, 0, 0, 0.4) !important;
+  border-color: #7B9669 !important;
+  box-shadow: 0 0 0 3px rgba(123, 150, 105, 0.2) !important;
+  outline: none !important;
 }
 
 /* =========================================================================
-   3. LIGHT MODE — ORIGINAL PHISHGUARD FROSTED GLASS AESTHETIC
+   3. NATURE PALETTE THEME STYLING
    ========================================================================= */
 body.light-mode,
 .light,
 [data-theme='light'] {
-  --page-bg: #eef2f7;
-  --bg: #eef2f7;
-  --bg-main: #eef2f7;
-  --bg-surface: rgba(255, 255, 255, 0.72);
-  --glass: rgba(255, 255, 255, 0.72);
-  --glass-hover: rgba(255, 255, 255, 0.88);
-  --border: rgba(0, 0, 0, 0.08);
-  --border-em: rgba(5, 150, 105, 0.40);
-  --txt: #111827;
-  --txt-2: #4b5563;
-  --txt-3: #9ca3af;
-  --accent: #059669;
-  --accent-dim: rgba(5, 150, 105, 0.10);
-  --accent-glow: rgba(5, 150, 105, 0.25);
-  --border-color: rgba(0, 0, 0, 0.08);
-  --text-primary: #111827;
-  --text-secondary: #4b5563;
-  --text-muted: #9ca3af;
-  --accent-cyan: #059669;
-  --accent-blue: #047857;
-  background-color: #eef2f7 !important;
-  color: #111827 !important;
+  --page-bg: #F4F7F4;
+  --bg: #F4F7F4;
+  --bg-main: #F4F7F4;
+  --bg-surface: #FFFFFF;
+  --glass: #FFFFFF;
+  --glass-hover: #F8FAF7;
+  --border: rgba(64, 78, 59, 0.12);
+  --border-em: rgba(123, 150, 105, 0.40);
+  --txt: #2C3527;
+  --txt-2: #4D5C4A;
+  --txt-3: #6C8480;
+  --accent: #7B9669;
+  --accent-dim: rgba(123, 150, 105, 0.12);
+  --accent-glow: rgba(123, 150, 105, 0.25);
+  --border-color: rgba(64, 78, 59, 0.12);
+  --text-primary: #2C3527;
+  --text-secondary: #4D5C4A;
+  --text-muted: #6C8480;
+  --accent-cyan: #7B9669;
+  --accent-blue: #6C8480;
+  background-color: #F4F7F4 !important;
+  color: #2C3527 !important;
 }
 
 .light .liquid-glass-card,
@@ -281,14 +239,10 @@ body.light-mode .glass-panel,
 body.light-mode .stat-card,
 body.light-mode .info-card,
 body.light-mode .about-card {
-  background: rgba(255, 255, 255, 0.72) !important;
-  backdrop-filter: blur(28px) saturate(200%) !important;
-  -webkit-backdrop-filter: blur(28px) saturate(200%) !important;
-  border: 1.5px solid rgba(0, 0, 0, 0.08) !important;
-  box-shadow: 
-    0 20px 48px rgba(0, 0, 0, 0.08),
-    inset 0 1px 0 rgba(255, 255, 255, 0.95) !important;
-  color: #111827 !important;
+  background: #FFFFFF !important;
+  border: 1px solid rgba(64, 78, 59, 0.12) !important;
+  box-shadow: 0 2px 14px rgba(64, 78, 59, 0.05) !important;
+  color: #2C3527 !important;
 }
 
 .light .liquid-glass-card:hover,
@@ -300,23 +254,24 @@ body.light-mode .liquid-glass-card:hover,
 body.light-mode .glass-panel:hover,
 body.light-mode .stat-card:hover,
 body.light-mode .about-card:hover {
-  background: rgba(255, 255, 255, 0.88) !important;
-  border-color: rgba(5, 150, 105, 0.40) !important;
-  box-shadow: 
-    0 24px 56px rgba(5, 150, 105, 0.12),
-    inset 0 1px 0 rgba(255, 255, 255, 1) !important;
+  border-color: rgba(123, 150, 105, 0.35) !important;
+  box-shadow: 0 6px 20px rgba(64, 78, 59, 0.08) !important;
 }
 
 .light header,
-.light aside,
 .light nav,
 body.light-mode header,
-body.light-mode aside,
 body.light-mode nav {
-  background: rgba(230, 238, 248, 0.88) !important;
-  backdrop-filter: blur(20px) !important;
-  border-color: rgba(0, 0, 0, 0.08) !important;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05) !important;
+  background: #EEF3EC !important;
+  border-bottom: 1px solid rgba(64, 78, 59, 0.12) !important;
+  box-shadow: 0 2px 10px rgba(64, 78, 59, 0.04) !important;
+}
+
+.light aside,
+body.light-mode aside {
+  background: #404E3B !important;
+  border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
+  box-shadow: 4px 0 24px rgba(64, 78, 59, 0.08) !important;
 }
 
 .light .text-white,
@@ -333,77 +288,77 @@ body.light-mode h6,
 .light h4,
 .light h5,
 .light h6 {
-  color: #0f172a !important;
+  color: #404E3B !important;
 }
 
 .light .text-slate-200,
 .light .text-slate-300,
 body.light-mode .text-slate-200,
 body.light-mode .text-slate-300 {
-  color: #1e293b !important;
+  color: #2C3527 !important;
 }
 
 .light .text-slate-400,
 body.light-mode .text-slate-400 {
-  color: #475569 !important;
+  color: #6C8480 !important;
 }
 
 .light .text-slate-500,
 body.light-mode .text-slate-500 {
-  color: #64748b !important;
+  color: #586E6A !important;
 }
 
 body.light-mode [class*="text-[rgba(255,255,255"] {
-  color: #334155 !important;
+  color: #374635 !important;
 }
 
 body.light-mode [class*="text-[rgba(255,255,255"]:hover {
-  color: #0f172a !important;
+  color: #404E3B !important;
 }
 
 /* Light mode support for Workflow Story Diagram */
 body.light-mode .ns-track-l,
 body.light-mode .ns-track-r {
-  border-top: 1.5px dashed rgba(15, 23, 42, 0.35) !important;
+  border-top: 1.5px dashed rgba(64, 78, 59, 0.35) !important;
 }
 body.light-mode .ns-char-lbl {
-  color: #1e293b !important;
+  color: #404E3B !important;
   font-weight: 800 !important;
 }
 body.light-mode .ns-atk-lbl {
-  color: #b91c1c !important;
+  color: #DC2626 !important;
   font-weight: 800 !important;
 }
 body.light-mode .ns-user-lbl {
-  color: #1e293b !important;
+  color: #404E3B !important;
   font-weight: 800 !important;
 }
 body.light-mode .ns-d1 {
-  color: #dc2626 !important;
+  color: #DC2626 !important;
   font-weight: 800 !important;
 }
 body.light-mode .ns-d2 {
-  color: #dc2626 !important;
+  color: #DC2626 !important;
   font-weight: 800 !important;
 }
 body.light-mode .ns-d3 {
-  color: #b45309 !important;
+  color: #D97706 !important;
   font-weight: 800 !important;
 }
 body.light-mode .ns-d4 {
-  color: #047857 !important;
+  color: #7B9669 !important;
   font-weight: 800 !important;
 }
 body.light-mode .ns-d5 {
-  color: #047857 !important;
+  color: #7B9669 !important;
   font-weight: 800 !important;
 }
 body.light-mode .ns-user-icon circle {
-  stroke: rgba(30, 41, 59, 0.75) !important;
-  fill: rgba(99, 102, 241, 0.15) !important;
+  stroke: #404E3B !important;
+  fill: rgba(123, 150, 105, 0.2) !important;
 }
 body.light-mode .ns-user-icon path {
-  stroke: rgba(30, 41, 59, 0.75) !important;
+  stroke: #404E3B !important;
 }
 
 .light input[type="text"],

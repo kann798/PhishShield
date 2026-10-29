@@ -79,11 +79,7 @@ export default function App() {
 
   return (
     <div
-      className={`min-h-screen w-full flex flex-col font-sans transition-colors duration-300 relative overflow-x-hidden ${
-        theme === 'dark'
-          ? 'bg-[#040b18] text-[rgba(255,255,255,0.92)]'
-          : 'bg-[#edf2f9] text-[#111827]'
-      }`}
+      className="min-h-screen w-full flex flex-col font-sans transition-colors duration-300 relative overflow-x-hidden bg-[#F4F7F4] text-[#2C3527]"
     >
       {/* Animated Global World Map Full-Screen Background (Corner-to-Corner behind whole app) */}
       <GlobalWorldMapBackground theme={theme} />

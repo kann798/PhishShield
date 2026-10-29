@@ -116,16 +116,16 @@ IT Support Services`,
   return (
     <div className="space-y-6 w-full pb-8">
       {/* Page Header */}
-      <div className="border-b border-slate-200 dark:border-[#1a2744] pb-5">
+      <div className="border-b border-[#404E3B]/15 pb-5">
         <div className="flex items-center gap-3">
-          <div className="p-2.5 bg-emerald-100 dark:bg-emerald-950/80 border border-emerald-300 dark:border-emerald-500/40 rounded-xl text-emerald-700 dark:text-emerald-400 shadow-sm">
-            <GraduationCap className="w-5 h-5" />
+          <div className="p-3 bg-[#7B9669]/20 border border-[#7B9669]/40 rounded-2xl text-[#404E3B] shadow-sm">
+            <GraduationCap className="w-5 h-5 text-[#404E3B]" />
           </div>
           <div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white font-sans">
+            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#404E3B] font-heading">
               PHISHING AWARENESS & DEFENSE CENTER
             </h1>
-            <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5">
+            <p className="text-xs sm:text-sm text-[#6C8480] mt-0.5">
               Interactive threat simulation, anatomy of deception, red flag checklists, and defensive response
             </p>
           </div>
@@ -133,19 +133,19 @@ IT Support Services`,
       </div>
 
       {/* Navigation Tabs */}
-      <div className="flex flex-wrap gap-2.5 border-b border-white/10 pb-4">
+      <div className="flex flex-wrap gap-2.5 border-b border-[#404E3B]/10 pb-4">
         <button
           onClick={() => setActiveTab('quiz')}
           className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-mono font-bold transition-all ${
             activeTab === 'quiz'
-              ? 'bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 shadow-[0_0_20px_rgba(16,185,129,0.25)] backdrop-blur-xl'
-              : 'liquid-glass-card text-slate-400 hover:text-white border-white/10 hover:border-emerald-500/30'
+              ? 'bg-[#7B9669] text-white shadow-sm'
+              : 'bg-white text-[#404E3B] border border-[#404E3B]/15 hover:bg-[#EEF3EC]'
           }`}
         >
-          <Award className="w-4 h-4 text-emerald-400" />
+          <Award className={`w-4 h-4 ${activeTab === 'quiz' ? 'text-white' : 'text-[#7B9669]'}`} />
           <span>Interactive "Spot-the-Phish" Simulator</span>
           {Object.keys(selectedAnswers).length > 0 && (
-            <span className="px-2 py-0.5 rounded-full bg-emerald-500/30 border border-emerald-400/40 text-[10px] text-emerald-200 font-bold">
+            <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${activeTab === 'quiz' ? 'bg-white/20 text-white' : 'bg-[#7B9669]/15 text-[#404E3B]'}`}>
               {score}/{scenarios.length}
             </span>
           )}
@@ -155,11 +155,11 @@ IT Support Services`,
           onClick={() => setActiveTab('attack_types')}
           className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-mono font-bold transition-all ${
             activeTab === 'attack_types'
-              ? 'bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 shadow-[0_0_20px_rgba(16,185,129,0.25)] backdrop-blur-xl'
-              : 'liquid-glass-card text-slate-400 hover:text-white border-white/10 hover:border-emerald-500/30'
+              ? 'bg-[#7B9669] text-white shadow-sm'
+              : 'bg-white text-[#404E3B] border border-[#404E3B]/15 hover:bg-[#EEF3EC]'
           }`}
         >
-          <BookOpen className="w-4 h-4 text-emerald-400" />
+          <BookOpen className={`w-4 h-4 ${activeTab === 'attack_types' ? 'text-white' : 'text-[#7B9669]'}`} />
           <span>Anatomy of Phishing Attacks</span>
         </button>
 
@@ -167,11 +167,11 @@ IT Support Services`,
           onClick={() => setActiveTab('red_flags')}
           className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-mono font-bold transition-all ${
             activeTab === 'red_flags'
-              ? 'bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 shadow-[0_0_20px_rgba(16,185,129,0.25)] backdrop-blur-xl'
-              : 'liquid-glass-card text-slate-400 hover:text-white border-white/10 hover:border-emerald-500/30'
+              ? 'bg-[#7B9669] text-white shadow-sm'
+              : 'bg-white text-[#404E3B] border border-[#404E3B]/15 hover:bg-[#EEF3EC]'
           }`}
         >
-          <AlertTriangle className="w-4 h-4 text-emerald-400" />
+          <AlertTriangle className={`w-4 h-4 ${activeTab === 'red_flags' ? 'text-white' : 'text-[#7B9669]'}`} />
           <span>Identifying Red Flags</span>
         </button>
 
@@ -179,11 +179,11 @@ IT Support Services`,
           onClick={() => setActiveTab('checklist')}
           className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-mono font-bold transition-all ${
             activeTab === 'checklist'
-              ? 'bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 shadow-[0_0_20px_rgba(16,185,129,0.25)] backdrop-blur-xl'
-              : 'liquid-glass-card text-slate-400 hover:text-white border-white/10 hover:border-emerald-500/30'
+              ? 'bg-[#7B9669] text-white shadow-sm'
+              : 'bg-white text-[#404E3B] border border-[#404E3B]/15 hover:bg-[#EEF3EC]'
           }`}
         >
-          <ShieldCheck className="w-4 h-4 text-emerald-400" />
+          <ShieldCheck className={`w-4 h-4 ${activeTab === 'checklist' ? 'text-white' : 'text-[#7B9669]'}`} />
           <span>Prevention Checklist</span>
         </button>
       </div>
@@ -191,20 +191,19 @@ IT Support Services`,
       {/* Tab 1: Interactive Simulator Quiz */}
       {activeTab === 'quiz' && (
         <div className="space-y-6">
-          <div className="liquid-glass-card relative overflow-hidden rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border border-white/10">
-            <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-emerald-400/40 to-transparent pointer-events-none" />
+          <div className="bg-white rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border border-[#404E3B]/15 shadow-sm">
             <div>
-              <h3 className="text-base font-extrabold text-white font-sans flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              <h3 className="text-base font-extrabold text-[#404E3B] font-sans flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-[#7B9669]" />
                 Real-World Email Inspection Challenge
               </h3>
-              <p className="text-xs text-slate-400 mt-1">
+              <p className="text-xs text-[#6C8480] mt-1">
                 Review the synthetic sample emails below and decide whether they represent genuine communications or malicious phishing.
               </p>
             </div>
             <div className="flex items-center gap-3 shrink-0">
-              <span className="text-xs font-mono font-semibold text-slate-400">Your Current Score:</span>
-              <span className="text-xl font-black font-mono text-emerald-300 px-4 py-1.5 bg-[#061024]/80 border border-emerald-400/40 rounded-xl shadow-[0_0_15px_rgba(16,185,129,0.25)]">
+              <span className="text-xs font-mono font-semibold text-[#6C8480]">Your Current Score:</span>
+              <span className="text-xl font-black font-mono text-[#404E3B] px-4 py-1.5 bg-[#EEF3EC] border border-[#404E3B]/15 rounded-xl">
                 {score} / {scenarios.length}
               </span>
             </div>
@@ -218,69 +217,67 @@ IT Support Services`,
               return (
                 <div
                   key={sc.id}
-                  className="liquid-glass-card relative overflow-hidden rounded-2xl p-6 space-y-4 border border-white/10 hover:border-emerald-500/40 transition-all duration-300"
+                  className="bg-white rounded-2xl p-6 space-y-4 border border-[#404E3B]/15 shadow-sm transition-all duration-300"
                 >
-                  <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-emerald-400/30 to-transparent pointer-events-none" />
-                  
-                  <div className="flex items-center justify-between border-b border-white/10 pb-3">
-                    <h4 className="text-sm font-bold text-white font-mono tracking-wide">{sc.title}</h4>
+                  <div className="flex items-center justify-between border-b border-[#404E3B]/10 pb-3">
+                    <h4 className="text-sm font-bold text-[#404E3B] font-mono tracking-wide">{sc.title}</h4>
                     {answered && (
                       <span
-                        className={`text-xs font-mono px-3 py-1 rounded-full font-bold flex items-center gap-1.5 backdrop-blur-xl ${
+                        className={`text-xs font-mono px-3 py-1 rounded-full font-bold flex items-center gap-1.5 ${
                           isCorrect
-                            ? 'bg-emerald-500/20 border border-emerald-400/60 text-emerald-300 shadow-[0_0_12px_rgba(16,185,129,0.3)]'
-                            : 'bg-rose-500/20 border border-rose-400/60 text-rose-300 shadow-[0_0_12px_rgba(244,63,94,0.3)]'
+                            ? 'bg-[#7B9669]/15 border border-[#7B9669]/30 text-[#404E3B]'
+                            : 'bg-rose-50 border border-rose-200 text-rose-700'
                         }`}
                       >
-                        {isCorrect ? <Check className="w-3.5 h-3.5" /> : <X className="w-3.5 h-3.5" />}
+                        {isCorrect ? <Check className="w-3.5 h-3.5 text-[#7B9669]" /> : <X className="w-3.5 h-3.5 text-rose-600" />}
                         <span>{isCorrect ? 'Correct Assessment' : 'Incorrect Assessment'}</span>
                       </span>
                     )}
                   </div>
 
                   {/* Mock Email Viewer */}
-                  <div className="bg-[#061024]/90 dark:bg-[#050e20]/90 backdrop-blur-xl rounded-xl border border-white/10 p-4 font-mono text-xs space-y-2 shadow-inner">
-                    <div className="text-slate-400">
-                      <span className="text-slate-500 font-bold">From: </span>
-                      <span className="text-emerald-300 font-semibold">{sc.sender}</span>
+                  <div className="bg-[#F4F7F4] rounded-xl border border-[#404E3B]/10 p-4 font-mono text-xs space-y-2">
+                    <div className="text-[#6C8480]">
+                      <span className="font-bold text-[#404E3B]">From: </span>
+                      <span className="text-[#2C3527] font-semibold">{sc.sender}</span>
                     </div>
                     {sc.replyTo && (
-                      <div className="text-slate-400">
-                        <span className="text-slate-500 font-bold">Reply-To: </span>
-                        <span className="text-amber-400 font-bold">{sc.replyTo}</span>
+                      <div className="text-[#6C8480]">
+                        <span className="font-bold text-[#404E3B]">Reply-To: </span>
+                        <span className="text-amber-700 font-bold">{sc.replyTo}</span>
                       </div>
                     )}
-                    <div className="text-slate-400">
-                      <span className="text-slate-500 font-bold">Subject: </span>
-                      <span className="text-white font-medium">{sc.subject}</span>
+                    <div className="text-[#6C8480]">
+                      <span className="font-bold text-[#404E3B]">Subject: </span>
+                      <span className="text-[#2C3527] font-medium">{sc.subject}</span>
                     </div>
-                    <div className="pt-2 border-t border-white/10 text-slate-300 whitespace-pre-wrap leading-relaxed">
+                    <div className="pt-2 border-t border-[#404E3B]/10 text-[#2C3527] whitespace-pre-wrap leading-relaxed">
                       {sc.body}
                     </div>
                   </div>
 
                   {/* Action Buttons */}
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2">
-                    <span className="text-xs text-slate-400 font-mono font-medium">
+                    <span className="text-xs text-[#6C8480] font-mono font-medium">
                       What is your threat verdict?
                     </span>
                     <div className="flex items-center gap-2.5">
                       <button
                         onClick={() => handleAnswer(sc.id, true)}
-                        className={`px-4 py-2 rounded-xl text-xs font-mono font-bold transition-all ${
+                        className={`px-4 py-2 rounded-xl text-xs font-mono font-bold transition-all cursor-pointer ${
                           selectedAnswers[sc.id] === true
-                            ? 'bg-gradient-to-r from-rose-500 to-red-600 text-white shadow-[0_0_20px_rgba(244,63,94,0.4)] border border-rose-300'
-                            : 'liquid-glass-card border-rose-500/30 hover:border-rose-400 hover:text-rose-300 text-slate-300'
+                            ? 'bg-rose-600 text-white shadow-sm'
+                            : 'bg-white border border-rose-300 text-rose-700 hover:bg-rose-50'
                         }`}
                       >
                         🚨 Phishing Attack
                       </button>
                       <button
                         onClick={() => handleAnswer(sc.id, false)}
-                        className={`px-4 py-2 rounded-xl text-xs font-mono font-bold transition-all ${
+                        className={`px-4 py-2 rounded-xl text-xs font-mono font-bold transition-all cursor-pointer ${
                           selectedAnswers[sc.id] === false
-                            ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-[0_0_20px_rgba(16,185,129,0.4)] border border-emerald-300'
-                            : 'liquid-glass-card border-emerald-500/30 hover:border-emerald-400 hover:text-emerald-300 text-slate-300'
+                            ? 'bg-[#7B9669] text-white shadow-sm'
+                            : 'bg-white border border-[#7B9669]/40 text-[#404E3B] hover:bg-[#EEF3EC]'
                         }`}
                       >
                         ✅ Legitimate Email
@@ -291,10 +288,10 @@ IT Support Services`,
                   {/* Feedback Explanation */}
                   {showExplanation[sc.id] && (
                     <div
-                      className={`p-4 rounded-xl text-xs leading-relaxed border backdrop-blur-xl ${
+                      className={`p-4 rounded-xl text-xs leading-relaxed border ${
                         isCorrect
-                          ? 'bg-emerald-950/40 border-emerald-500/40 text-emerald-200 shadow-[0_0_15px_rgba(16,185,129,0.2)]'
-                          : 'bg-rose-950/40 border-rose-500/40 text-rose-200 shadow-[0_0_15px_rgba(244,63,94,0.2)]'
+                          ? 'bg-[#EEF3EC] border-[#7B9669]/30 text-[#404E3B]'
+                          : 'bg-rose-50 border-rose-200 text-rose-800'
                       }`}
                     >
                       <strong className="block mb-1 font-mono uppercase text-[11px] font-bold">
@@ -314,18 +311,17 @@ IT Support Services`,
       {activeTab === 'attack_types' && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {attackTypes.map((type, idx) => (
-            <div key={idx} className="liquid-glass-card relative overflow-hidden rounded-2xl p-6 space-y-3 border border-white/10 hover:border-emerald-500/40 transition-all duration-300">
-              <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-emerald-400/30 to-transparent pointer-events-none" />
+            <div key={idx} className="bg-white rounded-2xl p-6 space-y-3 border border-[#404E3B]/15 shadow-sm transition-all duration-300">
               <div className="flex items-center gap-3">
-                <span className="text-2xl p-2 rounded-xl bg-emerald-500/15 border border-emerald-500/30">{type.icon}</span>
-                <h4 className="text-sm font-bold text-white font-mono tracking-wide">{type.title}</h4>
+                <span className="text-2xl p-2 rounded-xl bg-[#EEF3EC] border border-[#404E3B]/15">{type.icon}</span>
+                <h4 className="text-sm font-bold text-[#404E3B] font-mono tracking-wide">{type.title}</h4>
               </div>
-              <p className="text-xs text-slate-300 leading-relaxed">{type.desc}</p>
-              <div className="pt-3 border-t border-white/10">
-                <span className="text-[10px] font-mono uppercase text-emerald-400 font-bold block mb-1">
+              <p className="text-xs text-[#2C3527] leading-relaxed">{type.desc}</p>
+              <div className="pt-3 border-t border-[#404E3B]/10">
+                <span className="text-[10px] font-mono uppercase text-[#7B9669] font-bold block mb-1">
                   Recommended Defense:
                 </span>
-                <p className="text-xs text-slate-400 leading-relaxed">{type.countermeasure}</p>
+                <p className="text-xs text-[#6C8480] leading-relaxed">{type.countermeasure}</p>
               </div>
             </div>
           ))}
@@ -335,42 +331,41 @@ IT Support Services`,
       {/* Tab 3: Identifying Red Flags */}
       {activeTab === 'red_flags' && (
         <div className="space-y-4">
-          <div className="liquid-glass-card relative overflow-hidden rounded-2xl p-6 space-y-4 border border-white/10">
-            <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-emerald-400/40 to-transparent pointer-events-none" />
-            <h3 className="text-sm font-bold text-white font-mono uppercase tracking-wider flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-emerald-400" />
+          <div className="bg-white rounded-2xl p-6 space-y-4 border border-[#404E3B]/15 shadow-sm">
+            <h3 className="text-sm font-bold text-[#404E3B] font-mono uppercase tracking-wider flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-[#7B9669]" />
               How to Spot Deceptive URLs & Phishing Domains
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-              <div className="p-4 rounded-xl bg-[#061024]/80 backdrop-blur-xl border border-white/10 space-y-2">
-                <h5 className="font-bold text-rose-400 font-mono flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-rose-400" /> 1. Raw IP Address Hosts
+              <div className="p-4 rounded-xl bg-[#F4F7F4] border border-[#404E3B]/10 space-y-2">
+                <h5 className="font-bold text-rose-700 font-mono flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-rose-600" /> 1. Raw IP Address Hosts
                 </h5>
-                <p className="text-slate-300 leading-relaxed">
-                  Legitimate web portals use registered domain names with public SSL certificates. Be wary of links like <code className="text-emerald-300 font-mono font-bold bg-emerald-950/60 px-1 py-0.5 rounded">http://192.168.1.1/login</code>.
+                <p className="text-[#2C3527] leading-relaxed">
+                  Legitimate web portals use registered domain names with public SSL certificates. Be wary of links like <code className="text-[#404E3B] font-mono font-bold bg-[#BAC8B1]/40 px-1 py-0.5 rounded">http://192.168.1.1/login</code>.
                 </p>
               </div>
-              <div className="p-4 rounded-xl bg-[#061024]/80 backdrop-blur-xl border border-white/10 space-y-2">
-                <h5 className="font-bold text-rose-400 font-mono flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-rose-400" /> 2. Typosquatting & Homoglyphs
+              <div className="p-4 rounded-xl bg-[#F4F7F4] border border-[#404E3B]/10 space-y-2">
+                <h5 className="font-bold text-rose-700 font-mono flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-rose-600" /> 2. Typosquatting & Homoglyphs
                 </h5>
-                <p className="text-slate-300 leading-relaxed">
-                  Attackers swap Latin characters for identical Cyrillic glyphs or replace letters with numbers (e.g., <code className="text-emerald-300 font-mono font-bold bg-emerald-950/60 px-1 py-0.5 rounded">paypa1.com</code> or <code className="text-emerald-300 font-mono font-bold bg-emerald-950/60 px-1 py-0.5 rounded">micros0ft.com</code>).
+                <p className="text-[#2C3527] leading-relaxed">
+                  Attackers swap Latin characters for identical Cyrillic glyphs or replace letters with numbers (e.g., <code className="text-[#404E3B] font-mono font-bold bg-[#BAC8B1]/40 px-1 py-0.5 rounded">paypa1.com</code> or <code className="text-[#404E3B] font-mono font-bold bg-[#BAC8B1]/40 px-1 py-0.5 rounded">micros0ft.com</code>).
                 </p>
               </div>
-              <div className="p-4 rounded-xl bg-[#061024]/80 backdrop-blur-xl border border-white/10 space-y-2">
-                <h5 className="font-bold text-rose-400 font-mono flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-rose-400" /> 3. Brand Subdomain Deception
+              <div className="p-4 rounded-xl bg-[#F4F7F4] border border-[#404E3B]/10 space-y-2">
+                <h5 className="font-bold text-rose-700 font-mono flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-rose-600" /> 3. Brand Subdomain Deception
                 </h5>
-                <p className="text-slate-300 leading-relaxed">
-                  Always inspect the root domain immediately preceding the TLD. In <code className="text-emerald-300 font-mono font-bold bg-emerald-950/60 px-1 py-0.5 rounded">paypal.com.verify-login.xyz</code>, the actual domain is <strong className="text-emerald-200">verify-login.xyz</strong>, not PayPal.
+                <p className="text-[#2C3527] leading-relaxed">
+                  Always inspect the root domain immediately preceding the TLD. In <code className="text-[#404E3B] font-mono font-bold bg-[#BAC8B1]/40 px-1 py-0.5 rounded">paypal.com.verify-login.xyz</code>, the actual domain is <strong className="text-[#404E3B]">verify-login.xyz</strong>, not PayPal.
                 </p>
               </div>
-              <div className="p-4 rounded-xl bg-[#061024]/80 backdrop-blur-xl border border-white/10 space-y-2">
-                <h5 className="font-bold text-rose-400 font-mono flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-rose-400" /> 4. HTTPS Does NOT Guarantee Safety
+              <div className="p-4 rounded-xl bg-[#F4F7F4] border border-[#404E3B]/10 space-y-2">
+                <h5 className="font-bold text-rose-700 font-mono flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-rose-600" /> 4. HTTPS Does NOT Guarantee Safety
                 </h5>
-                <p className="text-slate-300 leading-relaxed">
+                <p className="text-[#2C3527] leading-relaxed">
                   The padlock icon only indicates traffic encryption in transit. Over 80% of modern phishing domains use free automated TLS certificates (Let's Encrypt).
                 </p>
               </div>
@@ -381,10 +376,9 @@ IT Support Services`,
 
       {/* Tab 4: Security Checklist */}
       {activeTab === 'checklist' && (
-        <div className="liquid-glass-card relative overflow-hidden rounded-2xl p-6 space-y-4 border border-white/10">
-          <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-emerald-400/40 to-transparent pointer-events-none" />
-          <h3 className="text-sm font-bold text-white font-mono uppercase tracking-wider flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-emerald-400" />
+        <div className="bg-white rounded-2xl p-6 space-y-4 border border-[#404E3B]/15 shadow-sm">
+          <h3 className="text-sm font-bold text-[#404E3B] font-mono uppercase tracking-wider flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-[#7B9669]" />
             Cybersecurity Incident Prevention Checklist
           </h3>
           <div className="space-y-3">
@@ -395,13 +389,13 @@ IT Support Services`,
               { title: 'Never Open Unexpected Script or Container Attachments', desc: 'Avoid executing .iso, .exe, .scr, or macro-enabled .docm/.xlsm files delivered in unsolicited messages.' },
               { title: 'Bookmark Critical Portals', desc: 'Never click email links to access financial, government, or cloud consoles. Type bookmarked URLs directly.' },
             ].map((item, idx) => (
-              <div key={idx} className="p-4 rounded-xl bg-[#061024]/80 backdrop-blur-xl border border-white/10 flex items-start gap-3.5 hover:border-emerald-500/30 transition-colors">
-                <div className="p-1.5 rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-400/40 mt-0.5 shrink-0 shadow-[0_0_10px_rgba(16,185,129,0.3)]">
-                  <Check className="w-4 h-4" />
+              <div key={idx} className="p-4 rounded-xl bg-[#F4F7F4] border border-[#404E3B]/10 flex items-start gap-3.5">
+                <div className="p-1.5 rounded-lg bg-[#7B9669]/20 text-[#404E3B] border border-[#7B9669]/40 mt-0.5 shrink-0 shadow-xs">
+                  <Check className="w-4 h-4 text-[#7B9669]" />
                 </div>
                 <div>
-                  <h4 className="text-xs font-bold text-white">{item.title}</h4>
-                  <p className="text-xs text-slate-300 mt-1 leading-relaxed">{item.desc}</p>
+                  <h4 className="text-xs font-bold text-[#404E3B]">{item.title}</h4>
+                  <p className="text-xs text-[#6C8480] mt-1 leading-relaxed">{item.desc}</p>
                 </div>
               </div>
             ))}

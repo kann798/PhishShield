@@ -8,8 +8,8 @@ export function ThemeProvider({ children }) {
     if (saved === 'dark' || saved === 'light') {
       return saved;
     }
-    // Default to the Apple Liquid Glass Dark theme
-    return 'dark';
+    // Default to Nature Theme (Light Green, Sage & Forest Green)
+    return 'light';
   });
 
   useEffect(() => {

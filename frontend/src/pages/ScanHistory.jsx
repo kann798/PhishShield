@@ -84,15 +84,15 @@ export default function ScanHistory({ onSelectScan }) {
   return (
     <div className="space-y-6 w-full pb-8">
       {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-white/10 pb-5">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-[#404E3B]/15 pb-5">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white font-heading flex items-center gap-3">
-            <div className="p-3 bg-emerald-500/15 border border-emerald-500/35 rounded-2xl text-[#10B981] shadow-[0_0_15px_rgba(16,185,129,0.2)]">
-              <History className="w-5 h-5 text-[#10B981]" />
+          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#404E3B] font-heading flex items-center gap-3">
+            <div className="p-3 bg-[#7B9669]/20 border border-[#7B9669]/40 rounded-2xl text-[#404E3B] shadow-sm">
+              <History className="w-5 h-5 text-[#404E3B]" />
             </div>
             <span>SECURITY AUDIT & SCAN HISTORY</span>
           </h1>
-          <p className="text-xs sm:text-sm text-slate-400 mt-1 font-sans">
+          <p className="text-xs sm:text-sm text-[#6C8480] mt-1 font-sans">
             Persisted SQLite logs, threat level classifications, and downloadable forensic telemetry reports
           </p>
         </div>
@@ -101,17 +101,17 @@ export default function ScanHistory({ onSelectScan }) {
           <button
             onClick={fetchScans}
             disabled={loading}
-            className="p-2.5 rounded-xl bg-[rgba(8,20,40,0.55)] backdrop-blur-md border border-white/10 hover:border-emerald-500/40 text-slate-300 hover:text-white transition-all shadow-sm hover:shadow-[0_0_12px_rgba(16,185,129,0.25)] disabled:opacity-50"
+            className="p-2.5 rounded-xl bg-white border border-[#404E3B]/15 hover:bg-[#EEF3EC] text-[#404E3B] transition-all shadow-sm disabled:opacity-50"
             title="Refresh Scan History"
             aria-label="Refresh Scan History"
           >
-            <RefreshCw className={`w-4 h-4 text-[#10B981] ${loading ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`w-4 h-4 text-[#7B9669] ${loading ? 'animate-spin' : ''}`} />
           </button>
 
           <button
             onClick={handleClearAll}
             disabled={loading || scans.length === 0}
-            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 text-xs font-mono font-bold border border-rose-500/35 transition-all shadow-[0_0_12px_rgba(239,68,68,0.2)] disabled:opacity-50"
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-mono font-bold border border-rose-200 transition-all shadow-sm disabled:opacity-50"
           >
             <Trash2 className="w-3.5 h-3.5" />
             <span>Clear History</span>
@@ -129,20 +129,17 @@ export default function ScanHistory({ onSelectScan }) {
       )}
 
       {/* Filter and Search Bar Card */}
-      <div className="liquid-glass-card rounded-2xl p-4 sm:p-5 shadow-[0_16px_40px_rgba(0,0,0,0.35)] border border-white/10 relative overflow-hidden">
-        {/* Specular Top Line */}
-        <div className="absolute top-0 inset-x-0 h-[1px] bg-gradient-to-r from-transparent via-emerald-400/30 to-transparent pointer-events-none" />
-
+      <div className="bg-white rounded-2xl p-4 sm:p-5 shadow-sm border border-[#404E3B]/15 relative overflow-hidden">
         <form onSubmit={handleSearchSubmit} className="grid grid-cols-1 sm:grid-cols-12 gap-3">
           {/* Keyword Search Input */}
           <div className="sm:col-span-6 relative">
-            <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+            <Search className="w-4 h-4 text-[#6C8480] absolute left-3.5 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search targets, URLs, subjects, or indicators..."
-              className="w-full rounded-xl bg-[rgba(6,16,36,0.75)] border border-white/10 pl-10 pr-4 py-2.5 text-xs text-white font-mono placeholder:text-slate-500 focus:outline-none focus:border-[#10B981] focus:ring-2 focus:ring-[#10B981]/25 transition-all shadow-inner"
+              className="w-full rounded-xl bg-[#F4F7F4] border border-[#404E3B]/20 pl-10 pr-4 py-2.5 text-xs text-[#2C3527] font-mono placeholder:text-[#6C8480] focus:outline-none focus:border-[#7B9669] focus:ring-2 focus:ring-[#7B9669]/25 transition-all"
             />
           </div>
 
@@ -151,7 +148,7 @@ export default function ScanHistory({ onSelectScan }) {
             <select
               value={selectedType}
               onChange={(e) => setSelectedType(e.target.value)}
-              className="w-full rounded-xl bg-[rgba(6,16,36,0.75)] border border-white/10 px-3 py-2.5 text-xs text-slate-200 font-mono focus:outline-none focus:border-[#10B981]"
+              className="w-full rounded-xl bg-[#F4F7F4] border border-[#404E3B]/20 px-3 py-2.5 text-xs text-[#2C3527] font-mono focus:outline-none focus:border-[#7B9669]"
             >
               <option value="all">All Targets (URLs & Emails)</option>
               <option value="url">URLs Only</option>
@@ -164,7 +161,7 @@ export default function ScanHistory({ onSelectScan }) {
             <select
               value={selectedRisk}
               onChange={(e) => setSelectedRisk(e.target.value)}
-              className="w-full rounded-xl bg-[rgba(6,16,36,0.75)] border border-white/10 px-3 py-2.5 text-xs text-slate-200 font-mono focus:outline-none focus:border-[#10B981]"
+              className="w-full rounded-xl bg-[#F4F7F4] border border-[#404E3B]/20 px-3 py-2.5 text-xs text-[#2C3527] font-mono focus:outline-none focus:border-[#7B9669]"
             >
               <option value="all">All Risk Levels</option>
               <option value="critical">Critical Risk</option>
@@ -187,19 +184,16 @@ export default function ScanHistory({ onSelectScan }) {
       )}
 
       {/* Scan History Table / List */}
-      <div className="liquid-glass-card rounded-2xl border border-white/10 bg-[rgba(10,24,52,0.65)] backdrop-blur-[28px] overflow-hidden shadow-[0_16px_40px_rgba(0,0,0,0.5)] relative">
-        {/* Specular Top Line */}
-        <div className="absolute top-0 inset-x-0 h-[1.5px] bg-gradient-to-r from-transparent via-white/25 to-transparent pointer-events-none" />
-
+      <div className="rounded-2xl border border-[#404E3B]/15 bg-white overflow-hidden shadow-sm relative">
         {loading ? (
-          <div className="p-12 text-center text-xs font-mono text-slate-400">
-            <RefreshCw className="w-6 h-6 text-emerald-400 animate-spin mx-auto mb-2" />
+          <div className="p-12 text-center text-xs font-mono text-[#6C8480]">
+            <RefreshCw className="w-6 h-6 text-[#7B9669] animate-spin mx-auto mb-2" />
             <span>Fetching historical telemetry records...</span>
           </div>
         ) : scans.length > 0 ? (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs font-mono">
-              <thead className="bg-[rgba(8,20,40,0.85)] text-slate-300 uppercase text-xs border-b border-white/10 font-bold tracking-wider">
+              <thead className="bg-[#EEF3EC] text-[#404E3B] uppercase text-xs border-b border-[#404E3B]/15 font-bold tracking-wider">
                 <tr>
                   <th className="py-3.5 px-4">ID</th>
                   <th className="py-3.5 px-4">Type</th>
@@ -210,26 +204,26 @@ export default function ScanHistory({ onSelectScan }) {
                   <th className="py-3.5 px-4 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-white/5">
+              <tbody className="divide-y divide-[#404E3B]/10">
                 {scans.map((scan) => (
-                  <tr key={scan.id} className="hover:bg-white/5 transition-colors">
-                    <td className="py-3.5 px-4 font-bold text-[#10B981]">#{scan.id}</td>
+                  <tr key={scan.id} className="hover:bg-[#F4F7F4] transition-colors">
+                    <td className="py-3.5 px-4 font-bold text-[#7B9669]">#{scan.id}</td>
                     <td className="py-3.5 px-4">
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[rgba(6,16,36,0.7)] border border-white/10 text-xs text-slate-200 font-bold">
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#EEF3EC] border border-[#404E3B]/15 text-xs text-[#404E3B] font-bold">
                         {scan.scan_type === 'url' ? (
-                          <Globe className="w-3.5 h-3.5 text-[#10B981]" />
+                          <Globe className="w-3.5 h-3.5 text-[#7B9669]" />
                         ) : (
-                          <Mail className="w-3.5 h-3.5 text-sky-400" />
+                          <Mail className="w-3.5 h-3.5 text-[#6C8480]" />
                         )}
                         <span>{scan.scan_type.toUpperCase()}</span>
                       </span>
                     </td>
-                    <td className="py-3.5 px-4 text-slate-200 font-medium max-w-sm">
+                    <td className="py-3.5 px-4 text-[#2C3527] font-medium max-w-sm">
                       <div className="truncate font-mono text-xs" title={scan.target_identifier}>
                         {scan.target_identifier}
                       </div>
                       {scan.is_sample && (
-                        <span className="text-[10px] uppercase px-1.5 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-[#10B981] mt-1 inline-block font-bold">
+                        <span className="text-[10px] uppercase px-1.5 py-0.5 rounded-full bg-[#7B9669]/15 border border-[#7B9669]/30 text-[#404E3B] mt-1 inline-block font-bold">
                           Sample Demonstration Record
                         </span>
                       )}
@@ -238,17 +232,17 @@ export default function ScanHistory({ onSelectScan }) {
                       <RiskBadge classification={scan.classification} size="sm" />
                     </td>
                     <td className="py-3.5 px-4">
-                      <span className="font-black text-white text-sm">{scan.risk_score}</span>
-                      <span className="text-xs text-slate-400">/100</span>
+                      <span className="font-black text-[#404E3B] text-sm">{scan.risk_score}</span>
+                      <span className="text-xs text-[#6C8480]">/100</span>
                     </td>
-                    <td className="py-3.5 px-4 text-slate-300 text-xs whitespace-nowrap">
+                    <td className="py-3.5 px-4 text-[#6C8480] text-xs whitespace-nowrap">
                       {scan.created_at}
                     </td>
                     <td className="py-3.5 px-4 text-right whitespace-nowrap">
                       <div className="inline-flex items-center gap-1.5">
                         <button
                           onClick={() => onSelectScan(scan.id)}
-                          className="p-1.5 rounded-lg bg-[rgba(6,16,36,0.7)] hover:bg-emerald-500/20 text-[#10B981] transition-colors border border-white/10 shadow-sm"
+                          className="p-1.5 rounded-lg bg-[#EEF3EC] hover:bg-[#7B9669] hover:text-white text-[#404E3B] transition-colors border border-[#404E3B]/15 shadow-sm"
                           title="Inspect Details"
                           aria-label={`Inspect Details for Scan #${scan.id}`}
                         >
@@ -257,15 +251,15 @@ export default function ScanHistory({ onSelectScan }) {
                         <a
                           href={api.getExportUrl(scan.id, 'json')}
                           download
-                          className="p-1.5 rounded-lg bg-[rgba(6,16,36,0.7)] hover:bg-emerald-500/20 text-slate-300 hover:text-[#10B981] transition-colors border border-white/10 shadow-sm"
+                          className="p-1.5 rounded-lg bg-[#EEF3EC] hover:bg-[#7B9669] hover:text-white text-[#404E3B] transition-colors border border-[#404E3B]/15 shadow-sm"
                           title="Download JSON Report"
                           aria-label={`Download JSON for Scan #${scan.id}`}
                         >
-                          <Download className="w-3.5 h-3.5 text-[#10B981]" />
+                          <Download className="w-3.5 h-3.5" />
                         </a>
                         <button
                           onClick={() => handleDeleteSingle(scan.id)}
-                          className="p-1.5 rounded-lg bg-[rgba(6,16,36,0.7)] hover:bg-rose-500/20 text-slate-400 hover:text-rose-400 transition-colors border border-white/10 shadow-sm"
+                          className="p-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 transition-colors border border-rose-200 shadow-sm"
                           title="Delete Record"
                           aria-label={`Delete Scan #${scan.id}`}
                         >
@@ -279,10 +273,10 @@ export default function ScanHistory({ onSelectScan }) {
             </table>
           </div>
         ) : (
-          <div className="p-12 text-center text-xs font-mono text-slate-400 space-y-2">
-            <CheckCircle2 className="w-8 h-8 text-[#10B981] mx-auto" />
-            <p className="font-bold text-white">No matching scan history records found</p>
-            <p className="text-slate-400 max-w-sm mx-auto">
+          <div className="p-12 text-center text-xs font-mono text-[#6C8480] space-y-2">
+            <CheckCircle2 className="w-8 h-8 text-[#7B9669] mx-auto" />
+            <p className="font-bold text-[#404E3B]">No matching scan history records found</p>
+            <p className="text-[#6C8480] max-w-sm mx-auto">
               Try adjusting your search criteria or run a new scan from the URL or Email Analyzer.
             </p>
           </div>

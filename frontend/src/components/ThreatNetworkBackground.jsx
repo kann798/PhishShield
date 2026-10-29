@@ -50,19 +50,19 @@ const FULLSCREEN_APP_HUBS = [
   { id: 'app-n20', name: 'DYNAMIC_DNS_RESOLVER', label: 'FAST-FLUX', tag: 'SUSPICIOUS', normX: 0.94, normY: 0.89, role: 'warning', pulseOffset: 2.5 },
 ];
 
-// Cyber Palettes for Dark and Light Modes
+// Nature Palettes for Dark and Light Modes
 const PALETTES = {
   dark: {
-    threat: '#e11d48',   // Soft crimson
-    defense: '#047857',  // Deep subdued forest emerald (no neon glare)
-    gateway: '#0284c7',  // Soft cyber cyan
-    warning: '#d97706',  // Soft amber
+    threat: '#DC2626',   // Crimson threat
+    defense: '#7B9669',  // Sage green
+    gateway: '#6C8480',  // Slate green
+    warning: '#D97706',  // Amber
   },
   light: {
-    threat: '#dc2626',   // High-contrast crimson
-    defense: '#059669',  // Crisp emerald
-    gateway: '#0284c7',  // Technical sky blue
-    warning: '#d97706',  // Amber warning
+    threat: '#DC2626',   // High-contrast crimson
+    defense: '#7B9669',  // Sage green
+    gateway: '#6C8480',  // Slate green
+    warning: '#D97706',  // Amber warning
   },
 };
 

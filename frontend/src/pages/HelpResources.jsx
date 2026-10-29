@@ -247,16 +247,16 @@ export default function HelpResources({ setActivePage }) {
   return (
     <div className="space-y-6 w-full pb-8 animate-fadeIn">
       {/* Page Header */}
-      <div className="border-b border-white/10 pb-5">
+      <div className="border-b border-[#404E3B]/15 pb-5">
         <div className="flex items-center gap-3">
-          <div className="p-3 bg-cyan-500/15 border border-cyan-500/35 rounded-2xl text-cyan-400 shadow-[0_0_15px_rgba(6,182,212,0.2)]">
-            <Compass className="w-5 h-5 text-cyan-400" />
+          <div className="p-3 bg-[#7B9669]/20 border border-[#7B9669]/40 rounded-2xl text-[#404E3B] shadow-sm">
+            <Compass className="w-5 h-5 text-[#404E3B]" />
           </div>
           <div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white font-heading">
+            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#404E3B] font-heading">
               Help &amp; Resources
             </h1>
-            <p className="text-xs sm:text-sm text-slate-400 mt-0.5 font-sans">
+            <p className="text-xs sm:text-sm text-[#6C8480] mt-0.5 font-sans">
               Step-by-step guides and useful information to help you use PhishShield effectively.
             </p>
           </div>
@@ -271,31 +271,28 @@ export default function HelpResources({ setActivePage }) {
           return (
             <div
               key={guide.id}
-              className="liquid-glass-card rounded-2xl border border-white/10 bg-[rgba(6,16,36,0.75)] backdrop-blur-xl p-5 sm:p-6 shadow-[0_12px_32px_rgba(0,0,0,0.35)] relative overflow-hidden flex flex-col justify-between group hover:border-cyan-500/40 transition-all duration-300"
+              className="bg-white rounded-2xl border border-[#404E3B]/15 p-5 sm:p-6 shadow-sm relative overflow-hidden flex flex-col justify-between group hover:border-[#7B9669] transition-all duration-300"
             >
-              {/* Top Highlight Specular Edge */}
-              <div className="absolute top-0 inset-x-0 h-[1px] bg-gradient-to-r from-transparent via-cyan-400/25 to-transparent pointer-events-none" />
-
               <div>
                 {/* Icon Badge */}
-                <div className={`w-11 h-11 rounded-xl flex items-center justify-center mb-4 border ${guide.color} shadow-sm group-hover:scale-105 transition-transform`}>
-                  <Icon className="w-5 h-5" />
+                <div className="w-11 h-11 rounded-xl flex items-center justify-center mb-4 bg-[#7B9669]/15 border border-[#7B9669]/30 text-[#404E3B] shadow-xs group-hover:scale-105 transition-transform">
+                  <Icon className="w-5 h-5 text-[#7B9669]" />
                 </div>
 
-                <h3 className="text-base font-bold text-white font-sans tracking-wide mb-1.5 group-hover:text-cyan-400 transition-colors">
+                <h3 className="text-base font-bold text-[#404E3B] font-sans tracking-wide mb-1.5 group-hover:text-[#7B9669] transition-colors">
                   {guide.title}
                 </h3>
 
-                <p className="text-xs text-slate-300 font-sans leading-relaxed mb-4">
+                <p className="text-xs text-[#6C8480] font-sans leading-relaxed mb-4">
                   {guide.description}
                 </p>
               </div>
 
               {/* Action Button */}
-              <div className="pt-3 border-t border-white/5 flex items-center justify-between">
+              <div className="pt-3 border-t border-[#404E3B]/10 flex items-center justify-between">
                 <button
                   onClick={() => setSelectedGuide(guide)}
-                  className="text-xs font-mono font-bold text-cyan-400 hover:text-cyan-300 flex items-center gap-1.5 transition-colors cursor-pointer group/btn"
+                  className="text-xs font-mono font-bold text-[#7B9669] hover:text-[#404E3B] flex items-center gap-1.5 transition-colors cursor-pointer group/btn"
                 >
                   <span>Read Guide</span>
                   <ArrowRight className="w-3.5 h-3.5 group-hover/btn:translate-x-1 transition-transform" />
@@ -311,26 +308,23 @@ export default function HelpResources({ setActivePage }) {
         <div
           role="dialog"
           aria-modal="true"
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md animate-fadeIn"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn"
           onClick={(e) => {
             if (e.target === e.currentTarget) setSelectedGuide(null);
           }}
         >
-          <div className="liquid-glass-card rounded-2xl border border-white/10 bg-[rgba(6,16,36,0.92)] backdrop-blur-2xl p-6 sm:p-8 max-w-2xl w-full max-h-[85vh] overflow-y-auto no-scrollbar shadow-[0_25px_60px_rgba(0,0,0,0.7)] relative animate-scaleUp">
-            {/* Top Specular Line */}
-            <div className="absolute top-0 inset-x-0 h-[1.5px] bg-gradient-to-r from-transparent via-cyan-400/40 to-transparent pointer-events-none" />
-
+          <div className="bg-white rounded-2xl border border-[#404E3B]/20 p-6 sm:p-8 max-w-2xl w-full max-h-[85vh] overflow-y-auto shadow-xl relative animate-scaleUp">
             {/* Modal Header */}
-            <div className="flex items-start justify-between gap-4 pb-4 border-b border-white/10">
+            <div className="flex items-start justify-between gap-4 pb-4 border-b border-[#404E3B]/10">
               <div className="flex items-center gap-3">
-                <div className={`w-10 h-10 rounded-xl flex items-center justify-center border ${selectedGuide.color}`}>
-                  <selectedGuide.icon className="w-5 h-5" />
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-[#7B9669]/15 border border-[#7B9669]/30 text-[#404E3B]">
+                  <selectedGuide.icon className="w-5 h-5 text-[#7B9669]" />
                 </div>
                 <div>
-                  <h3 className="text-base sm:text-lg font-bold text-white font-mono">
+                  <h3 className="text-base sm:text-lg font-bold text-[#404E3B] font-mono">
                     {selectedGuide.title}
                   </h3>
-                  <p className="text-xs text-slate-400 font-sans">
+                  <p className="text-xs text-[#6C8480] font-sans">
                     {selectedGuide.description}
                   </p>
                 </div>
@@ -338,7 +332,7 @@ export default function HelpResources({ setActivePage }) {
               <button
                 onClick={() => setSelectedGuide(null)}
                 aria-label="Close Guide"
-                className="p-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white transition-colors cursor-pointer"
+                className="p-1.5 rounded-lg bg-[#EEF3EC] text-[#404E3B] hover:bg-[#7B9669] hover:text-white transition-colors cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -346,7 +340,7 @@ export default function HelpResources({ setActivePage }) {
 
             {/* Numbered Steps */}
             <div className="py-5 space-y-3.5">
-              <h4 className="text-xs font-mono font-bold uppercase tracking-wider text-cyan-400 mb-2">
+              <h4 className="text-xs font-mono font-bold uppercase tracking-wider text-[#404E3B] mb-2">
                 Step-by-Step Instructions:
               </h4>
 
@@ -354,14 +348,14 @@ export default function HelpResources({ setActivePage }) {
                 {selectedGuide.steps.map((st) => (
                   <div
                     key={st.step}
-                    className="p-3.5 rounded-xl bg-white/[0.02] border border-white/5 flex items-start gap-3"
+                    className="p-3.5 rounded-xl bg-[#F4F7F4] border border-[#404E3B]/10 flex items-start gap-3"
                   >
-                    <span className="w-6 h-6 rounded-full bg-cyan-500/20 text-cyan-400 border border-cyan-500/35 flex items-center justify-center text-xs font-mono font-bold shrink-0 mt-0.5">
+                    <span className="w-6 h-6 rounded-full bg-[#7B9669] text-white flex items-center justify-center text-xs font-mono font-bold shrink-0 mt-0.5">
                       {st.step}
                     </span>
                     <div>
-                      <h5 className="text-xs font-bold text-white font-mono">{st.title}</h5>
-                      <p className="text-xs text-slate-300 leading-relaxed mt-0.5">{st.detail}</p>
+                      <h5 className="text-xs font-bold text-[#404E3B] font-mono">{st.title}</h5>
+                      <p className="text-xs text-[#2C3527] leading-relaxed mt-0.5">{st.detail}</p>
                     </div>
                   </div>
                 ))}
@@ -369,11 +363,11 @@ export default function HelpResources({ setActivePage }) {
 
               {/* Best Practice Tips */}
               {selectedGuide.tips && (
-                <div className="mt-4 p-4 rounded-xl bg-cyan-950/20 border border-cyan-500/30 text-xs">
-                  <span className="font-bold text-cyan-400 font-mono uppercase block mb-1.5">
+                <div className="mt-4 p-4 rounded-xl bg-[#EEF3EC] border border-[#7B9669]/30 text-xs">
+                  <span className="font-bold text-[#404E3B] font-mono uppercase block mb-1.5">
                     Pro Tips &amp; Security Best Practices:
                   </span>
-                  <ul className="list-disc list-inside space-y-1 text-slate-300">
+                  <ul className="list-disc list-inside space-y-1 text-[#2C3527]">
                     {selectedGuide.tips.map((tip, idx) => (
                       <li key={idx} className="leading-relaxed">{tip}</li>
                     ))}
@@ -383,10 +377,10 @@ export default function HelpResources({ setActivePage }) {
             </div>
 
             {/* Modal Actions */}
-            <div className="pt-4 border-t border-white/10 flex items-center justify-between gap-3">
+            <div className="pt-4 border-t border-[#404E3B]/10 flex items-center justify-between gap-3">
               <button
                 onClick={() => setSelectedGuide(null)}
-                className="px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 text-xs font-mono transition-colors cursor-pointer"
+                className="px-4 py-2 rounded-xl bg-[#EEF3EC] hover:bg-[#BAC8B1]/40 text-[#404E3B] text-xs font-mono transition-colors cursor-pointer"
               >
                 Close Guide
               </button>
@@ -396,7 +390,7 @@ export default function HelpResources({ setActivePage }) {
                     setSelectedGuide(null);
                     setActivePage(selectedGuide.targetPage);
                   }}
-                  className="px-4 py-2 rounded-xl bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 hover:text-white border border-cyan-500/40 text-xs font-mono font-bold transition-all shadow-[0_0_12px_rgba(6,182,212,0.2)] flex items-center gap-1.5 cursor-pointer"
+                  className="px-4 py-2 rounded-xl bg-[#7B9669] hover:bg-[#688258] text-white text-xs font-mono font-bold transition-all shadow-sm flex items-center gap-1.5 cursor-pointer"
                 >
                   <span>{selectedGuide.targetLabel}</span>
                   <ArrowRight className="w-3.5 h-3.5" />
