@@ -55,14 +55,14 @@ export default function ContactFeedback({ initialSubject = '' }) {
       {/* Page Header */}
       <div className="border-b border-[#404E3B]/15 pb-5">
         <div className="flex items-center gap-3">
-          <div className="p-3 bg-[#7B9669]/20 border border-[#7B9669]/40 rounded-2xl text-[#404E3B] shadow-sm">
-            <Mail className="w-5 h-5 text-[#404E3B]" />
+          <div className="p-3 bg-[#7B9669]/20 border border-[#7B9669]/40 rounded-2xl text-[#404E3B] dark:text-[#BAC8B1] shadow-sm">
+            <Mail className="w-5 h-5 text-[#404E3B] dark:text-[#BAC8B1]" />
           </div>
           <div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#404E3B] font-heading">
-              Contact &amp; Feedback
+            <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-[#1C2518] dark:text-white font-heading">
+              CONTACT &amp; <span className="text-[#7B9669] dark:text-[#9FC48A]">FEEDBACK</span>
             </h1>
-            <p className="text-xs sm:text-sm text-[#6C8480] mt-0.5 font-sans">
+            <p className="text-xs sm:text-sm text-[#404E3B]/80 dark:text-[#BAC8B1] mt-0.5 font-sans font-medium page-subtitle">
               Have a question, found an issue, or want to share feedback? We&apos;re here to help.
             </p>
           </div>
@@ -117,7 +117,7 @@ export default function ContactFeedback({ initialSubject = '' }) {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Enter your name"
-                className="w-full px-4 py-2.5 rounded-xl bg-[#F4F7F4] border border-[#404E3B]/20 text-[#2C3527] placeholder:text-[#6C8480] focus:outline-none focus:border-[#7B9669] focus:ring-1 focus:ring-[#7B9669]/40 transition-all font-sans"
+                className="w-full px-4 py-2.5 rounded-xl bg-[#F4F7F4] border border-[#404E3B]/20 text-[#2C3527] placeholder:text-[#627F51] placeholder:italic dark:placeholder:text-[#9FC48A] focus:outline-none focus:border-[#7B9669] focus:ring-1 focus:ring-[#7B9669]/40 transition-all font-sans"
               />
             </div>
 
@@ -132,7 +132,7 @@ export default function ContactFeedback({ initialSubject = '' }) {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="Enter your email"
-                className="w-full px-4 py-2.5 rounded-xl bg-[#F4F7F4] border border-[#404E3B]/20 text-[#2C3527] placeholder:text-[#6C8480] focus:outline-none focus:border-[#7B9669] focus:ring-1 focus:ring-[#7B9669]/40 transition-all font-sans"
+                className="w-full px-4 py-2.5 rounded-xl bg-[#F4F7F4] border border-[#404E3B]/20 text-[#2C3527] placeholder:text-[#627F51] placeholder:italic dark:placeholder:text-[#9FC48A] focus:outline-none focus:border-[#7B9669] focus:ring-1 focus:ring-[#7B9669]/40 transition-all font-sans"
               />
             </div>
 
@@ -165,7 +165,7 @@ export default function ContactFeedback({ initialSubject = '' }) {
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
                 placeholder="Type your message..."
-                className="w-full p-4 rounded-xl bg-[#F4F7F4] border border-[#404E3B]/20 text-[#2C3527] placeholder:text-[#6C8480] focus:outline-none focus:border-[#7B9669] focus:ring-1 focus:ring-[#7B9669]/40 transition-all font-sans leading-relaxed resize-y"
+                className="w-full p-4 rounded-xl bg-[#F4F7F4] border border-[#404E3B]/20 text-[#2C3527] placeholder:text-[#627F51] placeholder:italic dark:placeholder:text-[#9FC48A] focus:outline-none focus:border-[#7B9669] focus:ring-1 focus:ring-[#7B9669]/40 transition-all font-sans leading-relaxed resize-y"
               />
             </div>
 

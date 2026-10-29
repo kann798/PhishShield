@@ -255,8 +255,8 @@ export default function AnalysisResultView({ type = 'email', result, onBack }) {
 
       {/* 1. THREAT SUMMARY */}
       <section aria-labelledby="threat-summary-title">
-        <h2 id="threat-summary-title" className="text-xs font-mono font-bold uppercase tracking-wider text-[#404E3B] mb-2 flex items-center gap-1.5">
-          <span className="text-[#7B9669]">1..</span>
+        <h2 id="threat-summary-title" className="text-xs font-mono font-bold uppercase tracking-wider text-[#404E3B] dark:text-[#E6ECE1] mb-2 flex items-center gap-1.5">
+          <span className="text-[#7B9669] dark:text-[#9FC48A]">1..</span>
           <span>THREAT SUMMARY</span>
         </h2>
 
@@ -325,21 +325,29 @@ export default function AnalysisResultView({ type = 'email', result, onBack }) {
 
             {/* Right: Recommended Action Highlight Box */}
             <div className={`w-full lg:w-auto lg:max-w-xs shrink-0 flex items-start gap-3 p-3.5 sm:p-4 rounded-xl border shadow-sm ${
-              isCriticalOrHigh ? 'border-rose-200 bg-rose-50' : 'border-[#404E3B]/15 bg-[#EEF3EC]'
+              isCriticalOrHigh
+                ? 'border-[#F5B7BD] bg-[#FEECEC]'
+                : isMedium
+                ? 'border-[#F5D08A] bg-[#FFF1DB]'
+                : 'border-[#B7E3C7] bg-[#E8F6ED]'
             }`}>
-              <div className={`p-2 rounded-lg shrink-0 mt-0.5 ${
-                isCriticalOrHigh ? 'bg-rose-100 text-rose-700 border border-rose-300' : 'bg-[#7B9669]/15 text-[#404E3B] border border-[#7B9669]/30'
+              <div className={`p-2.5 rounded-[12px] shrink-0 mt-0.5 shadow-xs ${
+                isCriticalOrHigh
+                  ? 'bg-white text-[#D92D20] border border-[#F5B7BD]'
+                  : isMedium
+                  ? 'bg-white text-[#B54708] border border-[#F5D08A]'
+                  : 'bg-white text-[#16794B] border border-[#B7E3C7]'
               }`}>
-                <Shield className="w-4 h-4" />
+                <Shield className="w-4 h-4 stroke-[1.8]" />
               </div>
               <div>
                 <h4 className={`text-xs font-bold uppercase tracking-wide font-mono mb-1 ${
-                  isCriticalOrHigh ? 'text-rose-700' : 'text-[#404E3B]'
+                  isCriticalOrHigh ? 'text-[#B42332]' : isMedium ? 'text-[#B54708]' : 'text-[#16794B]'
                 }`}>
                   Recommended Action
                 </h4>
                 <p className={`text-xs leading-relaxed font-sans font-normal ${
-                  isCriticalOrHigh ? 'text-rose-900' : 'text-[#2C3527]'
+                  isCriticalOrHigh ? 'text-[#7A1D28]' : isMedium ? 'text-[#7A2E0E]' : 'text-[#202B21]'
                 }`}>
                   {primaryRecommendation}
                 </p>
@@ -351,8 +359,8 @@ export default function AnalysisResultView({ type = 'email', result, onBack }) {
 
       {/* 2. WHY THIS EMAIL/URL WAS FLAGGED */}
       <section aria-labelledby="why-flagged-title">
-        <h2 id="why-flagged-title" className="text-xs font-mono font-bold uppercase tracking-wider text-[#404E3B] mb-2 flex items-center gap-1.5">
-          <span className="w-4 h-4 rounded-full border border-[#404E3B]/30 text-[#404E3B] flex items-center justify-center text-[10px] font-mono">i</span>
+        <h2 id="why-flagged-title" className="text-xs font-mono font-bold uppercase tracking-wider text-[#404E3B] dark:text-[#E6ECE1] mb-2 flex items-center gap-1.5">
+          <span className="w-4 h-4 rounded-full border border-[#404E3B]/30 dark:border-[#E6ECE1]/30 text-[#404E3B] dark:text-[#E6ECE1] flex items-center justify-center text-[10px] font-mono">i</span>
           <span>2. WHY THIS {isEmail ? 'EMAIL' : 'URL'} WAS FLAGGED</span>
         </h2>
 
@@ -373,24 +381,46 @@ export default function AnalysisResultView({ type = 'email', result, onBack }) {
                   const isExpanded = !!expandedRows[idx];
                   const sev = (ind.severity || 'low').toLowerCase();
 
-                  let sevBadge = 'bg-[#7B9669]/15 text-[#404E3B] border-[#7B9669]/30';
-                  if (sev === 'critical') sevBadge = 'bg-rose-50 text-rose-700 border-rose-300 font-bold';
-                  else if (sev === 'high') sevBadge = 'bg-orange-50 text-orange-700 border-orange-300 font-bold';
-                  else if (sev === 'medium') sevBadge = 'bg-amber-50 text-amber-700 border-amber-300';
+                  let sevBadge = 'bg-[#E8F6ED] text-[#16794B] border-[#B7E3C7] font-semibold';
+                  let sevIconBg = 'bg-[#E8F6ED] text-[#16794B] border-[#B7E3C7]';
+                  let sevDot = 'bg-[#16794B]';
+                  if (sev === 'critical') {
+                    sevBadge = 'bg-[#FEECEC] text-[#D92D20] border-[#F5B7BD] font-bold';
+                    sevIconBg = 'bg-[#FEECEC] text-[#D92D20] border-[#F5B7BD]';
+                    sevDot = 'bg-[#D92D20]';
+                  } else if (sev === 'high') {
+                    sevBadge = 'bg-[#FEF2F2] text-[#DC2626] border-[#FECACA] font-bold';
+                    sevIconBg = 'bg-[#FEF2F2] text-[#DC2626] border-[#FECACA]';
+                    sevDot = 'bg-[#DC2626]';
+                  } else if (sev === 'medium') {
+                    sevBadge = 'bg-[#FFF1DB] text-[#B54708] border-[#F5D08A] font-bold';
+                    sevIconBg = 'bg-[#FFF1DB] text-[#B54708] border-[#F5D08A]';
+                    sevDot = 'bg-[#B54708]';
+                  } else if (sev === 'low') {
+                    sevBadge = 'bg-[#EAF4FC] text-[#1D6FA5] border-[#B8DDF5] font-semibold';
+                    sevIconBg = 'bg-[#EAF4FC] text-[#1D6FA5] border-[#B8DDF5]';
+                    sevDot = 'bg-[#1D6FA5]';
+                  }
 
                   return (
                     <React.Fragment key={`finding-row-${idx}`}>
                       <tr className="hover:bg-[#F4F7F4] transition-colors">
                         <td className="py-3.5 px-4 font-mono text-[#6C8480] font-semibold">{idx + 1}</td>
                         <td className="py-3.5 px-4 font-bold text-[#404E3B] tracking-wide font-sans">
-                          {ind.name || ind.title || 'Security Anomaly'}
+                          <div className="flex items-center gap-2.5">
+                            <div className={`w-7 h-7 rounded-lg border flex items-center justify-center shrink-0 shadow-2xs ${sevIconBg}`}>
+                              <ShieldAlert className="w-3.5 h-3.5" />
+                            </div>
+                            <span>{ind.name || ind.title || 'Security Anomaly'}</span>
+                          </div>
                         </td>
                         <td className="py-3.5 px-4 text-[#2C3527] leading-relaxed max-w-md">
                           {ind.description || ind.summary || 'Security heuristics flagged an atypical attribute.'}
                         </td>
                         <td className="py-3.5 px-4 text-center">
-                          <span className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-mono uppercase border ${sevBadge}`}>
-                            {ind.severity || 'Low'}
+                          <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-mono uppercase border ${sevBadge}`}>
+                            <span className={`w-1.5 h-1.5 rounded-full ${sevDot}`}></span>
+                            <span>{ind.severity || 'Low'}</span>
                           </span>
                         </td>
                         <td className="py-3.5 px-4 text-right">
@@ -457,8 +487,8 @@ export default function AnalysisResultView({ type = 'email', result, onBack }) {
 
       {/* 3. AI / ML ANALYSIS */}
       <section aria-labelledby="ai-analysis-title">
-        <h2 id="ai-analysis-title" className="text-xs font-mono font-bold uppercase tracking-wider text-[#404E3B] mb-2 flex items-center gap-1.5">
-          <span className="w-4 h-4 rounded-full border border-[#404E3B]/30 text-[#404E3B] flex items-center justify-center text-[10px] font-mono">i</span>
+        <h2 id="ai-analysis-title" className="text-xs font-mono font-bold uppercase tracking-wider text-[#404E3B] dark:text-[#E6ECE1] mb-2 flex items-center gap-1.5">
+          <span className="w-4 h-4 rounded-full border border-[#404E3B]/30 dark:border-[#E6ECE1]/30 text-[#404E3B] dark:text-[#E6ECE1] flex items-center justify-center text-[10px] font-mono">i</span>
           <span>3. AI / ML ANALYSIS</span>
         </h2>
 
@@ -537,82 +567,82 @@ export default function AnalysisResultView({ type = 'email', result, onBack }) {
 
       {/* 4. RECOMMENDED ACTIONS */}
       <section aria-labelledby="recommended-actions-title">
-        <h2 id="recommended-actions-title" className="text-xs font-mono font-bold uppercase tracking-wider text-[#404E3B] mb-2 flex items-center gap-1.5">
-          <span className="w-4 h-4 rounded-full border border-[#404E3B]/30 text-[#404E3B] flex items-center justify-center text-[10px] font-mono">i</span>
+        <h2 id="recommended-actions-title" className="text-xs font-mono font-bold uppercase tracking-wider text-[#404E3B] dark:text-[#E6ECE1] mb-2 flex items-center gap-1.5">
+          <span className="w-4 h-4 rounded-full border border-[#404E3B]/30 dark:border-[#E6ECE1]/30 text-[#404E3B] dark:text-[#E6ECE1] flex items-center justify-center text-[10px] font-mono">i</span>
           <span>4. RECOMMENDED ACTIONS</span>
         </h2>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
-          {/* Action 1: Do not provide credentials */}
-          <div className="p-3.5 sm:p-4 rounded-2xl border border-[#404E3B]/15 bg-white shadow-sm flex flex-col justify-between">
+          {/* Action 1: Do not provide credentials (Red) */}
+          <div className="p-3.5 sm:p-4 rounded-2xl border border-[#F5B7BD] bg-[#FEECEC]/50 hover:bg-[#FEECEC] dark:bg-rose-950/20 dark:border-rose-900/60 shadow-sm flex flex-col justify-between transition-colors">
             <div>
-              <div className="w-8 h-8 rounded-xl bg-rose-50 border border-rose-200 text-rose-600 flex items-center justify-center mb-3">
+              <div className="w-8 h-8 rounded-xl bg-[#FEECEC] border border-[#F5B7BD] text-[#D92D20] flex items-center justify-center mb-3 shadow-2xs">
                 <ShieldAlert className="w-4 h-4" />
               </div>
-              <h3 className="text-xs font-bold text-[#404E3B] font-sans tracking-wide mb-1">
+              <h3 className="text-xs font-bold text-[#B42332] dark:text-rose-400 font-sans tracking-wide mb-1">
                 Do not provide credentials
               </h3>
-              <p className="text-[11px] text-[#6C8480] leading-relaxed font-sans">
+              <p className="text-[11px] text-[#52665A] dark:text-rose-200/70 leading-relaxed font-sans">
                 Never share passwords, MFA codes, or financial information.
               </p>
             </div>
           </div>
 
-          {/* Action 2: Avoid suspicious links */}
-          <div className="p-3.5 sm:p-4 rounded-2xl border border-[#404E3B]/15 bg-white shadow-sm flex flex-col justify-between">
+          {/* Action 2: Avoid suspicious links (Orange) */}
+          <div className="p-3.5 sm:p-4 rounded-2xl border border-[#F5D08A] bg-[#FFF1DB]/50 hover:bg-[#FFF1DB] dark:bg-amber-950/20 dark:border-amber-900/60 shadow-sm flex flex-col justify-between transition-colors">
             <div>
-              <div className="w-8 h-8 rounded-xl bg-amber-50 border border-amber-200 text-amber-600 flex items-center justify-center mb-3">
+              <div className="w-8 h-8 rounded-xl bg-[#FFF1DB] border border-[#F5D08A] text-[#B54708] flex items-center justify-center mb-3 shadow-2xs">
                 <LinkIcon className="w-4 h-4" />
               </div>
-              <h3 className="text-xs font-bold text-[#404E3B] font-sans tracking-wide mb-1">
+              <h3 className="text-xs font-bold text-[#B54708] dark:text-amber-400 font-sans tracking-wide mb-1">
                 Avoid suspicious links
               </h3>
-              <p className="text-[11px] text-[#6C8480] leading-relaxed font-sans">
+              <p className="text-[11px] text-[#52665A] dark:text-amber-200/70 leading-relaxed font-sans">
                 Do not click links or download unverified attachments.
               </p>
             </div>
           </div>
 
-          {/* Action 3: Verify the sender */}
-          <div className="p-3.5 sm:p-4 rounded-2xl border border-[#404E3B]/15 bg-white shadow-sm flex flex-col justify-between">
+          {/* Action 3: Verify the sender (Blue) */}
+          <div className="p-3.5 sm:p-4 rounded-2xl border border-[#B8DDF5] bg-[#EAF4FC]/50 hover:bg-[#EAF4FC] dark:bg-blue-950/20 dark:border-blue-900/60 shadow-sm flex flex-col justify-between transition-colors">
             <div>
-              <div className="w-8 h-8 rounded-xl bg-[#7B9669]/15 border border-[#7B9669]/30 text-[#404E3B] flex items-center justify-center mb-3">
+              <div className="w-8 h-8 rounded-xl bg-[#EAF4FC] border border-[#B8DDF5] text-[#1D6FA5] flex items-center justify-center mb-3 shadow-2xs">
                 <UserCheck className="w-4 h-4" />
               </div>
-              <h3 className="text-xs font-bold text-[#404E3B] font-sans tracking-wide mb-1">
+              <h3 className="text-xs font-bold text-[#1D6FA5] dark:text-blue-400 font-sans tracking-wide mb-1">
                 Verify the sender
               </h3>
-              <p className="text-[11px] text-[#6C8480] leading-relaxed font-sans">
+              <p className="text-[11px] text-[#52665A] dark:text-blue-200/70 leading-relaxed font-sans">
                 Confirm through an independent channel (e.g., official website or phone).
               </p>
             </div>
           </div>
 
-          {/* Action 4: Report this email / URL */}
-          <div className="p-3.5 sm:p-4 rounded-2xl border border-[#404E3B]/15 bg-white shadow-sm flex flex-col justify-between">
+          {/* Action 4: Report this email / URL (Green) */}
+          <div className="p-3.5 sm:p-4 rounded-2xl border border-[#B7E3C7] bg-[#E8F6ED]/50 hover:bg-[#E8F6ED] dark:bg-emerald-950/20 dark:border-emerald-900/60 shadow-sm flex flex-col justify-between transition-colors">
             <div>
-              <div className="w-8 h-8 rounded-xl bg-[#6C8480]/15 border border-[#6C8480]/30 text-[#404E3B] flex items-center justify-center mb-3">
+              <div className="w-8 h-8 rounded-xl bg-[#E8F6ED] border border-[#B7E3C7] text-[#16794B] flex items-center justify-center mb-3 shadow-2xs">
                 <FileText className="w-4 h-4" />
               </div>
-              <h3 className="text-xs font-bold text-[#404E3B] font-sans tracking-wide mb-1">
+              <h3 className="text-xs font-bold text-[#16794B] dark:text-emerald-400 font-sans tracking-wide mb-1">
                 {isEmail ? 'Report this email' : 'Report this URL'}
               </h3>
-              <p className="text-[11px] text-[#6C8480] leading-relaxed font-sans">
+              <p className="text-[11px] text-[#52665A] dark:text-emerald-200/70 leading-relaxed font-sans">
                 Forward to your organization's SOC or abuse@ provider.
               </p>
             </div>
           </div>
 
-          {/* Action 5: Verify payment requests */}
-          <div className="p-3.5 sm:p-4 rounded-2xl border border-[#404E3B]/15 bg-white shadow-sm flex flex-col justify-between">
+          {/* Action 5: Verify payment requests (Purple) */}
+          <div className="p-3.5 sm:p-4 rounded-2xl border border-[#D8C7F0] bg-[#F5F0FB]/50 hover:bg-[#F5F0FB] dark:bg-purple-950/20 dark:border-purple-900/60 shadow-sm flex flex-col justify-between transition-colors">
             <div>
-              <div className="w-8 h-8 rounded-xl bg-[#7B9669]/15 border border-[#7B9669]/30 text-[#404E3B] flex items-center justify-center mb-3">
+              <div className="w-8 h-8 rounded-xl bg-[#F5F0FB] border border-[#D8C7F0] text-[#7E22CE] flex items-center justify-center mb-3 shadow-2xs">
                 <CreditCard className="w-4 h-4" />
               </div>
-              <h3 className="text-xs font-bold text-[#404E3B] font-sans tracking-wide mb-1">
+              <h3 className="text-xs font-bold text-[#7E22CE] dark:text-purple-400 font-sans tracking-wide mb-1">
                 Verify payment requests
               </h3>
-              <p className="text-[11px] text-[#6C8480] leading-relaxed font-sans">
+              <p className="text-[11px] text-[#52665A] dark:text-purple-200/70 leading-relaxed font-sans">
                 Do not transfer money without independent multi-party verification.
               </p>
             </div>
@@ -628,12 +658,12 @@ export default function AnalysisResultView({ type = 'email', result, onBack }) {
           className="w-full rounded-2xl border border-[#404E3B]/15 hover:border-[#7B9669] bg-white p-4 sm:p-5 flex items-center justify-between shadow-sm transition-all text-left cursor-pointer group"
         >
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-[#7B9669]/15 border border-[#7B9669]/30 text-[#404E3B] group-hover:scale-105 transition-transform">
-              <Sliders className="w-4 h-4 text-[#7B9669]" />
+            <div className="p-2.5 rounded-[12px] bg-[#7B9669]/15 border border-[#7B9669]/30 text-[#404E3B] group-hover:scale-105 transition-transform shadow-xs">
+              <Sliders className="w-4 h-4 text-[#7B9669] stroke-[1.8]" />
             </div>
             <div>
-              <h2 id="advanced-analysis-title" className="text-xs sm:text-sm font-bold font-mono uppercase tracking-wide text-[#404E3B] flex items-center gap-2">
-                <span>5. ADVANCED ANALYSIS</span>
+              <h2 id="advanced-analysis-title" className="text-xs sm:text-sm font-bold font-mono uppercase tracking-wide text-[#1C2518] flex items-center gap-2">
+                <span className="text-[#1C2518]">5. ADVANCED ANALYSIS</span>
                 <span className="text-[11px] text-[#6C8480] font-normal lowercase font-sans">
                   ({advancedOpen ? 'click to collapse' : 'click to expand'})
                 </span>

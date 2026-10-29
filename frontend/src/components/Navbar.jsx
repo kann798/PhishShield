@@ -13,7 +13,7 @@ import {
   Cpu,
   GraduationCap,
   Info,
-  Compass,
+  BookOpen,
   HelpCircle,
   MessageSquare,
 } from 'lucide-react';
@@ -39,7 +39,7 @@ export default function Navbar({
     { id: 'history', label: 'Scan History', icon: History, badge: null },
     { id: 'reports', label: 'Reports & Export', icon: FileText, badge: null },
     { id: 'awareness', label: 'Awareness Center', icon: GraduationCap, badge: 'QUIZ' },
-    { id: 'help', label: 'Help & Resources', icon: Compass, badge: null },
+    { id: 'help', label: 'Help & Resources', icon: BookOpen, badge: null },
     { id: 'faq', label: 'FAQ', icon: HelpCircle, badge: null },
     { id: 'contact', label: 'Contact & Feedback', icon: MessageSquare, badge: null },
     { id: 'about', label: 'About & Defense', icon: Info, badge: null },

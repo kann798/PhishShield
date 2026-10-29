@@ -28,7 +28,9 @@ export default function App() {
   const [extensionModalOpen, setExtensionModalOpen] = useState(false);
   const [telemetryCollapsed, setTelemetryCollapsed] = useState(true);
   const [securityModal, setSecurityModal] = useState({ open: false, section: 'disclaimer' });
-  const [contactSubject, setContactSubject] = useState('');
+  const [contactSubject, setContactSubject] = useState('');
+  const [urlScanCompleted, setUrlScanCompleted] = useState(false);
+  const [emailScanCompleted, setEmailScanCompleted] = useState(false);
 
   const handleOpenScanDetail = async (scanId) => {
     try {
@@ -55,9 +57,19 @@ export default function App() {
       case 'dashboard':
         return <Dashboard setActivePage={setActivePage} onSelectScan={handleOpenScanDetail} />;
       case 'url':
-        return <UrlAnalyzer onSelectScan={handleOpenScanDetail} />;
+        return (
+          <UrlAnalyzer
+            onSelectScan={handleOpenScanDetail}
+            onScanComplete={setUrlScanCompleted}
+          />
+        );
       case 'email':
-        return <EmailAnalyzer onSelectScan={handleOpenScanDetail} />;
+        return (
+          <EmailAnalyzer
+            onSelectScan={handleOpenScanDetail}
+            onScanComplete={setEmailScanCompleted}
+          />
+        );
       case 'history':
         return <ScanHistory onSelectScan={handleOpenScanDetail} />;
       case 'awareness':
@@ -79,7 +91,7 @@ export default function App() {
 
   return (
     <div
-      className="min-h-screen w-full flex flex-col font-sans transition-colors duration-300 relative overflow-x-hidden bg-[#F4F7F4] text-[#2C3527]"
+      className="min-h-screen w-full flex flex-col font-sans transition-colors duration-300 relative overflow-x-clip bg-[#F4F7F4] text-[#2C3527]"
     >
       {/* Animated Global World Map Full-Screen Background (Corner-to-Corner behind whole app) */}
       <GlobalWorldMapBackground theme={theme} />
@@ -93,8 +105,8 @@ export default function App() {
         onOpenExtension={() => setExtensionModalOpen(true)}
       />
 
-      {/* Main Layout: Left-Side Panel + Fluid Content Area */}
-      <div className="flex-1 flex w-full min-h-[calc(100vh-4rem)] relative z-10">
+      {/* Main Layout: Left-Side Panel + Fluid Content Area (min-h-[calc(100vh-72px)] ensures content fills viewport so footer is naturally at the bottom) */}
+      <div className="flex-1 flex w-full relative z-10 min-h-[calc(100vh-72px)]">
         {/* Left-Side Panel: Navigation, Awareness & Support (Translucent Glass above the World Map) */}
         <Sidebar
           activePage={activePage}
@@ -105,26 +117,27 @@ export default function App() {
 
         {/* Main Content Area */}
         <main
-          className={`flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto w-full min-w-0 transition-all duration-300 relative z-10 flex flex-col ${
+          className={`flex-1 p-4 sm:p-6 lg:p-8 pb-6 w-full min-w-0 transition-all duration-300 relative z-10 flex flex-col ${
             telemetryCollapsed ? '' : 'xl:pr-[330px]'
           }`}
         >
-          <div className="w-full max-w-[1920px] mx-auto flex-1 flex flex-col justify-between">
-            <div className="flex-1">
-              {renderPage()}
-            </div>
-
-            {/* Professional Website Footer */}
-            <Footer
-              setActivePage={setActivePage}
-              onOpenSecurity={(section) => setSecurityModal({ open: true, section })}
-              onSelectContactSubject={(subj) => setContactSubject(subj)}
-            />
+          <div className="w-full max-w-[1920px] mx-auto flex-1">
+            {renderPage()}
           </div>
         </main>
       </div>
 
-      {/* Fixed Threat Telemetry Panel on the Right Side (Anchored while dashboard scrolls) */}
+      {/* Full-Viewport-Width Footer (On URL and Email analyzers, appears ONLY after completion of scan) */}
+      {(activePage === 'url' ? urlScanCompleted : activePage === 'email' ? emailScanCompleted : true) && (
+        <Footer
+          setActivePage={setActivePage}
+          onOpenSecurity={(section) => setSecurityModal({ open: true, section })}
+          onSelectContactSubject={(subj) => setContactSubject(subj)}
+          telemetryCollapsed={telemetryCollapsed}
+        />
+      )}
+
+      {/* Fixed Threat Telemetry Panel on the Right Side */}
       <FixedThreatTelemetryPanel
         collapsed={telemetryCollapsed}
         onToggleCollapse={() => setTelemetryCollapsed(!telemetryCollapsed)}

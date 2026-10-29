@@ -30,6 +30,7 @@ backend/*.db
 
 # Temporary test files
 test_*.pdf
+scratch/
 
 # Operating System & IDE
 .DS_Store

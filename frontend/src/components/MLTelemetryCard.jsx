@@ -41,8 +41,8 @@ export default function MLTelemetryCard({ mlAnalysis }) {
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h3 className="text-sm font-bold text-[#404E3B] tracking-wide font-sans flex items-center gap-1.5">
-                <span>Machine Learning Threat Intelligence</span>
+              <h3 className="text-sm font-bold text-[#1C2518] tracking-wide font-sans flex items-center gap-1.5">
+                <span className="text-[#1C2518]">Machine Learning Threat Intelligence</span>
                 <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-[#7B9669]/15 text-[#404E3B] border border-[#7B9669]/30">
                   <Zap className="w-2.5 h-2.5 text-[#7B9669]" /> ML Active
                 </span>

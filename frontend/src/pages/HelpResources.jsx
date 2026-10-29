@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   Compass,
   Globe,
@@ -8,22 +8,32 @@ import {
   Eye,
   Download,
   ArrowRight,
-  CheckCircle2,
-  AlertTriangle,
+  Shield,
+  Lightbulb,
   X,
   ExternalLink,
 } from 'lucide-react';
 
 export default function HelpResources({ setActivePage }) {
-  const [selectedGuide, setSelectedGuide] = useState(null);
+  const [hoveredGuideId, setHoveredGuideId] = useState(null);
+  const [isHoveringModal, setIsHoveringModal] = useState(false);
+  const [pinnedGuideId, setPinnedGuideId] = useState(null);
+  const leaveTimerRef = useRef(null);
 
   const guides = [
     {
       id: 'url',
       title: 'How to Analyze a URL',
       icon: Globe,
-      color: 'text-cyan-400 bg-cyan-500/15 border-cyan-500/30',
-      description: 'Learn how to scan and analyze suspicious URLs.',
+      accent: {
+        badge: 'bg-[#E8F6ED] text-[#16794B] border-[#B7E3C7]',
+        iconBg: 'bg-[#E8F6ED] text-[#16794B] border-[#B7E3C7]',
+        stepBg: 'bg-[#16794B]',
+        borderHover: 'hover:border-[#16794B]',
+        activeBorder: 'border-[#16794B] ring-2 ring-[#16794B]/20',
+        titleHover: 'group-hover:text-[#16794B]',
+      },
+      description: 'Learn how to scan and analyze suspicious URLs using deterministic regex heuristics.',
       targetPage: 'url',
       targetLabel: 'Launch URL Analyzer',
       steps: [
@@ -62,15 +72,22 @@ export default function HelpResources({ setActivePage }) {
       id: 'email',
       title: 'How to Analyze an Email',
       icon: Mail,
-      color: 'text-blue-400 bg-blue-500/15 border-blue-500/30',
-      description: 'Learn how to upload and analyze emails for phishing.',
+      accent: {
+        badge: 'bg-[#EAF4FC] text-[#1D6FA5] border-[#B8DDF5]',
+        iconBg: 'bg-[#EAF4FC] text-[#1D6FA5] border-[#B8DDF5]',
+        stepBg: 'bg-[#1D6FA5]',
+        borderHover: 'hover:border-[#1D6FA5]',
+        activeBorder: 'border-[#1D6FA5] ring-2 ring-[#1D6FA5]/20',
+        titleHover: 'group-hover:text-[#1D6FA5]',
+      },
+      description: 'Learn how to inspect raw email headers, body content, and wire transfer lures.',
       targetPage: 'email',
       targetLabel: 'Launch Email Analyzer',
       steps: [
         {
           step: 1,
           title: 'Copy Raw Email Text & Headers',
-          detail: 'In your email provider (Outlook, Gmail, Apple Mail), choose "Show Original" or "View Headers", and copy the headers (From, Reply-To, Subject) and body.',
+          detail: 'In your email client (Outlook, Gmail), choose "Show Original" or "View Headers", and copy headers (From, Reply-To, Subject) and body.',
         },
         {
           step: 2,
@@ -80,12 +97,12 @@ export default function HelpResources({ setActivePage }) {
         {
           step: 3,
           title: 'Paste Email Content',
-          detail: 'Paste the content into the text area. You can also click synthetic email test presets (e.g. CEO BEC Wire Transfer, Microsoft 365 Display Spoof) to test.',
+          detail: 'Paste content into the text area. You can also click synthetic email test presets (e.g. CEO BEC Wire Transfer, Microsoft 365 Spoof).',
         },
         {
           step: 4,
           title: 'Inspect Email',
-          detail: 'Click "Analyze Email Content". The NLP and heuristic engines evaluate sender mismatches, urgency triggers, wire transfer solicitations, and embedded links.',
+          detail: 'Click "Analyze Email Content". The NLP and heuristic engines evaluate sender mismatches, urgency triggers, and embedded links.',
         },
         {
           step: 5,
@@ -94,16 +111,23 @@ export default function HelpResources({ setActivePage }) {
         },
       ],
       tips: [
-        'Check if the Reply-To domain differs from the sender domain; attackers frequently spoof display names while routing replies to a personal mailbox.',
-        'Beware of artificial urgency (e.g. "immediate suspension in 24 hours") designed to make you act without thinking.',
+        'Check if the Reply-To domain differs from the sender domain; attackers frequently spoof display names.',
+        'Beware of artificial urgency (e.g. "account suspension in 24 hours") designed to cause panic.',
       ],
     },
     {
       id: 'scores',
       title: 'Understanding Risk Scores',
       icon: BarChart3,
-      color: 'text-teal-400 bg-teal-500/15 border-teal-500/30',
-      description: 'What risk scores mean and how classifications work.',
+      accent: {
+        badge: 'bg-[#FFF1DB] text-[#B54708] border-[#F5D08A]',
+        iconBg: 'bg-[#FFF1DB] text-[#B54708] border-[#F5D08A]',
+        stepBg: 'bg-[#B54708]',
+        borderHover: 'hover:border-[#B54708]',
+        activeBorder: 'border-[#B54708] ring-2 ring-[#B54708]/20',
+        titleHover: 'group-hover:text-[#B54708]',
+      },
+      description: 'Understand the 0-100 threat score metric and heuristic classification tiers.',
       targetPage: 'dashboard',
       targetLabel: 'View Dashboard Metrics',
       steps: [
@@ -120,17 +144,17 @@ export default function HelpResources({ setActivePage }) {
         {
           step: 3,
           title: 'Medium Risk Tier (35–64)',
-          detail: 'Color: Amber Yellow. Structural anomalies or mild coercion detected (such as shortened URLs or generic urgent phrasing). Exercise caution.',
+          detail: 'Color: Amber Yellow. Structural anomalies or mild coercion detected (such as shortened URLs or generic urgency). Exercise caution.',
         },
         {
           step: 4,
           title: 'High Risk Tier (65–84)',
-          detail: 'Color: Vibrant Orange. Multiple dangerous indicators found (e.g. typosquatting domain, sender mismatch, credential traps). Avoid interacting.',
+          detail: 'Color: Coral Orange. Multiple dangerous indicators found (e.g. typosquatting domain, sender mismatch). Avoid interacting.',
         },
         {
           step: 5,
           title: 'Critical Risk Tier (85–100)',
-          detail: 'Color: Crimson Red. Severe phishing attempt detected (e.g. raw IP login portals, wire transfer requests, verified brand spoofing). Block and report immediately.',
+          detail: 'Color: Crimson Red. Severe phishing attempt detected (e.g. raw IP login portals, wire transfer requests). Block immediately.',
         },
       ],
       tips: [
@@ -142,8 +166,15 @@ export default function HelpResources({ setActivePage }) {
       id: 'history',
       title: 'Viewing Previous Scans',
       icon: History,
-      color: 'text-blue-400 bg-blue-500/15 border-blue-500/30',
-      description: 'Find and manage your past scan history.',
+      accent: {
+        badge: 'bg-[#F5F0FB] text-[#7E22CE] border-[#D8C7F0]',
+        iconBg: 'bg-[#F5F0FB] text-[#7E22CE] border-[#D8C7F0]',
+        stepBg: 'bg-[#7E22CE]',
+        borderHover: 'hover:border-[#7E22CE]',
+        activeBorder: 'border-[#7E22CE] ring-2 ring-[#7E22CE]/20',
+        titleHover: 'group-hover:text-[#7E22CE]',
+      },
+      description: 'Find, filter, inspect, and manage your historical scan records stored in SQLite.',
       targetPage: 'history',
       targetLabel: 'Open Scan History',
       steps: [
@@ -177,8 +208,15 @@ export default function HelpResources({ setActivePage }) {
       id: 'inspect',
       title: 'Inspecting Detailed Results',
       icon: Eye,
-      color: 'text-cyan-400 bg-cyan-500/15 border-cyan-500/30',
-      description: 'Understand scan results and view evidence.',
+      accent: {
+        badge: 'bg-[#FEECEC] text-[#D92D20] border-[#F5B7BD]',
+        iconBg: 'bg-[#FEECEC] text-[#D92D20] border-[#F5B7BD]',
+        stepBg: 'bg-[#D92D20]',
+        borderHover: 'hover:border-[#D92D20]',
+        activeBorder: 'border-[#D92D20] ring-2 ring-[#D92D20]/20',
+        titleHover: 'group-hover:text-[#D92D20]',
+      },
+      description: 'Deep-dive into regex evidence strings, anatomy features, and ML probability vectors.',
       targetPage: 'dashboard',
       targetLabel: 'View Recent Telemetry',
       steps: [
@@ -211,8 +249,15 @@ export default function HelpResources({ setActivePage }) {
       id: 'reports',
       title: 'Exporting Reports',
       icon: Download,
-      color: 'text-teal-400 bg-teal-500/15 border-teal-500/30',
-      description: 'Download and share scan reports in PDF format.',
+      accent: {
+        badge: 'bg-[#EEF3EC] text-[#355B43] border-[#404E3B]/20',
+        iconBg: 'bg-[#EEF3EC] text-[#355B43] border-[#404E3B]/20',
+        stepBg: 'bg-[#355B43]',
+        borderHover: 'hover:border-[#355B43]',
+        activeBorder: 'border-[#355B43] ring-2 ring-[#355B43]/20',
+        titleHover: 'group-hover:text-[#355B43]',
+      },
+      description: 'Download and share executive audit memos in PDF, structured JSON, or CSV format.',
       targetPage: 'reports',
       targetLabel: 'Go to Reports & Export',
       steps: [
@@ -244,131 +289,226 @@ export default function HelpResources({ setActivePage }) {
     },
   ];
 
+  // Hover handlers that show/hide the center overlay without disturbing grid cards
+  const handleCardMouseEnter = (id) => {
+    if (leaveTimerRef.current) {
+      clearTimeout(leaveTimerRef.current);
+      leaveTimerRef.current = null;
+    }
+    setHoveredGuideId(id);
+  };
+
+  const handleCardMouseLeave = () => {
+    leaveTimerRef.current = setTimeout(() => {
+      if (!isHoveringModal) {
+        setHoveredGuideId(null);
+      }
+    }, 300);
+  };
+
+  const handleModalMouseEnter = () => {
+    if (leaveTimerRef.current) {
+      clearTimeout(leaveTimerRef.current);
+      leaveTimerRef.current = null;
+    }
+    setIsHoveringModal(true);
+  };
+
+  const handleModalMouseLeave = () => {
+    setIsHoveringModal(false);
+    if (!pinnedGuideId) {
+      setHoveredGuideId(null);
+    }
+  };
+
+  const activeGuideId = pinnedGuideId || hoveredGuideId;
+  const activeGuide = guides.find((g) => g.id === activeGuideId);
+
   return (
-    <div className="space-y-6 w-full pb-8 animate-fadeIn">
+    <div className="space-y-6 w-full pb-8 animate-fadeIn relative">
       {/* Page Header */}
       <div className="border-b border-[#404E3B]/15 pb-5">
         <div className="flex items-center gap-3">
-          <div className="p-3 bg-[#7B9669]/20 border border-[#7B9669]/40 rounded-2xl text-[#404E3B] shadow-sm">
-            <Compass className="w-5 h-5 text-[#404E3B]" />
+          <div className="p-3 bg-[#7B9669]/20 border border-[#7B9669]/40 rounded-2xl text-[#404E3B] dark:text-[#BAC8B1] shadow-sm">
+            <Compass className="w-5 h-5 text-[#404E3B] dark:text-[#BAC8B1]" />
           </div>
           <div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#404E3B] font-heading">
-              Help &amp; Resources
+            <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-[#1C2518] dark:text-white font-heading">
+              HELP &amp; <span className="text-[#7B9669] dark:text-[#9FC48A]">RESOURCES</span>
             </h1>
-            <p className="text-xs sm:text-sm text-[#6C8480] mt-0.5 font-sans">
-              Step-by-step guides and useful information to help you use PhishShield effectively.
+            <p className="text-xs sm:text-sm text-[#404E3B]/80 dark:text-[#BAC8B1] mt-0.5 font-sans font-medium page-subtitle">
+              Move cursor over any guide to preview full instructions in the center of the screen without disturbing other cards.
             </p>
           </div>
         </div>
       </div>
 
-      {/* 6 Step-by-Step Guide Cards (2 rows of 3 on Desktop) */}
+      {/* Instructions Banner */}
+      <div className="bg-[#EEF3EC] border border-[#7B9669]/30 rounded-2xl px-5 py-3 flex items-center justify-between text-xs font-mono text-[#243D2E] shadow-2xs">
+        <span className="flex items-center gap-2">
+          <Lightbulb className="w-4 h-4 text-[#7B9669] shrink-0" />
+          <span>
+            <strong>Interactive Guide Previews:</strong> Hover cursor over any card to view its complete guide in the center of the screen. Content disappears when cursor is removed. Click card to pin open.
+          </span>
+        </span>
+        {pinnedGuideId && (
+          <button
+            onClick={() => setPinnedGuideId(null)}
+            className="text-[11px] font-bold text-[#D92D20] hover:underline cursor-pointer ml-3 shrink-0"
+          >
+            Close Guide
+          </button>
+        )}
+      </div>
+
+      {/* 6 Fixed Step-by-Step Guide Cards (Layout remains undisturbed at all times in 2 rows of 3) */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
         {guides.map((guide) => {
           const Icon = guide.icon;
+          const isCurrentActive = activeGuideId === guide.id;
 
           return (
             <div
               key={guide.id}
-              className="bg-white rounded-2xl border border-[#404E3B]/15 p-5 sm:p-6 shadow-sm relative overflow-hidden flex flex-col justify-between group hover:border-[#7B9669] transition-all duration-300"
+              id={`guide-card-${guide.id}`}
+              onMouseEnter={() => handleCardMouseEnter(guide.id)}
+              onMouseLeave={handleCardMouseLeave}
+              onPointerEnter={() => handleCardMouseEnter(guide.id)}
+              onPointerLeave={handleCardMouseLeave}
+              onClick={() => setPinnedGuideId((prev) => (prev === guide.id ? null : guide.id))}
+              className={`bg-white rounded-2xl border p-5 sm:p-6 shadow-sm relative overflow-hidden flex flex-col justify-between transition-all duration-200 cursor-pointer group h-[200px] ${
+                isCurrentActive
+                  ? `${guide.accent.activeBorder} shadow-md`
+                  : `border-[#404E3B]/15 ${guide.accent.borderHover}`
+              }`}
             >
               <div>
-                {/* Icon Badge */}
-                <div className="w-11 h-11 rounded-xl flex items-center justify-center mb-4 bg-[#7B9669]/15 border border-[#7B9669]/30 text-[#404E3B] shadow-xs group-hover:scale-105 transition-transform">
-                  <Icon className="w-5 h-5 text-[#7B9669]" />
+                <div className="flex items-center justify-between mb-3.5">
+                  <div className={`w-11 h-11 rounded-xl flex items-center justify-center border shadow-2xs transition-transform group-hover:scale-105 ${guide.accent.iconBg}`}>
+                    <Icon className="w-5 h-5" />
+                  </div>
+                  <span className={`text-[10px] font-mono font-semibold px-2.5 py-1 rounded-full border transition-colors ${
+                    isCurrentActive
+                      ? guide.accent.badge
+                      : 'bg-[#F4F7F4] text-[#6C8480] border-[#404E3B]/15'
+                  }`}>
+                    {isCurrentActive ? 'Active Preview' : 'Hover to view'}
+                  </span>
                 </div>
 
-                <h3 className="text-base font-bold text-[#404E3B] font-sans tracking-wide mb-1.5 group-hover:text-[#7B9669] transition-colors">
+                <h3 className={`text-base font-bold text-[#1C2518] font-sans tracking-wide mb-1.5 transition-colors ${guide.accent.titleHover}`}>
                   {guide.title}
                 </h3>
 
-                <p className="text-xs text-[#6C8480] font-sans leading-relaxed mb-4">
+                <p className="text-xs text-[#52665A] font-sans leading-relaxed line-clamp-2">
                   {guide.description}
                 </p>
               </div>
 
-              {/* Action Button */}
-              <div className="pt-3 border-t border-[#404E3B]/10 flex items-center justify-between">
-                <button
-                  onClick={() => setSelectedGuide(guide)}
-                  className="text-xs font-mono font-bold text-[#7B9669] hover:text-[#404E3B] flex items-center gap-1.5 transition-colors cursor-pointer group/btn"
-                >
-                  <span>Read Guide</span>
-                  <ArrowRight className="w-3.5 h-3.5 group-hover/btn:translate-x-1 transition-transform" />
-                </button>
+              <div className="pt-3 border-t border-[#404E3B]/10 flex items-center justify-between text-xs font-mono font-bold text-[#7B9669]">
+                <span className="flex items-center gap-1.5">
+                  <Eye className="w-3.5 h-3.5 text-[#7B9669]" />
+                  <span>Hover to display in center</span>
+                </span>
+                <ArrowRight className="w-3.5 h-3.5 opacity-60 group-hover:translate-x-1 transition-transform" />
               </div>
             </div>
           );
         })}
       </div>
 
-      {/* Step-by-Step Guide Viewer Modal */}
-      {selectedGuide && (
+      {/* Center Screen Floating Guide Display (Displays over fields without disturbing the grid; disappears when cursor is removed) */}
+      {activeGuide && (
         <div
           role="dialog"
           aria-modal="true"
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) setSelectedGuide(null);
-          }}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 pointer-events-none"
         >
-          <div className="bg-white rounded-2xl border border-[#404E3B]/20 p-6 sm:p-8 max-w-2xl w-full max-h-[85vh] overflow-y-auto shadow-xl relative animate-scaleUp">
-            {/* Modal Header */}
-            <div className="flex items-start justify-between gap-4 pb-4 border-b border-[#404E3B]/10">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-[#7B9669]/15 border border-[#7B9669]/30 text-[#404E3B]">
-                  <selectedGuide.icon className="w-5 h-5 text-[#7B9669]" />
+          {/* Backdrop: transparent to pointer events during hover so card under mouse keeps receiving events; clicks dismiss when pinned */}
+          <div
+            className={`fixed inset-0 bg-black/40 backdrop-blur-[2px] transition-opacity duration-200 ${
+              pinnedGuideId ? 'pointer-events-auto' : 'pointer-events-none'
+            }`}
+            onClick={() => {
+              setPinnedGuideId(null);
+              setHoveredGuideId(null);
+            }}
+          />
+
+          {/* Center Floating Guide Card with min-h-0 and max-h-[80vh] so header and footer NEVER cut off */}
+          <div
+            id="center-guide-modal"
+            onMouseEnter={handleModalMouseEnter}
+            onMouseLeave={handleModalMouseLeave}
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white dark:bg-[#1C281F] rounded-2xl border-2 border-[#7B9669] max-w-2xl w-full max-h-[82vh] h-auto flex flex-col min-h-0 shadow-2xl overflow-hidden animate-scaleUp text-[#202B21] dark:text-[#E6E6E6] relative z-10 pointer-events-auto"
+          >
+            {/* Sticky Fixed Header - ALWAYS FULLY VISIBLE AT TOP */}
+            <div className="px-6 py-4 border-b border-[#404E3B]/10 dark:border-[#BAC8B1]/15 flex items-center justify-between gap-4 bg-[#F8FAF7] dark:bg-[#253629] shrink-0">
+              <div className="flex items-center gap-3.5 min-w-0">
+                <div className={`w-11 h-11 rounded-xl flex items-center justify-center border shadow-2xs shrink-0 ${activeGuide.accent.iconBg}`}>
+                  <activeGuide.icon className="w-5 h-5" />
                 </div>
-                <div>
-                  <h3 className="text-base sm:text-lg font-bold text-[#404E3B] font-mono">
-                    {selectedGuide.title}
-                  </h3>
-                  <p className="text-xs text-[#6C8480] font-sans">
-                    {selectedGuide.description}
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-base sm:text-lg font-bold text-[#1C2518] dark:text-white font-sans tracking-tight truncate">
+                      {activeGuide.title}
+                    </h3>
+                    {pinnedGuideId && (
+                      <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-[#E8F6ED] text-[#16794B] border border-[#B7E3C7] font-bold shrink-0">
+                        Pinned
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-[#52665A] dark:text-[#BAC8B1] font-sans mt-0.5 line-clamp-1">
+                    {activeGuide.description}
                   </p>
                 </div>
               </div>
               <button
-                onClick={() => setSelectedGuide(null)}
+                onClick={() => {
+                  setPinnedGuideId(null);
+                  setHoveredGuideId(null);
+                }}
                 aria-label="Close Guide"
-                className="p-1.5 rounded-lg bg-[#EEF3EC] text-[#404E3B] hover:bg-[#7B9669] hover:text-white transition-colors cursor-pointer"
+                className="p-1.5 rounded-lg bg-white dark:bg-[#1E2B20] text-[#404E3B] dark:text-[#BAC8B1] hover:bg-[#BAC8B1]/40 border border-[#404E3B]/15 dark:border-[#BAC8B1]/20 transition-colors cursor-pointer shrink-0"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            {/* Numbered Steps */}
-            <div className="py-5 space-y-3.5">
-              <h4 className="text-xs font-mono font-bold uppercase tracking-wider text-[#404E3B] mb-2">
-                Step-by-Step Instructions:
-              </h4>
+            {/* Scrollable Body with min-h-0 flex-1 - Contains ALL 5 steps and pro tips completely */}
+            <div className="p-6 overflow-y-auto flex-1 min-h-0 space-y-4 font-sans">
+              <span className="text-xs font-mono font-bold uppercase tracking-wider text-[#243D2E] dark:text-[#BAC8B1] flex items-center gap-1.5 block">
+                <span className={`w-2 h-2 rounded-full ${activeGuide.accent.stepBg}`}></span>
+                <span>Step-by-Step Instructions:</span>
+              </span>
 
               <div className="space-y-3 font-sans">
-                {selectedGuide.steps.map((st) => (
+                {activeGuide.steps.map((st) => (
                   <div
                     key={st.step}
-                    className="p-3.5 rounded-xl bg-[#F4F7F4] border border-[#404E3B]/10 flex items-start gap-3"
+                    className="p-3.5 rounded-xl bg-[#F4F7F4] dark:bg-[#243527] border border-[#404E3B]/10 dark:border-[#BAC8B1]/15 flex items-start gap-3 shadow-2xs"
                   >
-                    <span className="w-6 h-6 rounded-full bg-[#7B9669] text-white flex items-center justify-center text-xs font-mono font-bold shrink-0 mt-0.5">
+                    <span className={`w-6 h-6 rounded-full text-white flex items-center justify-center text-xs font-mono font-bold shrink-0 mt-0.5 shadow-2xs ${activeGuide.accent.stepBg}`}>
                       {st.step}
                     </span>
-                    <div>
-                      <h5 className="text-xs font-bold text-[#404E3B] font-mono">{st.title}</h5>
-                      <p className="text-xs text-[#2C3527] leading-relaxed mt-0.5">{st.detail}</p>
+                    <div className="space-y-0.5">
+                      <h5 className="text-xs font-bold text-[#1C2518] dark:text-white font-mono">{st.title}</h5>
+                      <p className="text-xs text-[#52665A] dark:text-[#BAC8B1] leading-relaxed font-sans">{st.detail}</p>
                     </div>
                   </div>
                 ))}
               </div>
 
               {/* Best Practice Tips */}
-              {selectedGuide.tips && (
-                <div className="mt-4 p-4 rounded-xl bg-[#EEF3EC] border border-[#7B9669]/30 text-xs">
-                  <span className="font-bold text-[#404E3B] font-mono uppercase block mb-1.5">
+              {activeGuide.tips && (
+                <div className="p-4 rounded-xl bg-[#E8F6ED] dark:bg-[#1E3B2B] border border-[#B7E3C7] dark:border-[#355B43] text-xs">
+                  <span className="font-bold text-[#16794B] dark:text-[#9FC48A] font-mono uppercase block mb-1.5 text-[11px]">
                     Pro Tips &amp; Security Best Practices:
                   </span>
-                  <ul className="list-disc list-inside space-y-1 text-[#2C3527]">
-                    {selectedGuide.tips.map((tip, idx) => (
+                  <ul className="list-disc list-inside space-y-1 text-[#202B21] dark:text-[#E6E6E6] text-xs font-sans">
+                    {activeGuide.tips.map((tip, idx) => (
                       <li key={idx} className="leading-relaxed">{tip}</li>
                     ))}
                   </ul>
@@ -376,26 +516,36 @@ export default function HelpResources({ setActivePage }) {
               )}
             </div>
 
-            {/* Modal Actions */}
-            <div className="pt-4 border-t border-[#404E3B]/10 flex items-center justify-between gap-3">
-              <button
-                onClick={() => setSelectedGuide(null)}
-                className="px-4 py-2 rounded-xl bg-[#EEF3EC] hover:bg-[#BAC8B1]/40 text-[#404E3B] text-xs font-mono transition-colors cursor-pointer"
-              >
-                Close Guide
-              </button>
-              {selectedGuide.targetPage && (
+            {/* Sticky Fixed Footer - ALWAYS FULLY VISIBLE AT BOTTOM */}
+            <div className="px-6 py-3.5 border-t border-[#404E3B]/10 dark:border-[#BAC8B1]/15 flex items-center justify-between gap-3 bg-[#F8FAF7] dark:bg-[#253629] shrink-0 font-mono">
+              <span className="text-[11px] text-[#6C8480] dark:text-[#BAC8B1]">
+                {pinnedGuideId ? 'Pinned open • Click outside to close' : 'Hover active • Remove cursor to hide'}
+              </span>
+
+              <div className="flex items-center gap-2.5">
                 <button
                   onClick={() => {
-                    setSelectedGuide(null);
-                    setActivePage(selectedGuide.targetPage);
+                    setPinnedGuideId(null);
+                    setHoveredGuideId(null);
                   }}
-                  className="px-4 py-2 rounded-xl bg-[#7B9669] hover:bg-[#688258] text-white text-xs font-mono font-bold transition-all shadow-sm flex items-center gap-1.5 cursor-pointer"
+                  className="px-4 py-2 rounded-xl bg-white dark:bg-[#1E2B20] border border-[#404E3B]/20 dark:border-[#BAC8B1]/20 hover:bg-[#EEF3EC] dark:hover:bg-[#2A3B2C] text-[#404E3B] dark:text-[#BAC8B1] text-xs font-mono transition-colors cursor-pointer"
                 >
-                  <span>{selectedGuide.targetLabel}</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
+                  Close Guide
                 </button>
-              )}
+                {activeGuide.targetPage && (
+                  <button
+                    onClick={() => {
+                      setPinnedGuideId(null);
+                      setHoveredGuideId(null);
+                      setActivePage(activeGuide.targetPage);
+                    }}
+                    className="px-4 py-2 rounded-xl bg-[#7B9669] hover:bg-[#688258] text-white text-xs font-mono font-bold transition-all shadow-sm flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <span>{activeGuide.targetLabel}</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         </div>

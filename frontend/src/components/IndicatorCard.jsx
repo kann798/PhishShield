@@ -11,39 +11,39 @@ export default function IndicatorCard({ indicator }) {
 
   const severityConfig = {
     info: {
-      card: 'border-slate-200 dark:border-white/10 bg-white dark:bg-[rgba(10,24,52,0.65)]',
-      badge: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30',
+      card: 'border-[#404E3B]/15 bg-white',
+      badge: 'bg-[#7B9669]/15 text-[#404E3B] border-[#7B9669]/30',
       icon: Info,
-      iconColor: 'text-emerald-400',
-      iconBg: 'bg-emerald-500/15 border-emerald-500/30',
+      iconColor: 'text-[#404E3B]',
+      iconBg: 'bg-[#7B9669]/15 border-[#7B9669]/30',
     },
     low: {
-      card: 'border-emerald-300 dark:border-emerald-500/30 bg-emerald-50/40 dark:bg-[rgba(10,24,52,0.65)]',
-      badge: 'bg-emerald-500/15 text-[#10B981] border-emerald-500/30',
+      card: 'border-[#7B9669]/30 bg-white',
+      badge: 'bg-[#7B9669]/15 text-[#404E3B] border-[#7B9669]/30',
       icon: Info,
-      iconColor: 'text-[#10B981]',
-      iconBg: 'bg-emerald-500/15 border-emerald-500/30',
+      iconColor: 'text-[#7B9669]',
+      iconBg: 'bg-[#7B9669]/15 border-[#7B9669]/30',
     },
     medium: {
-      card: 'border-amber-300 dark:border-amber-500/30 bg-amber-50/40 dark:bg-[rgba(10,24,52,0.65)]',
-      badge: 'bg-amber-500/15 text-[#F59E0B] border-amber-500/30',
+      card: 'border-amber-300 bg-white',
+      badge: 'bg-amber-50 text-amber-800 border-amber-300',
       icon: AlertTriangle,
-      iconColor: 'text-[#F59E0B]',
-      iconBg: 'bg-amber-500/15 border-amber-500/30',
+      iconColor: 'text-amber-700',
+      iconBg: 'bg-amber-50 border-amber-300',
     },
     high: {
-      card: 'border-orange-300 dark:border-orange-500/35 bg-orange-50/40 dark:bg-[rgba(10,24,52,0.65)]',
-      badge: 'bg-orange-500/15 text-[#F97316] border-orange-500/35',
+      card: 'border-orange-300 bg-white',
+      badge: 'bg-orange-50 text-orange-800 border-orange-300',
       icon: AlertCircle,
-      iconColor: 'text-[#F97316]',
-      iconBg: 'bg-orange-500/15 border-orange-500/35',
+      iconColor: 'text-orange-700',
+      iconBg: 'bg-orange-50 border-orange-300',
     },
     critical: {
-      card: 'border-rose-400 dark:border-rose-500/40 bg-rose-50/50 dark:bg-rose-950/25 shadow-glow-crimson',
-      badge: 'bg-rose-500/20 text-[#EF4444] border-rose-500/40 font-bold',
+      card: 'border-rose-300 bg-[#FFF5F5]',
+      badge: 'bg-rose-50 text-rose-800 border-rose-300 font-bold',
       icon: ShieldAlert,
-      iconColor: 'text-[#EF4444]',
-      iconBg: 'bg-rose-500/20 border-rose-500/40',
+      iconColor: 'text-rose-700',
+      iconBg: 'bg-rose-100 border-rose-300',
     },
   };
 
@@ -66,8 +66,8 @@ export default function IndicatorCard({ indicator }) {
       <div className="absolute top-0 inset-x-0 h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent pointer-events-none" />
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-start gap-3 flex-1 min-w-0">
-          <div className={`p-2 rounded-lg border shrink-0 ${current.iconBg} ${current.iconColor}`}>
-            <Icon className="w-5 h-5" />
+          <div className={`p-2.5 rounded-[12px] border shrink-0 ${current.iconBg} ${current.iconColor} shadow-xs`}>
+            <Icon className="w-5 h-5 stroke-[1.8]" />
           </div>
 
           <div className="flex-1 min-w-0">

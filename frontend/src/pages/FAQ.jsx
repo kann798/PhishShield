@@ -197,14 +197,14 @@ export default function FAQ({ setActivePage }) {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#404E3B]/15 pb-5">
         <div>
           <div className="flex items-center gap-3">
-            <div className="p-3 bg-[#7B9669]/20 border border-[#7B9669]/40 rounded-2xl text-[#404E3B] shadow-sm">
-              <HelpCircle className="w-5 h-5 text-[#404E3B]" />
+            <div className="p-3 bg-[#7B9669]/20 border border-[#7B9669]/40 rounded-2xl text-[#404E3B] dark:text-[#BAC8B1] shadow-sm">
+              <HelpCircle className="w-5 h-5 text-[#404E3B] dark:text-[#BAC8B1]" />
             </div>
             <div>
-              <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#404E3B] font-heading">
-                Frequently Asked Questions
+              <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-[#1C2518] dark:text-white font-heading">
+                FREQUENTLY ASKED <span className="text-[#7B9669] dark:text-[#9FC48A]">QUESTIONS</span>
               </h1>
-              <p className="text-xs sm:text-sm text-[#6C8480] mt-0.5 font-sans">
+              <p className="text-xs sm:text-sm text-[#404E3B]/80 dark:text-[#BAC8B1] mt-0.5 font-sans font-medium page-subtitle">
                 Find answers to common questions about PhishShield, its features, and how it works.
               </p>
             </div>
@@ -218,7 +218,7 @@ export default function FAQ({ setActivePage }) {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search questions..."
-            className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-[#F4F7F4] border border-[#404E3B]/20 text-xs text-[#2C3527] font-sans placeholder:text-[#6C8480] focus:outline-none focus:border-[#7B9669] focus:ring-1 focus:ring-[#7B9669]/40 transition-all"
+            className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-[#F4F7F4] border border-[#404E3B]/20 text-xs text-[#2C3527] font-sans placeholder:text-[#627F51] placeholder:italic dark:placeholder:text-[#9FC48A] focus:outline-none focus:border-[#7B9669] focus:ring-1 focus:ring-[#7B9669]/40 transition-all"
           />
           <Search className="w-4 h-4 text-[#6C8480] absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
           {searchQuery && (

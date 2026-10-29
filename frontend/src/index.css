@@ -21,7 +21,7 @@
     --sidebar-text:  #E6E6E6;
     --sidebar-active:#7B9669; /* Sage Green */
 
-    --heading-color: #404E3B; /* Dark Forest Green */
+    --heading-color: #1C2518; /* Deep Forest Charcoal for crisp, high-contrast readability */
     --text-color:    #2C3527; /* Dark Gray for readability */
     --text-muted:    #6C8480; /* Slate Green */
 
@@ -67,13 +67,16 @@
   }
 
   /* Typography Hierarchy */
-  h1, h2, h3, h4, h5, h6,
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Bricolage Grotesque', sans-serif !important;
+    color: var(--heading-color);
+  }
+
   .font-heading,
   .font-display,
   .logo-main,
   .stat-counter {
     font-family: 'Bricolage Grotesque', sans-serif !important;
-    color: var(--heading-color);
   }
 
   body, p, span, button, input, textarea, label, a, .font-sans {
@@ -82,6 +85,20 @@
 
   code, pre, .font-mono, .stat-mono, .log-line, .tech-badge {
     font-family: 'JetBrains Mono', monospace !important;
+  }
+
+  /* Distinctive Colored Placeholder Styling */
+  input::placeholder,
+  textarea::placeholder {
+    color: #627F51 !important;
+    opacity: 0.85 !important;
+    font-style: italic;
+  }
+  .dark input::placeholder,
+  .dark textarea::placeholder {
+    color: #9FC48A !important;
+    opacity: 0.85 !important;
+    font-style: italic;
   }
 }
 
@@ -274,21 +291,84 @@ body.light-mode aside {
   box-shadow: 4px 0 24px rgba(64, 78, 59, 0.08) !important;
 }
 
-.light .text-white,
-body.light-mode .text-white,
 body.light-mode h1,
-body.light-mode h2,
-body.light-mode h3,
-body.light-mode h4,
-body.light-mode h5,
-body.light-mode h6,
-.light h1,
-.light h2,
-.light h3,
-.light h4,
-.light h5,
-.light h6 {
-  color: #404E3B !important;
+.light h1 {
+  color: #1C2518;
+}
+
+/* Dark Mode Main Page Titles on Atmospheric Background */
+body.dark-mode h1,
+.dark h1 {
+  color: #FFFFFF !important;
+}
+
+body.dark-mode h1 span.text-\[\#7B9669\],
+.dark h1 span.text-\[\#7B9669\],
+body.dark-mode h1 span[class*="text-[#7B9669]"],
+.dark h1 span[class*="text-[#7B9669]"] {
+  color: #9FC48A !important;
+}
+
+body.dark-mode h1 + p,
+.dark h1 + p,
+body.dark-mode .page-subtitle,
+.dark .page-subtitle {
+  color: #BAC8B1 !important;
+}
+
+/* Standalone Section Headings sitting on Atmospheric Background */
+.dark section > h2,
+body.dark-mode section > h2,
+.dark section > h2 span,
+body.dark-mode section > h2 span {
+  color: #FFFFFF !important;
+}
+
+/* CRITICAL: Headings INSIDE white/light cards, buttons, and panels MUST ALWAYS be dark (#1C2518) */
+.bg-white h1, .bg-white h2, .bg-white h3, .bg-white h4, .bg-white h5, .bg-white h6,
+[class*="bg-white"] h1, [class*="bg-white"] h2, [class*="bg-white"] h3, [class*="bg-white"] h4, [class*="bg-white"] h5, [class*="bg-white"] h6,
+.dark .bg-white h1, .dark .bg-white h2, .dark .bg-white h3, .dark .bg-white h4, .dark .bg-white h5, .dark .bg-white h6,
+.dark [class*="bg-white"] h1, .dark [class*="bg-white"] h2, .dark [class*="bg-white"] h3, .dark [class*="bg-white"] h4, .dark [class*="bg-white"] h5, .dark [class*="bg-white"] h6,
+body.dark-mode .bg-white h1, body.dark-mode .bg-white h2, body.dark-mode .bg-white h3, body.dark-mode .bg-white h4, body.dark-mode .bg-white h5, body.dark-mode .bg-white h6,
+body.dark-mode [class*="bg-white"] h1, body.dark-mode [class*="bg-white"] h2, body.dark-mode [class*="bg-white"] h3, body.dark-mode [class*="bg-white"] h4, body.dark-mode [class*="bg-white"] h5, body.dark-mode [class*="bg-white"] h6 {
+  color: #1C2518 !important;
+}
+
+/* Ensure text inside white card/button headings stays dark */
+.dark .bg-white h2 span,
+.dark [class*="bg-white"] h2 span,
+body.dark-mode .bg-white h2 span,
+body.dark-mode [class*="bg-white"] h2 span,
+.dark .bg-white h3 span,
+.dark [class*="bg-white"] h3 span,
+body.dark-mode .bg-white h3 span,
+body.dark-mode [class*="bg-white"] h3 span {
+  color: #1C2518 !important;
+}
+
+/* Fixed Telemetry Panel on the right (Always dark background with crisp white typography) */
+aside[aria-label="Global Threat Telemetry Panel"],
+.light aside[aria-label="Global Threat Telemetry Panel"],
+body.light-mode aside[aria-label="Global Threat Telemetry Panel"],
+.dark aside[aria-label="Global Threat Telemetry Panel"],
+body.dark-mode aside[aria-label="Global Threat Telemetry Panel"] {
+  background: #303B2C !important;
+  border: 1px solid rgba(186, 200, 177, 0.25) !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4) !important;
+  border-right: none !important;
+}
+
+aside[aria-label="Global Threat Telemetry Panel"] h3,
+aside[aria-label="Global Threat Telemetry Panel"] h3 span,
+.light aside[aria-label="Global Threat Telemetry Panel"] h3,
+.light aside[aria-label="Global Threat Telemetry Panel"] h3 span,
+body.light-mode aside[aria-label="Global Threat Telemetry Panel"] h3,
+body.light-mode aside[aria-label="Global Threat Telemetry Panel"] h3 span,
+.dark aside[aria-label="Global Threat Telemetry Panel"] h3,
+.dark aside[aria-label="Global Threat Telemetry Panel"] h3 span,
+body.dark-mode aside[aria-label="Global Threat Telemetry Panel"] h3,
+body.dark-mode aside[aria-label="Global Threat Telemetry Panel"] h3 span {
+  color: #FFFFFF !important;
 }
 
 .light .text-slate-200,
@@ -454,9 +534,11 @@ body.light-mode textarea:focus {
 .ns-track-l, .ns-track-r {
     position: absolute;
     top: 29px;
-    height: 1px;
-    border-top: 1px dashed rgba(255,255,255,0.22);
+    height: 2px;
+    border-top: 2px dashed #7B9669;
+    z-index: 1;
     pointer-events: none;
+    opacity: 0.85;
 }
 /* Attacker(10px) ←114px→ User(172px) ←168px→ Shield(388px) */
 .ns-track-l { left: 56px;  width: 114px; }
@@ -465,11 +547,12 @@ body.light-mode textarea:focus {
 .ns-char {
     position: absolute; top: 50%; transform: translateY(-50%);
     display: flex; flex-direction: column; align-items: center; gap: 3px;
+    z-index: 2;
 }
 .ns-char-lbl {
     font-family: 'JetBrains Mono', monospace;
     font-size: 10px; font-weight: 800; letter-spacing: 0.08em;
-    text-transform: uppercase; color: rgba(255,255,255,0.75); white-space: nowrap;
+    text-transform: uppercase; color: #404E3B; white-space: nowrap;
 }
 
 /* ── ATTACKER ── */
@@ -1020,6 +1103,48 @@ body.light-mode textarea:focus {
     opacity: 1;
     transform: translateX(0);
     color: rgba(16,185,129,0.75);
+}
+
+/* ── SCOPED EXTENSION PREVIEW FRAME OVERRIDES ────────────────────────── */
+.phishguard-extension-frame {
+    --txt: #ffffff !important;
+    --txt-2: #BAC8B1 !important;
+    --txt-3: #BAC8B1 !important;
+    --accent: #86EFAC !important;
+    --accent-glow: rgba(134, 239, 172, 0.4) !important;
+    color: #ffffff !important;
+}
+
+.phishguard-extension-frame .logo-main {
+    color: #ffffff !important;
+    text-shadow: 0 0 15px rgba(255, 255, 255, 0.2) !important;
+}
+
+.phishguard-extension-frame .logo-sub {
+    color: #BAC8B1 !important;
+}
+
+.phishguard-extension-frame .result-row .rk {
+    color: #BAC8B1 !important;
+    font-weight: 600 !important;
+}
+
+.phishguard-extension-frame .result-row .rv {
+    color: #ffffff !important;
+    font-weight: 700 !important;
+}
+
+.phishguard-extension-frame .score-bar-label span:first-child {
+    color: #BAC8B1 !important;
+}
+
+.phishguard-extension-frame .score-bar-label span:last-child {
+    color: #ffffff !important;
+    font-weight: 700 !important;
+}
+
+.phishguard-extension-frame .pg-footer {
+    color: #BAC8B1 !important;
 }
 
 /* ── RESULT CARD ───────────────────────────────── */

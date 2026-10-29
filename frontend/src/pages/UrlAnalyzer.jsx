@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Globe,
   Search,
@@ -9,19 +9,57 @@ import AlertBanner from '../components/AlertBanner';
 import AnalysisResultView from '../components/AnalysisResultView';
 import { api, clientAnalyzeUrl } from '../services/api';
 
-export default function UrlAnalyzer({ onSelectScan }) {
+export default function UrlAnalyzer({ onSelectScan, onScanComplete }) {
   const [urlInput, setUrlInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [result, setResult] = useState(null);
 
-  // Synthetic safe test examples for rapid user testing
+  // Notify parent layout whether a scan is completed so the footer only appears after completion
+  useEffect(() => {
+    onScanComplete?.(Boolean(result && !loading));
+    return () => {
+      onScanComplete?.(false);
+    };
+  }, [result, loading, onScanComplete]);
+
+  // Synthetic safe test examples for rapid user testing with distinct severity color badges
   const sampleUrls = [
-    { label: 'Raw IP Host (Critical)', url: 'http://192.168.1.45/paypal-login/verify.php' },
-    { label: 'Brand Typosquatting (Critical)', url: 'http://paypa1-security-verification.com/signin' },
-    { label: 'Subdomain Deception (High)', url: 'http://paypal.com.account-update.xyz/login' },
-    { label: 'URL Shortener (Medium)', url: 'https://bit.ly/3xY8a9Q' },
-    { label: 'Legitimate Site (Low)', url: 'https://www.google.com/search?q=cybersecurity' },
+    {
+      label: 'Raw IP Host (Critical)',
+      url: 'http://192.168.1.45/paypal-login/verify.php',
+      severity: 'critical',
+      tagColor: 'bg-[#FEECEC] border-[#F5B7BD] text-[#D92D20] hover:bg-[#D92D20] hover:text-white hover:border-[#D92D20] dark:bg-rose-950/40 dark:border-rose-800 dark:text-rose-300',
+      badgeBg: 'bg-[#D92D20]',
+    },
+    {
+      label: 'Brand Typosquatting (Critical)',
+      url: 'http://paypa1-security-verification.com/signin',
+      severity: 'critical',
+      tagColor: 'bg-[#FEECEC] border-[#F5B7BD] text-[#D92D20] hover:bg-[#D92D20] hover:text-white hover:border-[#D92D20] dark:bg-rose-950/40 dark:border-rose-800 dark:text-rose-300',
+      badgeBg: 'bg-[#D92D20]',
+    },
+    {
+      label: 'Subdomain Deception (High)',
+      url: 'http://paypal.com.account-update.xyz/login',
+      severity: 'high',
+      tagColor: 'bg-[#FEF2F2] border-[#FECACA] text-[#DC2626] hover:bg-[#DC2626] hover:text-white hover:border-[#DC2626] dark:bg-red-950/40 dark:border-red-800 dark:text-red-300',
+      badgeBg: 'bg-[#DC2626]',
+    },
+    {
+      label: 'URL Shortener (Medium)',
+      url: 'https://bit.ly/3xY8a9Q',
+      severity: 'medium',
+      tagColor: 'bg-[#FFF1DB] border-[#F5D08A] text-[#B54708] hover:bg-[#B54708] hover:text-white hover:border-[#B54708] dark:bg-amber-950/40 dark:border-amber-800 dark:text-amber-300',
+      badgeBg: 'bg-[#B54708]',
+    },
+    {
+      label: 'Legitimate Site (Low)',
+      url: 'https://www.google.com/search?q=cybersecurity',
+      severity: 'safe',
+      tagColor: 'bg-[#E8F6ED] border-[#B7E3C7] text-[#16794B] hover:bg-[#16794B] hover:text-white hover:border-[#16794B] dark:bg-emerald-950/40 dark:border-emerald-800 dark:text-emerald-300',
+      badgeBg: 'bg-[#16794B]',
+    },
   ];
 
   const handleAnalyze = async (targetUrl = urlInput) => {
@@ -34,7 +72,6 @@ export default function UrlAnalyzer({ onSelectScan }) {
     try {
       setLoading(true);
       setError(null);
-      setResult(null);
 
       const res = await api.analyzeUrl(urlToTest.trim());
       if (res && (res.success || res.data)) {
@@ -58,34 +95,25 @@ export default function UrlAnalyzer({ onSelectScan }) {
   };
 
   return (
-    <div className="w-full pb-8">
-      {/* 1. Results View (Clean 5-Section Layout matching reference design) */}
-      {result && !loading ? (
-        <AnalysisResultView
-          type="url"
-          result={result}
-          onBack={() => setResult(null)}
-        />
-      ) : (
-        <div className="space-y-6">
-          {/* Page Header */}
+    <div className="w-full pb-8 space-y-6">
+      {/* Page Header */}
       <div className="border-b border-[#404E3B]/15 pb-5">
         <div className="flex items-center gap-3">
           <div className="p-3 bg-[#7B9669]/20 border border-[#7B9669]/40 rounded-2xl text-[#404E3B] shadow-sm">
             <Globe className="w-5 h-5 text-[#404E3B]" />
           </div>
           <div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#404E3B] font-heading">
-              PHISHING URL DETECTOR & HEURISTICS
+            <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-[#1C2518] dark:text-white font-heading">
+              PHISHING URL DETECTOR &amp; <span className="text-[#7B9669] dark:text-[#9FC48A]">HEURISTICS</span>
             </h1>
-            <p className="text-xs sm:text-sm text-[#6C8480] mt-0.5 font-sans">
+            <p className="text-xs sm:text-sm text-[#404E3B]/80 dark:text-[#BAC8B1] mt-0.5 font-sans font-medium page-subtitle">
               Zero-SSRF offline heuristic evaluation of domain structures, typosquatting, raw IP hosts, and evasion tricks
             </p>
           </div>
         </div>
       </div>
 
-      {/* Input Form Card */}
+      {/* Input Form Card - Always visible above results */}
       <div className="bg-white rounded-2xl p-5 sm:p-6 shadow-sm border border-[#404E3B]/15 relative overflow-hidden">
         <form
           onSubmit={(e) => {
@@ -105,13 +133,16 @@ export default function UrlAnalyzer({ onSelectScan }) {
                 value={urlInput}
                 onChange={(e) => setUrlInput(e.target.value)}
                 placeholder="e.g. http://192.168.1.1/login or https://paypa1-security-verification.com"
-                className="w-full rounded-xl bg-[#F4F7F4] border border-[#404E3B]/20 px-4 py-3.5 text-sm text-[#2C3527] font-mono placeholder:text-[#6C8480] focus:outline-none focus:border-[#7B9669] focus:ring-2 focus:ring-[#7B9669]/25 transition-all"
+                className="w-full rounded-xl bg-[#F4F7F4] border border-[#404E3B]/20 px-4 py-3.5 text-sm text-[#2C3527] font-mono placeholder:text-[#627F51] placeholder:italic dark:placeholder:text-[#9FC48A] focus:outline-none focus:border-[#7B9669] focus:ring-2 focus:ring-[#7B9669]/25 transition-all"
               />
               {urlInput && (
                 <button
                   type="button"
-                  onClick={() => setUrlInput('')}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-mono text-[#404E3B] hover:text-[#2C3527] px-2.5 py-1 rounded-lg bg-[#EEF3EC] border border-[#404E3B]/15 transition-colors"
+                  onClick={() => {
+                    setUrlInput('');
+                    setResult(null);
+                  }}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-mono text-[#404E3B] hover:text-[#2C3527] px-2.5 py-1 rounded-lg bg-[#EEF3EC] border border-[#404E3B]/15 transition-colors cursor-pointer"
                 >
                   Clear
                 </button>
@@ -119,7 +150,7 @@ export default function UrlAnalyzer({ onSelectScan }) {
             </div>
           </div>
 
-          {/* Quick-test Presets */}
+          {/* Quick-test Presets with distinct severity color styling */}
           <div>
             <span className="text-[11px] font-mono text-[#6C8480] block mb-2 flex items-center gap-1.5 font-semibold">
               <Zap className="w-3.5 h-3.5 text-[#7B9669]" />
@@ -131,9 +162,10 @@ export default function UrlAnalyzer({ onSelectScan }) {
                   key={idx}
                   type="button"
                   onClick={() => handleSampleClick(sample.url)}
-                  className="px-3.5 py-1.5 rounded-xl text-xs font-mono font-medium bg-[#EEF3EC] border border-[#404E3B]/15 hover:border-[#7B9669] hover:bg-[#7B9669] hover:text-white text-[#404E3B] transition-all shadow-sm"
+                  className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-mono font-medium border transition-all shadow-xs cursor-pointer ${sample.tagColor}`}
                 >
-                  {sample.label}
+                  <span className={`w-2 h-2 rounded-full shrink-0 ${sample.badgeBg}`}></span>
+                  <span>{sample.label}</span>
                 </button>
               ))}
             </div>
@@ -149,7 +181,7 @@ export default function UrlAnalyzer({ onSelectScan }) {
               id="analyze-url-btn"
               type="submit"
               disabled={loading || !urlInput.trim()}
-              className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-[#7B9669] hover:bg-[#688258] text-white font-extrabold text-xs uppercase tracking-wider font-mono transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98]"
+              className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-[#7B9669] hover:bg-[#688258] text-white font-extrabold text-xs uppercase tracking-wider font-mono transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98] cursor-pointer"
             >
               {loading ? (
                 <>
@@ -186,13 +218,22 @@ export default function UrlAnalyzer({ onSelectScan }) {
             <Globe className="w-6 h-6 text-[#7B9669] absolute" />
           </div>
           <h3 className="text-sm font-mono font-bold text-[#404E3B] uppercase tracking-widest">
-            Scanning URL Architecture & Threat Signatures...
+            Scanning URL Architecture &amp; Threat Signatures...
           </h3>
           <p className="text-xs text-[#6C8480] mt-1 max-w-sm mx-auto font-mono">
             Evaluating IP address, homoglyphs, brand spoofing, subdomain depth, and suspicious keywords
           </p>
         </div>
       )}
+
+      {/* Results View - Appears directly below the search input field */}
+      {result && !loading && (
+        <div id="url-scan-results" className="pt-2 animate-fadeIn">
+          <AnalysisResultView
+            type="url"
+            result={result}
+            onBack={() => setResult(null)}
+          />
         </div>
       )}
     </div>

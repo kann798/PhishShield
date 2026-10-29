@@ -186,15 +186,15 @@ export default function Dashboard({ setActivePage, onSelectScan }) {
         {/* Left: Heading & Subtitle */}
         <div>
           <div className="flex items-center gap-3 flex-wrap">
-            <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-[#404E3B] font-heading">
-              SECURITY OPERATIONS DASHBOARD
+            <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-[#1C2518] dark:text-white font-heading">
+              SECURITY OPERATIONS <span className="text-[#7B9669] dark:text-[#9FC48A]">DASHBOARD</span>
             </h1>
-            <span className="flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-mono font-bold uppercase bg-[#7B9669]/15 border border-[#7B9669]/35 text-[#404E3B]">
-              <span className="w-2 h-2 rounded-full bg-[#7B9669]"></span>
+            <span className="flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-mono font-bold uppercase bg-[#7B9669]/20 border border-[#7B9669]/40 text-[#1C2518] dark:text-[#E6ECE1] dark:bg-[#7B9669]/30 dark:border-[#7B9669]/50 shadow-xs">
+              <span className="w-2 h-2 rounded-full bg-[#16A34A] shadow-[0_0_8px_#16A34A] animate-pulse"></span>
               • LIVE TELEMETRY
             </span>
           </div>
-          <p className="text-xs sm:text-sm text-[#6C8480] mt-1 font-sans">
+          <p className="text-xs sm:text-sm text-[#404E3B]/85 dark:text-[#BAC8B1] mt-1 font-sans font-medium page-subtitle">
             Real-time threat analytics, heuristic risk distribution, and security inspection logs.
           </p>
         </div>
@@ -206,7 +206,7 @@ export default function Dashboard({ setActivePage, onSelectScan }) {
               <div className="p-1 rounded bg-[#7B9669]/15 text-[#404E3B]">
                 <ShieldAlert className="w-3.5 h-3.5 text-[#7B9669]" />
               </div>
-              <span className="text-xs font-mono font-bold text-[#404E3B] tracking-wide">
+              <span className="text-xs font-mono font-bold text-[#1C2518] tracking-wide">
                 Last Scan Summary
               </span>
             </div>
@@ -232,7 +232,7 @@ export default function Dashboard({ setActivePage, onSelectScan }) {
                   <Clock className="w-3.5 h-3.5 text-[#6C8480]" />
                   <span>Last Scan</span>
                 </span>
-                <span className="text-[#404E3B] font-medium">
+                <span className="text-[#1C2518] font-semibold">
                   {formatRelativeTime(latestScan.created_at_iso || latestScan.created_at)}
                 </span>
               </div>
@@ -242,7 +242,7 @@ export default function Dashboard({ setActivePage, onSelectScan }) {
                   <Target className="w-3.5 h-3.5 text-[#6C8480]" />
                   <span>Type</span>
                 </span>
-                <span className="text-[#404E3B] font-medium capitalize">
+                <span className="text-[#1C2518] font-semibold capitalize">
                   {latestScan.scan_type === 'email' ? 'Email' : 'URL'}
                 </span>
               </div>
@@ -259,10 +259,10 @@ export default function Dashboard({ setActivePage, onSelectScan }) {
 
               <div className="flex items-center justify-between gap-4">
                 <span className="text-[#6C8480] flex items-center gap-2">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-[#7B9669]" />
+                  <CheckCircle2 className="w-3.5 h-3.5 text-[#16A34A]" />
                   <span>Status</span>
                 </span>
-                <span className="text-[#7B9669] font-bold flex items-center gap-1">
+                <span className="text-[#16A34A] font-bold flex items-center gap-1">
                   <span>•</span>
                   <span>Completed</span>
                 </span>
@@ -289,110 +289,101 @@ export default function Dashboard({ setActivePage, onSelectScan }) {
         </div>
       )}
 
-      {/* 2. Four Statistics Cards */}
+      {/* 2. Four Statistics Cards matching reference design */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
         {/* Card 1: URLs Analyzed */}
-        <div className="rounded-2xl p-5 border border-[#404E3B]/12 bg-white relative overflow-hidden flex flex-col justify-between shadow-sm">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold uppercase tracking-wider font-mono text-[#6C8480]">
+        <div className="rounded-2xl p-4 sm:p-5 border border-[#404E3B]/15 bg-white relative overflow-hidden flex flex-col justify-between shadow-xs hover:border-[#7B9669]/50 transition-all">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-[#4A5D44] flex items-center justify-center text-[#BAC8B1] shadow-xs shrink-0">
+              <Globe className="w-5 h-5 text-[#BAC8B1] stroke-[1.8]" />
+            </div>
+            <span className="text-xs sm:text-sm font-bold text-[#1C2518]">
               URLs Analyzed
             </span>
-            <div className="w-9 h-9 rounded-full bg-[#7B9669]/15 border border-[#7B9669]/30 flex items-center justify-center text-[#404E3B]">
-              <Globe className="w-4 h-4" />
-            </div>
           </div>
-          <div className="pt-3">
-            <div className="flex items-baseline justify-between">
-              <span className="text-3xl sm:text-4xl font-black font-mono text-[#404E3B] tracking-tight">
-                {totalUrls}
-              </span>
-              <span className="text-xs font-mono font-bold text-[#7B9669] flex items-center gap-0.5">
-                <ArrowUp className="w-3 h-3" />
-                <span>12%</span>
-              </span>
-            </div>
-            <p className="text-xs font-semibold text-[#7B9669] mt-1 font-mono tracking-wide">
-              Web links inspected
-            </p>
+          <div className="pt-3 flex items-baseline justify-between">
+            <span className="text-3xl sm:text-4xl font-extrabold text-[#1C2518] tracking-tight font-mono">
+              {totalUrls}
+            </span>
+            <span className="text-xs font-mono font-bold text-[#16A34A] flex items-center gap-0.5">
+              <ArrowUp className="w-3.5 h-3.5 stroke-[2.2]" />
+              <span>12%</span>
+            </span>
+          </div>
+          <div className="pt-2 text-xs text-[#6C8480] font-sans">
+            Web links inspected
           </div>
         </div>
 
         {/* Card 2: Emails Analyzed */}
-        <div className="rounded-2xl p-5 border border-[#404E3B]/12 bg-white relative overflow-hidden flex flex-col justify-between shadow-sm">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold uppercase tracking-wider font-mono text-[#6C8480]">
+        <div className="rounded-2xl p-4 sm:p-5 border border-[#404E3B]/15 bg-white relative overflow-hidden flex flex-col justify-between shadow-xs hover:border-[#7B9669]/50 transition-all">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-[#526861] flex items-center justify-center text-[#BAC8B1] shadow-xs shrink-0">
+              <Mail className="w-5 h-5 text-[#BAC8B1] stroke-[1.8]" />
+            </div>
+            <span className="text-xs sm:text-sm font-bold text-[#1C2518]">
               Emails Analyzed
             </span>
-            <div className="w-9 h-9 rounded-full bg-[#6C8480]/15 border border-[#6C8480]/30 flex items-center justify-center text-[#404E3B]">
-              <Mail className="w-4 h-4" />
-            </div>
           </div>
-          <div className="pt-3">
-            <div className="flex items-baseline justify-between">
-              <span className="text-3xl sm:text-4xl font-black font-mono text-[#404E3B] tracking-tight">
-                {totalEmails}
-              </span>
-              <span className="text-xs font-mono font-bold text-[#7B9669] flex items-center gap-0.5">
-                <ArrowUp className="w-3 h-3" />
-                <span>8%</span>
-              </span>
-            </div>
-            <p className="text-xs font-semibold text-[#6C8480] mt-1 font-mono tracking-wide">
-              Headers &amp; bodies parsed
-            </p>
+          <div className="pt-3 flex items-baseline justify-between">
+            <span className="text-3xl sm:text-4xl font-extrabold text-[#1C2518] tracking-tight font-mono">
+              {totalEmails}
+            </span>
+            <span className="text-xs font-mono font-bold text-[#16A34A] flex items-center gap-0.5">
+              <ArrowUp className="w-3.5 h-3.5 stroke-[2.2]" />
+              <span>8%</span>
+            </span>
+          </div>
+          <div className="pt-2 text-xs text-[#6C8480] font-sans">
+            Headers &amp; bodies parsed
           </div>
         </div>
 
         {/* Card 3: Threats Detected */}
-        <div className="rounded-2xl p-5 border border-rose-200 bg-white relative overflow-hidden flex flex-col justify-between shadow-sm">
-          <div className="absolute top-0 inset-x-0 h-[2px] bg-rose-500 pointer-events-none" />
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold uppercase tracking-wider font-mono text-rose-700">
+        <div className="rounded-2xl p-4 sm:p-5 border border-rose-200/80 bg-[#FFF5F4] relative overflow-hidden flex flex-col justify-between shadow-xs hover:border-rose-400 transition-all">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-[#E06355] flex items-center justify-center text-white shadow-xs shrink-0">
+              <ShieldAlert className="w-5 h-5 text-white stroke-[1.8]" />
+            </div>
+            <span className="text-xs sm:text-sm font-bold text-[#1C2518]">
               Threats Detected
             </span>
-            <div className="w-9 h-9 rounded-full bg-rose-100 border border-rose-300 flex items-center justify-center text-rose-600">
-              <ShieldAlert className="w-4 h-4" />
-            </div>
           </div>
-          <div className="pt-3">
-            <div className="flex items-baseline justify-between">
-              <span className="text-3xl sm:text-4xl font-black font-mono text-rose-600 tracking-tight">
-                {totalThreats}
-              </span>
-              <span className="text-xs font-mono font-bold text-rose-600 flex items-center gap-0.5">
-                <ArrowUp className="w-3 h-3" />
-                <span>15%</span>
-              </span>
-            </div>
-            <p className="text-xs font-bold text-rose-600 mt-1 font-mono tracking-wider uppercase">
-              CRITICAL / HIGH ANOMALIES
-            </p>
+          <div className="pt-3 flex items-baseline justify-between">
+            <span className="text-3xl sm:text-4xl font-extrabold text-[#DC2626] tracking-tight font-mono">
+              {totalThreats}
+            </span>
+            <span className="text-xs font-mono font-bold text-[#DC2626] flex items-center gap-0.5">
+              <ArrowUp className="w-3.5 h-3.5 stroke-[2.2]" />
+              <span>15%</span>
+            </span>
+          </div>
+          <div className="pt-2 text-xs text-[#6C8480] font-sans">
+            Critical / High anomalies
           </div>
         </div>
 
         {/* Card 4: Safe Items Verified */}
-        <div className="rounded-2xl p-5 border border-[#404E3B]/12 bg-white relative overflow-hidden flex flex-col justify-between shadow-sm">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold uppercase tracking-wider font-mono text-[#6C8480]">
+        <div className="rounded-2xl p-4 sm:p-5 border border-[#404E3B]/15 bg-white relative overflow-hidden flex flex-col justify-between shadow-xs hover:border-[#7B9669]/50 transition-all">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-[#4A5D44] flex items-center justify-center text-[#BAC8B1] shadow-xs shrink-0">
+              <ShieldCheck className="w-5 h-5 text-[#BAC8B1] stroke-[1.8]" />
+            </div>
+            <span className="text-xs sm:text-sm font-bold text-[#1C2518]">
               Safe Items Verified
             </span>
-            <div className="w-9 h-9 rounded-full bg-[#7B9669]/15 border border-[#7B9669]/30 flex items-center justify-center text-[#7B9669]">
-              <ShieldCheck className="w-4 h-4" />
-            </div>
           </div>
-          <div className="pt-3">
-            <div className="flex items-baseline justify-between">
-              <span className="text-3xl sm:text-4xl font-black font-mono text-[#404E3B] tracking-tight">
-                {totalSafe}
-              </span>
-              <span className="text-xs font-mono font-bold text-[#7B9669] flex items-center gap-0.5">
-                <ArrowUp className="w-3 h-3" />
-                <span>5%</span>
-              </span>
-            </div>
-            <p className="text-xs font-bold text-[#7B9669] mt-1 font-mono tracking-wider uppercase">
-              ZERO THREAT SIGNATURES
-            </p>
+          <div className="pt-3 flex items-baseline justify-between">
+            <span className="text-3xl sm:text-4xl font-extrabold text-[#16A34A] tracking-tight font-mono">
+              {totalSafe}
+            </span>
+            <span className="text-xs font-mono font-bold text-[#16A34A] flex items-center gap-0.5">
+              <ArrowUp className="w-3.5 h-3.5 stroke-[2.2]" />
+              <span>5%</span>
+            </span>
+          </div>
+          <div className="pt-2 text-xs text-[#6C8480] font-sans">
+            Zero threat signatures
           </div>
         </div>
       </div>
@@ -403,7 +394,7 @@ export default function Dashboard({ setActivePage, onSelectScan }) {
         <div className="rounded-2xl p-5 sm:p-6 shadow-sm border border-[#404E3B]/12 bg-white relative overflow-hidden flex flex-col justify-between">
           <div className="flex items-center gap-2 mb-4 pb-3 border-b border-[#404E3B]/10">
             <PieIcon className="w-4 h-4 text-[#7B9669]" />
-            <h3 className="text-xs sm:text-sm font-bold text-[#404E3B] font-mono uppercase tracking-wider">
+            <h3 className="text-xs sm:text-sm font-bold text-[#1C2518] font-mono uppercase tracking-wider">
               Threat Classification Breakdown
             </h3>
           </div>
@@ -469,7 +460,7 @@ export default function Dashboard({ setActivePage, onSelectScan }) {
         <div className="rounded-2xl p-5 sm:p-6 shadow-sm border border-[#404E3B]/12 bg-white relative overflow-hidden flex flex-col justify-between">
           <div className="flex items-center gap-2 mb-4 pb-3 border-b border-[#404E3B]/10">
             <BarChart3 className="w-4 h-4 text-[#7B9669]" />
-            <h3 className="text-xs sm:text-sm font-bold text-[#404E3B] font-mono uppercase tracking-wider">
+            <h3 className="text-xs sm:text-sm font-bold text-[#1C2518] font-mono uppercase tracking-wider">
               Risk Distribution Volume
             </h3>
           </div>
@@ -531,7 +522,7 @@ export default function Dashboard({ setActivePage, onSelectScan }) {
               <Shield className="w-4 h-4 text-[#7B9669]" />
             </div>
             <div>
-              <h3 className="text-xs sm:text-sm font-bold text-[#404E3B] font-mono uppercase tracking-wider">
+              <h3 className="text-xs sm:text-sm font-bold text-[#1C2518] font-mono uppercase tracking-wider">
                 Recent Threat Telemetry &amp; Inspection Logs
               </h3>
               <p className="text-xs text-[#6C8480] font-sans mt-0.5">

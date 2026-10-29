@@ -114,18 +114,18 @@ IT Support Services`,
   ];
 
   return (
-    <div className="space-y-6 w-full pb-8">
+    <div className="space-y-4 w-full pb-8">
       {/* Page Header */}
-      <div className="border-b border-[#404E3B]/15 pb-5">
+      <div className="border-b border-[#404E3B]/15 pb-3">
         <div className="flex items-center gap-3">
-          <div className="p-3 bg-[#7B9669]/20 border border-[#7B9669]/40 rounded-2xl text-[#404E3B] shadow-sm">
-            <GraduationCap className="w-5 h-5 text-[#404E3B]" />
+          <div className="p-2.5 bg-[#7B9669]/20 border border-[#7B9669]/40 rounded-xl text-[#404E3B] dark:text-[#BAC8B1] shadow-sm">
+            <GraduationCap className="w-5 h-5 text-[#404E3B] dark:text-[#BAC8B1]" />
           </div>
           <div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#404E3B] font-heading">
-              PHISHING AWARENESS & DEFENSE CENTER
+            <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-[#1C2518] dark:text-white font-heading">
+              PHISHING AWARENESS &amp; <span className="text-[#7B9669] dark:text-[#9FC48A]">DEFENSE CENTER</span>
             </h1>
-            <p className="text-xs sm:text-sm text-[#6C8480] mt-0.5">
+            <p className="text-xs sm:text-sm text-[#404E3B]/80 dark:text-[#BAC8B1] mt-0.5 font-sans font-medium page-subtitle">
               Interactive threat simulation, anatomy of deception, red flag checklists, and defensive response
             </p>
           </div>
@@ -133,10 +133,10 @@ IT Support Services`,
       </div>
 
       {/* Navigation Tabs */}
-      <div className="flex flex-wrap gap-2.5 border-b border-[#404E3B]/10 pb-4">
+      <div className="flex flex-wrap gap-2 border-b border-[#404E3B]/10 pb-3">
         <button
           onClick={() => setActiveTab('quiz')}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-mono font-bold transition-all ${
+          className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-mono font-bold transition-all ${
             activeTab === 'quiz'
               ? 'bg-[#7B9669] text-white shadow-sm'
               : 'bg-white text-[#404E3B] border border-[#404E3B]/15 hover:bg-[#EEF3EC]'
@@ -153,7 +153,7 @@ IT Support Services`,
 
         <button
           onClick={() => setActiveTab('attack_types')}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-mono font-bold transition-all ${
+          className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-mono font-bold transition-all ${
             activeTab === 'attack_types'
               ? 'bg-[#7B9669] text-white shadow-sm'
               : 'bg-white text-[#404E3B] border border-[#404E3B]/15 hover:bg-[#EEF3EC]'
@@ -165,7 +165,7 @@ IT Support Services`,
 
         <button
           onClick={() => setActiveTab('red_flags')}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-mono font-bold transition-all ${
+          className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-mono font-bold transition-all ${
             activeTab === 'red_flags'
               ? 'bg-[#7B9669] text-white shadow-sm'
               : 'bg-white text-[#404E3B] border border-[#404E3B]/15 hover:bg-[#EEF3EC]'
@@ -177,7 +177,7 @@ IT Support Services`,
 
         <button
           onClick={() => setActiveTab('checklist')}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-mono font-bold transition-all ${
+          className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-mono font-bold transition-all ${
             activeTab === 'checklist'
               ? 'bg-[#7B9669] text-white shadow-sm'
               : 'bg-white text-[#404E3B] border border-[#404E3B]/15 hover:bg-[#EEF3EC]'
@@ -190,26 +190,26 @@ IT Support Services`,
 
       {/* Tab 1: Interactive Simulator Quiz */}
       {activeTab === 'quiz' && (
-        <div className="space-y-6">
-          <div className="bg-white rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border border-[#404E3B]/15 shadow-sm">
+        <div className="space-y-4">
+          <div className="bg-white rounded-xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 border border-[#404E3B]/15 shadow-sm">
             <div>
-              <h3 className="text-base font-extrabold text-[#404E3B] font-sans flex items-center gap-2">
+              <h3 className="text-sm sm:text-base font-extrabold text-[#404E3B] font-sans flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-[#7B9669]" />
                 Real-World Email Inspection Challenge
               </h3>
-              <p className="text-xs text-[#6C8480] mt-1">
+              <p className="text-xs text-[#6C8480] mt-0.5">
                 Review the synthetic sample emails below and decide whether they represent genuine communications or malicious phishing.
               </p>
             </div>
-            <div className="flex items-center gap-3 shrink-0">
-              <span className="text-xs font-mono font-semibold text-[#6C8480]">Your Current Score:</span>
-              <span className="text-xl font-black font-mono text-[#404E3B] px-4 py-1.5 bg-[#EEF3EC] border border-[#404E3B]/15 rounded-xl">
+            <div className="flex items-center gap-2.5 shrink-0">
+              <span className="text-xs font-mono font-semibold text-[#6C8480]">Score:</span>
+              <span className="text-lg font-black font-mono text-[#404E3B] px-3.5 py-1 bg-[#EEF3EC] border border-[#404E3B]/15 rounded-xl">
                 {score} / {scenarios.length}
               </span>
             </div>
           </div>
 
-          <div className="space-y-6">
+          <div className="space-y-4">
             {scenarios.map((sc) => {
               const answered = selectedAnswers[sc.id] !== undefined;
               const isCorrect = selectedAnswers[sc.id] === sc.isPhishing;
@@ -217,10 +217,10 @@ IT Support Services`,
               return (
                 <div
                   key={sc.id}
-                  className="bg-white rounded-2xl p-6 space-y-4 border border-[#404E3B]/15 shadow-sm transition-all duration-300"
+                  className="bg-white rounded-xl p-4 sm:p-5 space-y-3 border border-[#404E3B]/15 shadow-sm transition-all duration-300"
                 >
-                  <div className="flex items-center justify-between border-b border-[#404E3B]/10 pb-3">
-                    <h4 className="text-sm font-bold text-[#404E3B] font-mono tracking-wide">{sc.title}</h4>
+                  <div className="flex items-center justify-between border-b border-[#404E3B]/10 pb-2.5">
+                    <h4 className="text-xs sm:text-sm font-bold text-[#404E3B] font-mono tracking-wide">{sc.title}</h4>
                     {answered && (
                       <span
                         className={`text-xs font-mono px-3 py-1 rounded-full font-bold flex items-center gap-1.5 ${
@@ -236,7 +236,7 @@ IT Support Services`,
                   </div>
 
                   {/* Mock Email Viewer */}
-                  <div className="bg-[#F4F7F4] rounded-xl border border-[#404E3B]/10 p-4 font-mono text-xs space-y-2">
+                  <div className="bg-[#F4F7F4] rounded-lg border border-[#404E3B]/10 p-3 font-mono text-xs space-y-1.5">
                     <div className="text-[#6C8480]">
                       <span className="font-bold text-[#404E3B]">From: </span>
                       <span className="text-[#2C3527] font-semibold">{sc.sender}</span>
@@ -251,20 +251,20 @@ IT Support Services`,
                       <span className="font-bold text-[#404E3B]">Subject: </span>
                       <span className="text-[#2C3527] font-medium">{sc.subject}</span>
                     </div>
-                    <div className="pt-2 border-t border-[#404E3B]/10 text-[#2C3527] whitespace-pre-wrap leading-relaxed">
+                    <div className="pt-2 border-t border-[#404E3B]/10 text-[#2C3527] whitespace-pre-wrap leading-relaxed text-[11.5px]">
                       {sc.body}
                     </div>
                   </div>
 
                   {/* Action Buttons */}
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pt-1">
                     <span className="text-xs text-[#6C8480] font-mono font-medium">
                       What is your threat verdict?
                     </span>
-                    <div className="flex items-center gap-2.5">
+                    <div className="flex items-center gap-2">
                       <button
                         onClick={() => handleAnswer(sc.id, true)}
-                        className={`px-4 py-2 rounded-xl text-xs font-mono font-bold transition-all cursor-pointer ${
+                        className={`px-3.5 py-1.5 rounded-lg text-xs font-mono font-bold transition-all cursor-pointer ${
                           selectedAnswers[sc.id] === true
                             ? 'bg-rose-600 text-white shadow-sm'
                             : 'bg-white border border-rose-300 text-rose-700 hover:bg-rose-50'
@@ -274,7 +274,7 @@ IT Support Services`,
                       </button>
                       <button
                         onClick={() => handleAnswer(sc.id, false)}
-                        className={`px-4 py-2 rounded-xl text-xs font-mono font-bold transition-all cursor-pointer ${
+                        className={`px-3.5 py-1.5 rounded-lg text-xs font-mono font-bold transition-all cursor-pointer ${
                           selectedAnswers[sc.id] === false
                             ? 'bg-[#7B9669] text-white shadow-sm'
                             : 'bg-white border border-[#7B9669]/40 text-[#404E3B] hover:bg-[#EEF3EC]'
@@ -288,7 +288,7 @@ IT Support Services`,
                   {/* Feedback Explanation */}
                   {showExplanation[sc.id] && (
                     <div
-                      className={`p-4 rounded-xl text-xs leading-relaxed border ${
+                      className={`p-3.5 rounded-lg text-xs leading-relaxed border ${
                         isCorrect
                           ? 'bg-[#EEF3EC] border-[#7B9669]/30 text-[#404E3B]'
                           : 'bg-rose-50 border-rose-200 text-rose-800'
@@ -309,16 +309,16 @@ IT Support Services`,
 
       {/* Tab 2: Attack Types */}
       {activeTab === 'attack_types' && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
           {attackTypes.map((type, idx) => (
-            <div key={idx} className="bg-white rounded-2xl p-6 space-y-3 border border-[#404E3B]/15 shadow-sm transition-all duration-300">
-              <div className="flex items-center gap-3">
-                <span className="text-2xl p-2 rounded-xl bg-[#EEF3EC] border border-[#404E3B]/15">{type.icon}</span>
-                <h4 className="text-sm font-bold text-[#404E3B] font-mono tracking-wide">{type.title}</h4>
+            <div key={idx} className="bg-white rounded-xl p-4 sm:p-5 space-y-2.5 border border-[#404E3B]/15 shadow-sm transition-all duration-300">
+              <div className="flex items-center gap-2.5">
+                <span className="text-xl p-1.5 rounded-lg bg-[#EEF3EC] border border-[#404E3B]/15">{type.icon}</span>
+                <h4 className="text-xs sm:text-sm font-bold text-[#404E3B] font-mono tracking-wide">{type.title}</h4>
               </div>
               <p className="text-xs text-[#2C3527] leading-relaxed">{type.desc}</p>
-              <div className="pt-3 border-t border-[#404E3B]/10">
-                <span className="text-[10px] font-mono uppercase text-[#7B9669] font-bold block mb-1">
+              <div className="pt-2 border-t border-[#404E3B]/10">
+                <span className="text-[10px] font-mono uppercase text-[#7B9669] font-bold block mb-0.5">
                   Recommended Defense:
                 </span>
                 <p className="text-xs text-[#6C8480] leading-relaxed">{type.countermeasure}</p>
@@ -330,14 +330,14 @@ IT Support Services`,
 
       {/* Tab 3: Identifying Red Flags */}
       {activeTab === 'red_flags' && (
-        <div className="space-y-4">
-          <div className="bg-white rounded-2xl p-6 space-y-4 border border-[#404E3B]/15 shadow-sm">
-            <h3 className="text-sm font-bold text-[#404E3B] font-mono uppercase tracking-wider flex items-center gap-2">
+        <div className="space-y-3.5">
+          <div className="bg-white rounded-xl p-4 sm:p-5 space-y-3 border border-[#404E3B]/15 shadow-sm">
+            <h3 className="text-xs sm:text-sm font-bold text-[#404E3B] font-mono uppercase tracking-wider flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-[#7B9669]" />
               How to Spot Deceptive URLs & Phishing Domains
             </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-              <div className="p-4 rounded-xl bg-[#F4F7F4] border border-[#404E3B]/10 space-y-2">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+              <div className="p-3.5 rounded-xl bg-[#F4F7F4] border border-[#404E3B]/10 space-y-1.5">
                 <h5 className="font-bold text-rose-700 font-mono flex items-center gap-1.5">
                   <span className="w-1.5 h-1.5 rounded-full bg-rose-600" /> 1. Raw IP Address Hosts
                 </h5>
@@ -345,7 +345,7 @@ IT Support Services`,
                   Legitimate web portals use registered domain names with public SSL certificates. Be wary of links like <code className="text-[#404E3B] font-mono font-bold bg-[#BAC8B1]/40 px-1 py-0.5 rounded">http://192.168.1.1/login</code>.
                 </p>
               </div>
-              <div className="p-4 rounded-xl bg-[#F4F7F4] border border-[#404E3B]/10 space-y-2">
+              <div className="p-3.5 rounded-xl bg-[#F4F7F4] border border-[#404E3B]/10 space-y-1.5">
                 <h5 className="font-bold text-rose-700 font-mono flex items-center gap-1.5">
                   <span className="w-1.5 h-1.5 rounded-full bg-rose-600" /> 2. Typosquatting & Homoglyphs
                 </h5>
@@ -353,7 +353,7 @@ IT Support Services`,
                   Attackers swap Latin characters for identical Cyrillic glyphs or replace letters with numbers (e.g., <code className="text-[#404E3B] font-mono font-bold bg-[#BAC8B1]/40 px-1 py-0.5 rounded">paypa1.com</code> or <code className="text-[#404E3B] font-mono font-bold bg-[#BAC8B1]/40 px-1 py-0.5 rounded">micros0ft.com</code>).
                 </p>
               </div>
-              <div className="p-4 rounded-xl bg-[#F4F7F4] border border-[#404E3B]/10 space-y-2">
+              <div className="p-3.5 rounded-xl bg-[#F4F7F4] border border-[#404E3B]/10 space-y-1.5">
                 <h5 className="font-bold text-rose-700 font-mono flex items-center gap-1.5">
                   <span className="w-1.5 h-1.5 rounded-full bg-rose-600" /> 3. Brand Subdomain Deception
                 </h5>
@@ -361,7 +361,7 @@ IT Support Services`,
                   Always inspect the root domain immediately preceding the TLD. In <code className="text-[#404E3B] font-mono font-bold bg-[#BAC8B1]/40 px-1 py-0.5 rounded">paypal.com.verify-login.xyz</code>, the actual domain is <strong className="text-[#404E3B]">verify-login.xyz</strong>, not PayPal.
                 </p>
               </div>
-              <div className="p-4 rounded-xl bg-[#F4F7F4] border border-[#404E3B]/10 space-y-2">
+              <div className="p-3.5 rounded-xl bg-[#F4F7F4] border border-[#404E3B]/10 space-y-1.5">
                 <h5 className="font-bold text-rose-700 font-mono flex items-center gap-1.5">
                   <span className="w-1.5 h-1.5 rounded-full bg-rose-600" /> 4. HTTPS Does NOT Guarantee Safety
                 </h5>
@@ -376,12 +376,12 @@ IT Support Services`,
 
       {/* Tab 4: Security Checklist */}
       {activeTab === 'checklist' && (
-        <div className="bg-white rounded-2xl p-6 space-y-4 border border-[#404E3B]/15 shadow-sm">
-          <h3 className="text-sm font-bold text-[#404E3B] font-mono uppercase tracking-wider flex items-center gap-2">
+        <div className="bg-white rounded-xl p-4 sm:p-5 space-y-3.5 border border-[#404E3B]/15 shadow-sm">
+          <h3 className="text-xs sm:text-sm font-bold text-[#404E3B] font-mono uppercase tracking-wider flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-[#7B9669]" />
             Cybersecurity Incident Prevention Checklist
           </h3>
-          <div className="space-y-3">
+          <div className="space-y-2.5">
             {[
               { title: 'Enable Hardware Multi-Factor Authentication (MFA)', desc: 'FIDO2 / WebAuthn hardware keys or authenticator apps stop 99% of automated credential harvesting attempts.' },
               { title: 'Always Verify Out-of-Band', desc: 'If an email requests wire transfers or urgent payroll updates, contact the individual directly via a known phone number.' },
@@ -389,13 +389,13 @@ IT Support Services`,
               { title: 'Never Open Unexpected Script or Container Attachments', desc: 'Avoid executing .iso, .exe, .scr, or macro-enabled .docm/.xlsm files delivered in unsolicited messages.' },
               { title: 'Bookmark Critical Portals', desc: 'Never click email links to access financial, government, or cloud consoles. Type bookmarked URLs directly.' },
             ].map((item, idx) => (
-              <div key={idx} className="p-4 rounded-xl bg-[#F4F7F4] border border-[#404E3B]/10 flex items-start gap-3.5">
-                <div className="p-1.5 rounded-lg bg-[#7B9669]/20 text-[#404E3B] border border-[#7B9669]/40 mt-0.5 shrink-0 shadow-xs">
-                  <Check className="w-4 h-4 text-[#7B9669]" />
+              <div key={idx} className="p-3 rounded-lg bg-[#F4F7F4] border border-[#404E3B]/10 flex items-start gap-3">
+                <div className="p-1 rounded bg-[#7B9669]/20 text-[#404E3B] border border-[#7B9669]/40 mt-0.5 shrink-0 shadow-xs">
+                  <Check className="w-3.5 h-3.5 text-[#7B9669]" />
                 </div>
                 <div>
                   <h4 className="text-xs font-bold text-[#404E3B]">{item.title}</h4>
-                  <p className="text-xs text-[#6C8480] mt-1 leading-relaxed">{item.desc}</p>
+                  <p className="text-xs text-[#6C8480] mt-0.5 leading-relaxed">{item.desc}</p>
                 </div>
               </div>
             ))}

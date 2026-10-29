@@ -14,14 +14,14 @@ export default function About() {
       {/* Header */}
       <div className="border-b border-[#404E3B]/15 pb-5">
         <div className="flex items-center gap-3">
-          <div className="p-3 bg-[#7B9669]/20 border border-[#7B9669]/40 rounded-2xl text-[#404E3B] shadow-sm">
-            <Info className="w-5 h-5 text-[#404E3B]" />
+          <div className="p-3 bg-[#7B9669]/20 border border-[#7B9669]/40 rounded-2xl text-[#404E3B] dark:text-[#BAC8B1] shadow-sm">
+            <Info className="w-5 h-5 text-[#404E3B] dark:text-[#BAC8B1]" />
           </div>
           <div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#404E3B] font-heading">
-              PROJECT ARCHITECTURE & THREAT MODEL
+            <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-[#1C2518] dark:text-white font-heading">
+              PROJECT ARCHITECTURE &amp; <span className="text-[#7B9669] dark:text-[#9FC48A]">THREAT MODEL</span>
             </h1>
-            <p className="text-xs sm:text-sm text-[#6C8480] mt-1 font-sans">
+            <p className="text-xs sm:text-sm text-[#404E3B]/80 dark:text-[#BAC8B1] mt-1 font-sans font-medium page-subtitle">
               Technical specifications, detection methodologies, privacy architecture, and operational limitations
             </p>
           </div>

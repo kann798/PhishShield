@@ -8,6 +8,7 @@ import os
 import io
 import csv
 import json
+import zipfile
 import logging
 from flask import Flask, request, jsonify, Response, send_from_directory
 from flask_cors import CORS
@@ -469,6 +470,30 @@ def export_report(scan_id):
         json.dumps(report_data, indent=2),
         mimetype="application/json",
         headers={"Content-Disposition": f"attachment; filename=phishshield_report_{scan_id}.json"}
+    )
+
+
+
+@app.route('/api/extension/download', methods=['GET'])
+def download_extension_zip():
+    """Package and serve the PhishShield browser extension as a downloadable ZIP package."""
+    ext_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'extension'))
+    if not os.path.exists(ext_dir):
+        return jsonify({"success": False, "error": "Extension directory not found"}), 404
+
+    memory_file = io.BytesIO()
+    with zipfile.ZipFile(memory_file, 'w', zipfile.ZIP_DEFLATED) as zf:
+        for root, dirs, files in os.walk(ext_dir):
+            for file in files:
+                file_path = os.path.join(root, file)
+                archive_name = os.path.relpath(file_path, ext_dir)
+                zf.write(file_path, arcname=archive_name)
+
+    memory_file.seek(0)
+    return Response(
+        memory_file.getvalue(),
+        mimetype="application/zip",
+        headers={"Content-Disposition": "attachment; filename=phishshield-extension.zip"}
     )
 
 
