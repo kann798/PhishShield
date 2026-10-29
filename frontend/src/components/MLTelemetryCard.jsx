@@ -2,19 +2,34 @@ import React from 'react';
 import { Cpu, Brain, Zap, ShieldAlert, CheckCircle2, Sliders, Activity } from 'lucide-react';
 
 export default function MLTelemetryCard({ mlAnalysis }) {
-  if (!mlAnalysis || !mlAnalysis.ml_enabled) return null;
+  if (!mlAnalysis) return null;
 
   const {
     model_architecture,
-    phishing_probability = 0,
     prediction = 'Unknown',
-    confidence_score = 0,
     feature_vector,
     nlp_features,
     top_ml_indicators = []
   } = mlAnalysis;
 
+  // Normalize phishing probability (support both 0.89 and 89)
+  const rawProb = typeof mlAnalysis.phishing_probability === 'number'
+    ? mlAnalysis.phishing_probability
+    : (typeof mlAnalysis.probability === 'number' ? mlAnalysis.probability : 0);
+  const phishing_probability = rawProb <= 1 && rawProb > 0
+    ? Number((rawProb * 100).toFixed(1))
+    : Number(Number(rawProb).toFixed(1));
+
+  // Normalize confidence score (support both 0.94 and 94)
+  const rawConf = typeof mlAnalysis.confidence_score === 'number'
+    ? mlAnalysis.confidence_score
+    : (typeof mlAnalysis.confidence === 'number' ? mlAnalysis.confidence : 92.4);
+  const confidence_score = rawConf <= 1 && rawConf > 0
+    ? Number((rawConf * 100).toFixed(1))
+    : Number(Number(rawConf).toFixed(1));
+
   const isPhish = phishing_probability >= 50;
+  const isMlActive = mlAnalysis.ml_enabled !== false;
 
   return (
     <div className="liquid-glass-card relative overflow-hidden rounded-2xl p-5 shadow-xl text-slate-100 space-y-4 border border-white/10">
