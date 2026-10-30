@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import {
   Globe,
   Search,
@@ -9,19 +9,13 @@ import AlertBanner from '../components/AlertBanner';
 import AnalysisResultView from '../components/AnalysisResultView';
 import { api, clientAnalyzeUrl } from '../services/api';
 
-export default function UrlAnalyzer({ onSelectScan, onScanComplete }) {
+export default function UrlAnalyzer({ onSelectScan }) {
   const [urlInput, setUrlInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [result, setResult] = useState(null);
 
-  // Notify parent layout whether a scan is completed so the footer only appears after completion
-  useEffect(() => {
-    onScanComplete?.(Boolean(result && !loading));
-    return () => {
-      onScanComplete?.(false);
-    };
-  }, [result, loading, onScanComplete]);
+
 
   // Synthetic safe test examples for rapid user testing with distinct severity color badges
   const sampleUrls = [

@@ -30,10 +30,6 @@ export default function App() {
   const [securityModal, setSecurityModal] = useState({ open: false, section: 'disclaimer' });
   const [contactSubject, setContactSubject] = useState('');
 
-  const [urlScanCompleted, setUrlScanCompleted] = useState(false);
-
-  const [emailScanCompleted, setEmailScanCompleted] = useState(false);
-
   const handleOpenScanDetail = async (scanId) => {
     try {
       const res = await api.getScan(scanId);
@@ -59,19 +55,9 @@ export default function App() {
       case 'dashboard':
         return <Dashboard setActivePage={setActivePage} onSelectScan={handleOpenScanDetail} />;
       case 'url':
-        return (
-          <UrlAnalyzer
-            onSelectScan={handleOpenScanDetail}
-            onScanComplete={setUrlScanCompleted}
-          />
-        );
+        return <UrlAnalyzer onSelectScan={handleOpenScanDetail} />;
       case 'email':
-        return (
-          <EmailAnalyzer
-            onSelectScan={handleOpenScanDetail}
-            onScanComplete={setEmailScanCompleted}
-          />
-        );
+        return <EmailAnalyzer onSelectScan={handleOpenScanDetail} />;
       case 'history':
         return <ScanHistory onSelectScan={handleOpenScanDetail} />;
       case 'awareness':
@@ -129,15 +115,13 @@ export default function App() {
         </main>
       </div>
 
-      {/* Full-Viewport-Width Footer (On URL and Email analyzers, appears ONLY after completion of scan) */}
-      {(activePage === 'url' ? urlScanCompleted : activePage === 'email' ? emailScanCompleted : true) && (
-        <Footer
-          setActivePage={setActivePage}
-          onOpenSecurity={(section) => setSecurityModal({ open: true, section })}
-          onSelectContactSubject={(subj) => setContactSubject(subj)}
-          telemetryCollapsed={telemetryCollapsed}
-        />
-      )}
+      {/* Full-Viewport-Width Footer */}
+      <Footer
+        setActivePage={setActivePage}
+        onOpenSecurity={(section) => setSecurityModal({ open: true, section })}
+        onSelectContactSubject={(subj) => setContactSubject(subj)}
+        telemetryCollapsed={telemetryCollapsed}
+      />
 
 
 

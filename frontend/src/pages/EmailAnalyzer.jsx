@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import {
   Mail,
   Search,
@@ -9,19 +9,13 @@ import AlertBanner from '../components/AlertBanner';
 import AnalysisResultView from '../components/AnalysisResultView';
 import { api, clientAnalyzeEmail } from '../services/api';
 
-export default function EmailAnalyzer({ onSelectScan, onScanComplete }) {
+export default function EmailAnalyzer({ onSelectScan }) {
   const [emailText, setEmailText] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [result, setResult] = useState(null);
 
-  // Notify parent layout whether a scan is completed so the footer only appears after completion
-  useEffect(() => {
-    onScanComplete?.(Boolean(result && !loading));
-    return () => {
-      onScanComplete?.(false);
-    };
-  }, [result, loading, onScanComplete]);
+
 
   // Quick synthetic email presets with distinct severity colors
   const sampleEmails = [
