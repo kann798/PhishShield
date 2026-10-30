@@ -1,19 +1,13 @@
 import React from 'react';
 
 /**
- * PhishingWorkflowDiagram
- * Exact reproduction of the CENTER STORY ANIMATION from:
- * chandureddy142/Phishing-email-detection-using-ML-project (app/templates/index.html & app/static/style.css)
- * 
- * Includes:
- * - Attacker monitor SVG with typing dots (ns-type-d1, ns-type-d2, ns-type-d3) & pulsing red aura
- * - Email 1 flying from Attacker → User with gradient speed trail (ns-email-trail)
- * - User character with amber worry ring, floating '?' badge, and emerald safe checkmark badge
- * - Email 2 flying from User → PhishGuard
- * - PhishGuard security shield with radar scan rings (ns-ring-1, ns-ring-2), red threat X, and checkmark
- * - Floating '⚠ PHISHING' verdict pill above shield
- * - 5 synchronized narrative phase descriptions across 14s CSS keyframe loop
+ * PhishingWorkflowDiagram (redesigned visuals)
+ * Same workflow, same class names, same animation phases as the original.
+ * Only the SVG artwork has changed. Attacker and User labels are now black.
+ * The PHISHSHIELD label is unchanged.
  */
+const LABEL_BLACK = { color: '#000000' };
+
 export default function PhishingWorkflowDiagram({ className = '' }) {
   return (
     <div className={`ns-wrap ${className}`} aria-hidden="true">
@@ -22,104 +16,76 @@ export default function PhishingWorkflowDiagram({ className = '' }) {
         <div className="ns-track-l"></div>
         <div className="ns-track-r"></div>
 
-        {/* 1. ATTACKER (left) */}
+        {/* 1. ATTACKER (left) - hooded figure at a laptop */}
         <div className="ns-char ns-atk-char">
           <div className="ns-atk-glow"></div>
           <svg className="ns-atk-icon" width="34" height="34" viewBox="0 0 32 32" fill="none">
-            {/* Monitor screen */}
-            <rect
-              x="3.5"
-              y="3.5"
-              width="25"
-              height="17"
-              rx="2.5"
-              fill="rgba(220,38,38,0.12)"
-              stroke="#DC2626"
-              strokeWidth="1.8"
-            />
-            {/* Screen top title bar */}
-            <line x1="3.5" y1="7.5" x2="28.5" y2="7.5" stroke="#DC2626" strokeWidth="1" opacity="0.4" />
-            <circle cx="6.5" cy="5.5" r="0.9" fill="#DC2626" />
-            <circle cx="9" cy="5.5" r="0.9" fill="#DC2626" opacity="0.6" />
-            {/* Hooded hacker silhouette inside screen */}
+            {/* Hood */}
             <path
-              d="M16 8.5 C13.2 8.5 11.2 10.4 11.2 13 C11.2 14.8 12.2 16.2 13.5 16.8 C11.8 17.5 10.5 19 10.5 20.5 H21.5 C21.5 19 20.2 17.5 18.5 16.8 C19.8 16.2 20.8 14.8 20.8 13 C20.8 10.4 18.8 8.5 16 8.5 Z"
-              fill="rgba(220,38,38,0.25)"
-              stroke="#DC2626"
-              strokeWidth="1.4"
-            />
-            {/* Glowing hacker visor / eye slit */}
-            <path d="M13.5 12.8 H18.5" stroke="#EF4444" strokeWidth="1.5" strokeLinecap="round" />
-            {/* Monitor stand */}
-            <path
-              d="M13.5 20.5 L12 24.5 H20 L18.5 20.5"
-              fill="rgba(220,38,38,0.15)"
-              stroke="#DC2626"
-              strokeWidth="1.6"
+              d="M16 2.5 C10.5 2.5 7.5 7 7.5 11.5 C7.5 14.5 8.8 16.5 10.5 17.5 H21.5 C23.2 16.5 24.5 14.5 24.5 11.5 C24.5 7 21.5 2.5 16 2.5 Z"
+              fill="#7F1D1D"
+              stroke="#B91C1C"
+              strokeWidth="1.5"
               strokeLinejoin="round"
             />
-            {/* Base / Keyboard console with typing dots */}
-            <path d="M7.5 25.5 H24.5" stroke="#DC2626" strokeWidth="1.8" strokeLinecap="round" />
-            <circle className="ns-type-d1" cx="13" cy="28.5" r="1.1" fill="#DC2626" />
-            <circle className="ns-type-d2" cx="16" cy="28.5" r="1.1" fill="#DC2626" />
-            <circle className="ns-type-d3" cx="19" cy="28.5" r="1.1" fill="#DC2626" />
+            {/* Dark face opening */}
+            <ellipse cx="16" cy="11" rx="5" ry="4.6" fill="#1C0A0A" />
+            {/* Glowing eyes */}
+            <circle cx="14" cy="10.6" r="1" fill="#F87171" />
+            <circle cx="18" cy="10.6" r="1" fill="#F87171" />
+            {/* Laptop screen (back view) */}
+            <path
+              d="M8 19 H24 L22.8 25 H9.2 Z"
+              fill="#991B1B"
+              stroke="#DC2626"
+              strokeWidth="1.4"
+              strokeLinejoin="round"
+            />
+            <circle cx="16" cy="22" r="1.2" fill="#FCA5A5" />
+            {/* Laptop base */}
+            <rect x="5.5" y="25" width="21" height="2" rx="1" fill="#DC2626" />
+            {/* Typing dots */}
+            <circle className="ns-type-d1" cx="13" cy="29.8" r="1.1" fill="#DC2626" />
+            <circle className="ns-type-d2" cx="16" cy="29.8" r="1.1" fill="#DC2626" />
+            <circle className="ns-type-d3" cx="19" cy="29.8" r="1.1" fill="#DC2626" />
           </svg>
-          <span className="ns-char-lbl ns-atk-lbl">Attacker</span>
+          <span className="ns-char-lbl ns-atk-lbl" style={LABEL_BLACK}>Attacker</span>
         </div>
 
-        {/* 2. EMAIL 1: Attacker → User (red, malicious) */}
+        {/* 2. EMAIL 1: Attacker -> User (red, malicious) - envelope with hook */}
         <div className="ns-email ns-email-1">
           <div className="ns-email-trail"></div>
           <svg width="24" height="18" viewBox="0 0 22 16" fill="none">
-            <rect
-              x="1"
-              y="1"
-              width="20"
-              height="14"
-              rx="2"
-              fill="rgba(239,68,68,0.18)"
-              stroke="rgba(239,68,68,0.85)"
-              strokeWidth="1.3"
-            />
             <path
-              d="M1 3l10 7 10-7"
-              stroke="rgba(239,68,68,0.85)"
-              strokeWidth="1.3"
-              strokeLinecap="round"
+              d="M2 2.5 H20 A1.5 1.5 0 0 1 21.5 4 V13 A1.5 1.5 0 0 1 20 14.5 H2 A1.5 1.5 0 0 1 0.5 13 V4 A1.5 1.5 0 0 1 2 2.5 Z"
+              fill="#FEE2E2"
+              stroke="#EF4444"
+              strokeWidth="1.2"
             />
-            <circle cx="11" cy="9" r="1.4" fill="#f87171" />
+            <path d="M1 4 L11 10 L21 4" stroke="#EF4444" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+            {/* Fish-hook style bait mark */}
+            <path
+              d="M11 0.5 V3.5 A1.6 1.6 0 1 1 8.4 4.7"
+              stroke="#B91C1C"
+              strokeWidth="1.1"
+              strokeLinecap="round"
+              fill="none"
+            />
           </svg>
         </div>
 
-        {/* 3. USER (center) */}
+        {/* 3. USER (center) - round avatar badge */}
         <div className="ns-char ns-user-char">
           <div className="ns-user-worry-ring"></div>
           <svg className="ns-user-icon" width="34" height="34" viewBox="0 0 32 32" fill="none">
-            {/* User head */}
-            <circle
-              cx="16"
-              cy="9.5"
-              r="5.5"
-              fill="rgba(37,99,235,0.15)"
-              stroke="#2563EB"
-              strokeWidth="1.8"
-            />
-            {/* User shoulders/body */}
+            {/* Avatar disc */}
+            <circle cx="16" cy="16" r="14" fill="#DBEAFE" stroke="#3B82F6" strokeWidth="1.8" />
+            {/* Head */}
+            <circle cx="16" cy="12.5" r="4.6" fill="#2563EB" />
+            {/* Shoulders clipped to disc */}
             <path
-              d="M6 26.5 C6 20.5 10.5 17 16 17 C21.5 17 26 20.5 26 26.5"
-              fill="rgba(37,99,235,0.12)"
-              stroke="#2563EB"
-              strokeWidth="1.8"
-              strokeLinecap="round"
-            />
-            {/* Modern collar detail */}
-            <path
-              d="M12.8 17.5 L16 21.2 L19.2 17.5"
-              stroke="#2563EB"
-              strokeWidth="1.6"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              fill="none"
+              d="M6.2 25.2 C7.6 20.6 11.4 18.6 16 18.6 C20.6 18.6 24.4 20.6 25.8 25.2 C23.2 27.8 19.8 29.2 16 29.2 C12.2 29.2 8.8 27.8 6.2 25.2 Z"
+              fill="#2563EB"
             />
           </svg>
           <div className="ns-user-qmark">?</div>
@@ -134,65 +100,58 @@ export default function PhishingWorkflowDiagram({ className = '' }) {
               />
             </svg>
           </div>
-          <span className="ns-char-lbl ns-user-lbl">User</span>
+          <span className="ns-char-lbl ns-user-lbl" style={LABEL_BLACK}>User</span>
         </div>
 
-        {/* 4. EMAIL 2: User → PHISHSHIELD (amber, forwarded for verification) */}
+        {/* 4. EMAIL 2: User -> PHISHSHIELD (amber, forwarded for verification) */}
         <div className="ns-email ns-email-2">
           <svg width="24" height="18" viewBox="0 0 22 16" fill="none">
-            <rect
-              x="1"
-              y="1"
-              width="20"
-              height="14"
-              rx="2"
-              fill="rgba(251,191,36,0.16)"
-              stroke="rgba(251,191,36,0.75)"
-              strokeWidth="1.3"
-            />
             <path
-              d="M1 3l10 7 10-7"
-              stroke="rgba(251,191,36,0.75)"
-              strokeWidth="1.3"
-              strokeLinecap="round"
+              d="M2 2.5 H20 A1.5 1.5 0 0 1 21.5 4 V13 A1.5 1.5 0 0 1 20 14.5 H2 A1.5 1.5 0 0 1 0.5 13 V4 A1.5 1.5 0 0 1 2 2.5 Z"
+              fill="#FEF3C7"
+              stroke="#F59E0B"
+              strokeWidth="1.2"
             />
-            <path d="M8 8l4 3 4-3" stroke="#fbbf24" strokeWidth="1" strokeLinecap="round" />
+            <path d="M1 4 L11 10 L21 4" stroke="#F59E0B" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+            {/* Forward arrow */}
+            <path d="M8 1 L11 0 L11 2 Z" fill="#D97706" />
           </svg>
         </div>
 
-        {/* 5. PHISHSHIELD SHIELD (right) */}
+        {/* 5. PHISHSHIELD (right) - hexagonal shield */}
         <div className="ns-char ns-shield-char">
           <div className="ns-scan-ring ns-ring-1"></div>
           <div className="ns-scan-ring ns-ring-2"></div>
           <div className="ns-shield-pulse"></div>
           <svg className="ns-shield-icon" width="40" height="40" viewBox="0 0 32 32" fill="none">
-            {/* Security shield body */}
+            {/* Hex-top shield outer */}
             <path
-              d="M16 2.8 L5 7.5 V15.5 C5 22.5 9.8 27.2 16 29.5 C22.2 27.2 27 22.5 27 15.5 V7.5 L16 2.8 Z"
-              fill="rgba(5,150,105,0.18)"
-              stroke="#059669"
-              strokeWidth="2"
+              d="M16 2 L26 6 V15 C26 21.5 21.8 26.6 16 30 C10.2 26.6 6 21.5 6 15 V6 Z"
+              fill="#064E3B"
+              stroke="#10B981"
+              strokeWidth="1.8"
               strokeLinejoin="round"
             />
-            {/* Inner shield bevel / depth reflection */}
+            {/* Inner panel */}
             <path
-              d="M16 5.2 V27 C20.5 24.8 24.5 20.8 24.5 15.5 V9 L16 5.2 Z"
-              fill="rgba(16,185,129,0.12)"
+              d="M16 5.2 L23 8 V15 C23 19.8 20 23.6 16 26.2 C12 23.6 9 19.8 9 15 V8 Z"
+              fill="#059669"
+              opacity="0.55"
             />
-            {/* Clear, bold checkmark */}
+            {/* Checkmark */}
             <path
               className="ns-shield-check"
-              d="M10.5 16.2 L14.5 20.2 L21.5 12.8"
-              stroke="#059669"
+              d="M11.5 15.5 L14.8 18.8 L21 12"
+              stroke="#ECFDF5"
               strokeWidth="2.6"
               strokeLinecap="round"
               strokeLinejoin="round"
             />
-            {/* Threat detection cross */}
+            {/* Threat cross */}
             <path
               className="ns-shield-x"
-              d="M12 12 L20 20 M20 12 L12 20"
-              stroke="#DC2626"
+              d="M12 11.5 L20 19.5 M20 11.5 L12 19.5"
+              stroke="#FCA5A5"
               strokeWidth="2.6"
               strokeLinecap="round"
             />
