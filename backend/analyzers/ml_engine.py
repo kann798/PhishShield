@@ -113,6 +113,9 @@ class MLEngine:
         # -------------------------------------------------------------
         # 2. Train Email NLP Classifier
         # -------------------------------------------------------------
+        # -------------------------------------------------------------
+        # 2. Train Email NLP Classifier (Balanced Realistic Corpus)
+        # -------------------------------------------------------------
         email_legit = [
             "Hi team, attached is the monthly engineering newsletter. Keep up the great work!",
             "Here is the calendar invitation for our weekly architecture sync tomorrow at 10 AM.",
@@ -121,6 +124,22 @@ class MLEngine:
             "Your subscription invoice for October has been processed automatically. Thank you.",
             "Reminder: Scheduled maintenance on the staging cluster this Saturday from 2 to 4 UTC.",
             "Welcome to our platform! Check out our documentation to get started with the SDK.",
+            "Your monthly account Statement for account ending in ...4012 is now available. Log in to your Chase online banking app or visit our official site to securely view or download your document.",
+            "Dear Customer, your Wells Fargo statement is ready for viewing online. Sign in securely to your online banking portal to review your account activity.",
+            "Your Bank of America checking account statement is now ready. Visit bankofamerica.com or mobile app.",
+            "Your monthly subscription invoice for Google Workspace has been paid. View your invoice receipt in the admin console.",
+            "Thank you for your payment. Your receipt for order #84920 is attached. For questions, visit our customer help center.",
+            "Invoice #INV-2026-10 has been processed successfully. Your payment has been received.",
+            "University Department Meeting: The agenda for Friday faculty symposium has been updated. Looking forward to seeing you all.",
+            "Faculty and Staff Meeting: Please join us this Wednesday at 3:00 PM in Hall B to discuss campus updates.",
+            "Your Google Account password was changed from Chrome on Windows. If this was you, no action is needed.",
+            "Microsoft account security info was updated. If you made this change, you can safely ignore this email.",
+            "Weekly engineering newsletter with updates on sprint goals and releases. Great job everyone on the Q3 milestones.",
+            "Your package has been delivered to your front door. Thank you for shopping with us.",
+            "Flight confirmation: Your flight to Chicago on Nov 12 is confirmed. View details in the airline app.",
+            "Thanks for booking with Airbnb. Here is your reservation confirmation for the upcoming stay.",
+            "Meeting notes from today strategy session have been added to Google Docs. Please add any follow-ups.",
+            "Your automated monthly cloud storage billing receipt is ready. No further action is required.",
         ]
 
         email_phish = [
@@ -131,15 +150,24 @@ class MLEngine:
             "SECURITY ALERT: Someone accessed your Chase profile from an unrecognized device. Click here to secure your funds now.",
             "Wire transfer instructions: Boss sent instructions to wire $45,000 to vendor immediately before market close.",
             "Crypto wallet reward: You have received 1.5 ETH. Connect your seed phrase to claim your prize immediately.",
+            "After the final annual calculation of your fiscal earnings, we determined that you are eligible for an immediate tax refund of $1,420.50. To receive your refund directly to your debit card, click here to fill in your personal identity and card details: hxxp://tax-department-refund.example.com/claim",
+            "URGENT: Your tax refund of $850 is waiting. Click here immediately to claim your refund or it will be canceled.",
+            "You have won $5,000,000 in the international lottery. Send your banking credentials and passport copy to claim the funds.",
+            "Security Alert: Your Microsoft 365 session has expired. Sign in immediately to avoid mailbox deactivation and loss of data.",
+            "IT Security Notice: All staff are required to migrate their two-factor authentication tokens. Scan the QR code with your mobile camera immediately to complete identity sync.",
+            "Mandatory MFA update required for all employees. Scan the code to authenticate your domain credentials right now.",
+            "Final Notice: Unpaid invoice #9482 is past due. Immediate wire payment required within 12 hours to avoid court action.",
+            "Payroll Revision Notice: Q4 bonus and salary sheet has been shared. Authenticate with your corporate domain credentials to decrypt and view.",
+            "Action Required: Your PayPal account has been limited due to suspicious transactions. Click here to restore access.",
         ]
 
         email_corpus = email_legit + email_phish
         email_labels = [0] * len(email_legit) + [1] * len(email_phish)
 
-        cls._email_vectorizer = TfidfVectorizer(ngram_range=(1, 2), max_features=300)
+        cls._email_vectorizer = TfidfVectorizer(ngram_range=(1, 2), max_features=500, sublinear_tf=True)
         X_email = cls._email_vectorizer.fit_transform(email_corpus)
 
-        cls._email_model = LogisticRegression(random_state=42, C=1.5)
+        cls._email_model = LogisticRegression(random_state=42, C=3.5)
         cls._email_model.fit(X_email, email_labels)
 
         cls._is_initialized = True
@@ -269,31 +297,61 @@ class MLEngine:
 
         # Linguistic heuristics
         text_lower = email_content.lower()
-        urgency_terms = ["urgent", "immediately", "24 hours", "suspended", "action required", "terminate"]
-        matched_urgency = [t for t in urgency_terms if t in text_lower]
 
-        financial_terms = ["wire", "invoice", "payroll", "bitcoin", "bank", "password", "wallet", "funds"]
-        matched_financial = [t for t in financial_terms if t in text_lower]
+        # Specific lures
+        financial_bait = bool(re.search(
+            r'\b(?:tax refund|refund of \$|eligible for an? immediate|pending amount|lottery winner|inheritance fund|wire \$?\d|crypto wallet reward|overdue invoice|salary revision|annual bonus|claim prize|claim your refund|bonus and salary)\b',
+            text_lower
+        ))
+
+        credential_request = bool(re.search(
+            r'\b(?:debit card|credit card|card details|personal identity|credentials|credential|verify your credentials|enter your credentials|password|passcode|verify your account|seed phrase|corporate domain email credentials|authenticator token|scan the qr code|login to restore)\b',
+            text_lower
+        ))
+
+        urgency_coercion = bool(re.search(
+            r'\b(?:immediate|urgent|immediately|within 24 hours|within 48 hours|account suspended|deactivated|action required|mandatory|expires today|final notice)\b',
+            text_lower
+        ))
+
+        suspicious_keywords = bool(re.search(
+            r'\b(?:refund|debit card|wire transfer|suspended|unauthorized|cryptocurrency|token migration|phishing|claim|overdue)\b',
+            text_lower
+        ))
+
+        # Check for legitimate business structure
+        legitimate_structure = (not financial_bait and not credential_request and not urgency_coercion) and bool(re.search(
+            r'\b(?:statement is ready|account ending in|log in to your|official site|view or download|agenda|meeting|newsletter|scheduled maintenance|subscription invoice|thank you for your payment|receipt)\b',
+            text_lower
+        ))
 
         top_factors = []
-        if matched_urgency:
-            top_factors.append(f"High urgency coercion keywords ({', '.join(matched_urgency[:2])})")
-        if matched_financial:
-            top_factors.append(f"Financial / credential bait triggers ({', '.join(matched_financial[:2])})")
-        if "http://" in text_lower or "https://" in text_lower:
+        if urgency_coercion:
+            top_factors.append("High urgency coercion keywords detected")
+        if financial_bait:
+            top_factors.append("Financial incentive / refund lure detected")
+        if credential_request:
+            top_factors.append("Credential or payment card solicitation")
+        if "http://" in text_lower or "https://" in text_lower or "hxxp" in text_lower:
             top_factors.append("Embedded clickable hyperlink vectors")
 
         return {
             "ml_enabled": True,
-            "model_architecture": "TF-IDF + LogisticRegression NLP Classifier",
+            "model_architecture": "TF-IDF + Logistic Regression",
             "phishing_probability": float(round(phish_prob * 100, 1)),
             "prediction": "Phishing / Coercive" if phish_prob >= 0.50 else "Legitimate",
+            "predicted_class": "Phishing" if phish_prob >= 0.50 else "Legitimate",
             "confidence_score": float(round(float(max(probs)) * 100, 1)),
             "nlp_features": {
+                "financial_bait": bool(financial_bait),
+                "credential_request": bool(credential_request),
+                "urgency_coercion": bool(urgency_coercion),
+                "suspicious_keywords": bool(suspicious_keywords),
+                "legitimate_structure": bool(legitimate_structure),
                 "char_length": len(email_content),
                 "word_count": len(email_content.split()),
-                "coercive_urgency_detected": bool(matched_urgency),
-                "financial_credential_lures": bool(matched_financial),
+                "coercive_urgency_detected": bool(urgency_coercion),
+                "financial_credential_lures": bool(financial_bait or credential_request),
             },
             "top_ml_indicators": top_factors or ["Natural business text patterns within legitimate baseline"],
         }

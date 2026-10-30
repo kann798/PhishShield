@@ -67,3 +67,65 @@ def test_empty_email_content():
     result = EmailAnalyzer.analyze("")
     assert result["valid"] is False
     assert "error" in result
+
+
+def test_chase_legitimate_statement():
+    """Verify official banking statements without credential harvesting are classified Safe."""
+    content = """From: ebanking-alerts@chase.com
+Subject: Your monthly e-Statement is ready to view
+
+Body:
+Your monthly account Statement for account ending in ...4012 is now available. Log in to your Chase online banking app or visit our official site to securely view or download your document."""
+    result = EmailAnalyzer.analyze(content)
+    assert result["valid"] is True
+    assert result["classification"] == "Low"
+    assert result["risk_score"] <= 15
+    assert result["detected_indicators_count"] == 0
+    assert result["main_threat_category"] == "None"
+    assert len(result["security_indicators_table"]) == 10
+    assert result["security_indicators_table"][0]["status"] == "legitimate"
+
+
+def test_tax_refund_phishing_lure():
+    """Verify tax refund phishing scam with defanged link and credential trap is Critical."""
+    content = """From: refund-agent@tax-refund-portal.example.org
+Subject: Tax Refund Notification: Pending amount $1,420.50
+
+Body:
+After the final annual calculation of your fiscal earnings, we determined that you are eligible for an immediate tax refund of $1,420.50. To receive your refund directly to your debit card, click here to fill in your personal identity and card details: hxxp://tax-department-refund.example.com/claim"""
+    result = EmailAnalyzer.analyze(content)
+    assert result["valid"] is True
+    assert result["classification"] == "Critical"
+    assert result["risk_score"] >= 85
+    assert result["detected_indicators_count"] >= 5
+    assert result["main_threat_category"] == "Financial Phishing"
+    assert len(result["extracted_urls"]) == 1
+
+
+def test_university_meeting_notification():
+    """Verify university meeting update is classified as Low risk."""
+    content = """From: department-chair@university.edu
+Subject: Faculty & Staff Meeting Schedule: Friday 3:00 PM
+
+Body:
+Dear Colleagues,
+The agenda for Friday's faculty symposium has been updated. Please review the attached discussion points and join us in Hall B.
+Best regards,
+Academic Committee"""
+    result = EmailAnalyzer.analyze(content)
+    assert result["valid"] is True
+    assert result["classification"] == "Low"
+    assert result["risk_score"] <= 15
+
+
+def test_routine_invoice_receipt():
+    """Verify routine subscription invoice confirmation is classified as Low risk."""
+    content = """From: billing@google.com
+Subject: Your Google Workspace subscription invoice receipt
+
+Body:
+Your subscription invoice for October has been processed automatically. Thank you for your payment. You can view or download your receipt anytime from the admin console."""
+    result = EmailAnalyzer.analyze(content)
+    assert result["valid"] is True
+    assert result["classification"] == "Low"
+    assert result["risk_score"] <= 15
