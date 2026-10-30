@@ -2,7 +2,9 @@ import React, { useState } from 'react';
 import {
   Shield,
   ShieldAlert,
+  ShieldCheck,
   AlertTriangle,
+  AlertCircle,
   CheckCircle,
   Brain,
   Link as LinkIcon,
@@ -19,6 +21,8 @@ import {
   Copy,
   Check,
   Layers,
+  Lock,
+  Key,
 } from 'lucide-react';
 import MLTelemetryCard from './MLTelemetryCard';
 
@@ -212,6 +216,277 @@ export default function AnalysisResultView({ type = 'email', result, onBack }) {
       : null);
 
   const resolvedExtractedUrls = result.extracted_urls || result.details?.extracted_urls || [];
+
+  // -------------------------------------------------------------
+  // Dynamic Recommendations & Actions mapped to Classification Tier
+  // -------------------------------------------------------------
+  const normClass = (classification || '').toLowerCase();
+  let recTier = 'safe';
+  if (normClass.includes('critical') || score >= 85) {
+    recTier = 'critical';
+  } else if (normClass.includes('high') || score >= 70) {
+    recTier = 'high';
+  } else if (normClass.includes('medium') || (score >= 35 && score < 70)) {
+    recTier = 'medium';
+  } else if (normClass.includes('low')) {
+    recTier = score > 15 ? 'low' : 'safe';
+  } else if (normClass.includes('safe') || normClass.includes('clean')) {
+    recTier = 'safe';
+  } else {
+    recTier = score >= 35 ? 'medium' : (score > 15 ? 'low' : 'safe');
+  }
+
+  const getActionCards = () => {
+    switch (recTier) {
+      case 'critical':
+        return [
+          {
+            icon: <ShieldAlert className="w-4 h-4" />,
+            title: 'Immediate Threat Warning',
+            detail: `Active malicious ${isEmail ? 'email vector' : 'phishing infrastructure'} confirmed. Immediately cease all interaction.`,
+            cardBg: 'border-[#F4979F] bg-[#FDE2E4]/60 hover:bg-[#FDE2E4] dark:bg-red-950/30 dark:border-red-900/80',
+            iconBg: 'bg-[#FCE8E8] border-[#F4979F] text-[#B42332]',
+            titleColor: 'text-[#9B1C1C] dark:text-red-400',
+            descColor: 'text-[#52665A] dark:text-red-200/80',
+          },
+          {
+            icon: <AlertTriangle className="w-4 h-4" />,
+            title: 'Terminate & Disconnect',
+            detail: 'Close all related browser tabs or messages. Do not submit credentials, allow downloads, or bypass warnings.',
+            cardBg: 'border-[#F4979F] bg-[#FDE2E4]/60 hover:bg-[#FDE2E4] dark:bg-red-950/30 dark:border-red-900/80',
+            iconBg: 'bg-[#FCE8E8] border-[#F4979F] text-[#B42332]',
+            titleColor: 'text-[#9B1C1C] dark:text-red-400',
+            descColor: 'text-[#52665A] dark:text-red-200/80',
+          },
+          {
+            icon: <Key className="w-4 h-4" />,
+            title: 'Reset Compromised Passwords',
+            detail: 'If any credentials were submitted, immediately reset passwords from a safe device and revoke active sessions.',
+            cardBg: 'border-[#F4979F] bg-[#FDE2E4]/60 hover:bg-[#FDE2E4] dark:bg-red-950/30 dark:border-red-900/80',
+            iconBg: 'bg-[#FCE8E8] border-[#F4979F] text-[#B42332]',
+            titleColor: 'text-[#9B1C1C] dark:text-red-400',
+            descColor: 'text-[#52665A] dark:text-red-200/80',
+          },
+          {
+            icon: <Globe className="w-4 h-4" />,
+            title: 'Block Domain on Firewall',
+            detail: 'Add this domain, URL, and associated host IP to perimeter firewalls, EDR, and DNS blocklists.',
+            cardBg: 'border-[#F4979F] bg-[#FDE2E4]/60 hover:bg-[#FDE2E4] dark:bg-red-950/30 dark:border-red-900/80',
+            iconBg: 'bg-[#FCE8E8] border-[#F4979F] text-[#B42332]',
+            titleColor: 'text-[#9B1C1C] dark:text-red-400',
+            descColor: 'text-[#52665A] dark:text-red-200/80',
+          },
+          {
+            icon: <FileText className="w-4 h-4" />,
+            title: 'Trigger Incident Response',
+            detail: "Notify your organization's Security Operations Center (SOC) immediately for forensic triage and containment.",
+            cardBg: 'border-[#F4979F] bg-[#FDE2E4]/60 hover:bg-[#FDE2E4] dark:bg-red-950/30 dark:border-red-900/80',
+            iconBg: 'bg-[#FCE8E8] border-[#F4979F] text-[#B42332]',
+            titleColor: 'text-[#9B1C1C] dark:text-red-400',
+            descColor: 'text-[#52665A] dark:text-red-200/80',
+          },
+        ];
+
+      case 'high':
+        return [
+          {
+            icon: <ShieldAlert className="w-4 h-4" />,
+            title: isEmail ? 'Avoid This Email' : 'Avoid This Website',
+            detail: isEmail ? 'High risk of social engineering or credential theft. Do not reply or click any links.' : 'High probability of phishing or brand impersonation. Close the tab and avoid this destination.',
+            cardBg: 'border-[#F5B7BD] bg-[#FEECEC]/50 hover:bg-[#FEECEC] dark:bg-rose-950/20 dark:border-rose-900/60',
+            iconBg: 'bg-[#FEECEC] border-[#F5B7BD] text-[#D92D20]',
+            titleColor: 'text-[#B42332] dark:text-rose-400',
+            descColor: 'text-[#52665A] dark:text-rose-200/70',
+          },
+          {
+            icon: <Lock className="w-4 h-4" />,
+            title: 'Protect Your Credentials',
+            detail: 'Never enter usernames, passwords, MFA/OTP codes, or credit card details on this destination.',
+            cardBg: 'border-[#F5B7BD] bg-[#FEECEC]/50 hover:bg-[#FEECEC] dark:bg-rose-950/20 dark:border-rose-900/60',
+            iconBg: 'bg-[#FEECEC] border-[#F5B7BD] text-[#D92D20]',
+            titleColor: 'text-[#B42332] dark:text-rose-400',
+            descColor: 'text-[#52665A] dark:text-rose-200/70',
+          },
+          {
+            icon: <Globe className="w-4 h-4" />,
+            title: 'Verify Official Domain',
+            detail: 'This target mimics a known brand or institution. Manually navigate strictly to verified official portals.',
+            cardBg: 'border-[#F5B7BD] bg-[#FEECEC]/50 hover:bg-[#FEECEC] dark:bg-rose-950/20 dark:border-rose-900/60',
+            iconBg: 'bg-[#FEECEC] border-[#F5B7BD] text-[#D92D20]',
+            titleColor: 'text-[#B42332] dark:text-rose-400',
+            descColor: 'text-[#52665A] dark:text-rose-200/70',
+          },
+          {
+            icon: <FileText className="w-4 h-4" />,
+            title: 'Do Not Open Attachments',
+            detail: 'Refrain from opening or downloading any linked files, invoices, archives, or script documents.',
+            cardBg: 'border-[#F5B7BD] bg-[#FEECEC]/50 hover:bg-[#FEECEC] dark:bg-rose-950/20 dark:border-rose-900/60',
+            iconBg: 'bg-[#FEECEC] border-[#F5B7BD] text-[#D92D20]',
+            titleColor: 'text-[#B42332] dark:text-rose-400',
+            descColor: 'text-[#52665A] dark:text-rose-200/70',
+          },
+          {
+            icon: <AlertTriangle className="w-4 h-4" />,
+            title: isEmail ? 'Report Phishing Email' : 'Report This Target',
+            detail: isEmail ? "Report this message to your organization's SOC or abuse@ provider for gateway filtering." : 'Submit this malicious URL to your security team and anti-phishing feeds (APWG, PhishTank).',
+            cardBg: 'border-[#F5B7BD] bg-[#FEECEC]/50 hover:bg-[#FEECEC] dark:bg-rose-950/20 dark:border-rose-900/60',
+            iconBg: 'bg-[#FEECEC] border-[#F5B7BD] text-[#D92D20]',
+            titleColor: 'text-[#B42332] dark:text-rose-400',
+            descColor: 'text-[#52665A] dark:text-rose-200/70',
+          },
+        ];
+
+      case 'medium':
+        return [
+          {
+            icon: <AlertTriangle className="w-4 h-4" />,
+            title: 'Exercise Elevated Caution',
+            detail: 'Anomalous structural patterns or suspicious traits detected. Do not submit sensitive data.',
+            cardBg: 'border-[#F5D08A] bg-[#FFF1DB]/50 hover:bg-[#FFF1DB] dark:bg-amber-950/20 dark:border-amber-900/60',
+            iconBg: 'bg-[#FFF1DB] border-[#F5D08A] text-[#B54708]',
+            titleColor: 'text-[#B54708] dark:text-amber-400',
+            descColor: 'text-[#52665A] dark:text-amber-200/70',
+          },
+          {
+            icon: <LinkIcon className="w-4 h-4" />,
+            title: 'Avoid Direct Link Clicking',
+            detail: 'Refrain from clicking embedded links or unverified files. Access the service via bookmarks.',
+            cardBg: 'border-[#F5D08A] bg-[#FFF1DB]/50 hover:bg-[#FFF1DB] dark:bg-amber-950/20 dark:border-amber-900/60',
+            iconBg: 'bg-[#FFF1DB] border-[#F5D08A] text-[#B54708]',
+            titleColor: 'text-[#B54708] dark:text-amber-400',
+            descColor: 'text-[#52665A] dark:text-amber-200/70',
+          },
+          {
+            icon: <Globe className="w-4 h-4" />,
+            title: 'Inspect Domain & Subdomains',
+            detail: 'Check the URL structure for deceptive prefixes, unusual TLDs (.xyz, .top), or typos.',
+            cardBg: 'border-[#F5D08A] bg-[#FFF1DB]/50 hover:bg-[#FFF1DB] dark:bg-amber-950/20 dark:border-amber-900/60',
+            iconBg: 'bg-[#FFF1DB] border-[#F5D08A] text-[#B54708]',
+            titleColor: 'text-[#B54708] dark:text-amber-400',
+            descColor: 'text-[#52665A] dark:text-amber-200/70',
+          },
+          {
+            icon: <UserCheck className="w-4 h-4" />,
+            title: 'Verify Through Direct Channel',
+            detail: 'Contact the purported organization via an independent, verified phone number or portal.',
+            cardBg: 'border-[#F5D08A] bg-[#FFF1DB]/50 hover:bg-[#FFF1DB] dark:bg-amber-950/20 dark:border-amber-900/60',
+            iconBg: 'bg-[#FFF1DB] border-[#F5D08A] text-[#B54708]',
+            titleColor: 'text-[#B54708] dark:text-amber-400',
+            descColor: 'text-[#52665A] dark:text-amber-200/70',
+          },
+          {
+            icon: <FileText className="w-4 h-4" />,
+            title: 'Report Suspicious Activity',
+            detail: isEmail ? "Forward this email to your organization's IT security team or abuse@ provider for triage." : 'Submit this suspicious URL to your internal IT security team or abuse reporting provider.',
+            cardBg: 'border-[#F5D08A] bg-[#FFF1DB]/50 hover:bg-[#FFF1DB] dark:bg-amber-950/20 dark:border-amber-900/60',
+            iconBg: 'bg-[#FFF1DB] border-[#F5D08A] text-[#B54708]',
+            titleColor: 'text-[#B54708] dark:text-amber-400',
+            descColor: 'text-[#52665A] dark:text-amber-200/70',
+          },
+        ];
+
+      case 'low':
+        return [
+          {
+            icon: <Shield className="w-4 h-4" />,
+            title: 'Routine Caution Advised',
+            detail: 'Baseline indicators are clear, but remain alert for unexpected login prompts or redirections.',
+            cardBg: 'border-[#B7E3C7] bg-[#E8F6ED]/50 hover:bg-[#E8F6ED] dark:bg-emerald-950/20 dark:border-emerald-900/60',
+            iconBg: 'bg-[#E8F6ED] border-[#B7E3C7] text-[#16794B]',
+            titleColor: 'text-[#16794B] dark:text-emerald-400',
+            descColor: 'text-[#52665A] dark:text-emerald-200/70',
+          },
+          {
+            icon: <LinkIcon className="w-4 h-4" />,
+            title: 'Inspect Destination Links',
+            detail: 'Hover over hyperlinks before clicking to confirm destination URLs match the expected context.',
+            cardBg: 'border-[#B7E3C7] bg-[#E8F6ED]/50 hover:bg-[#E8F6ED] dark:bg-emerald-950/20 dark:border-emerald-900/60',
+            iconBg: 'bg-[#E8F6ED] border-[#B7E3C7] text-[#16794B]',
+            titleColor: 'text-[#16794B] dark:text-emerald-400',
+            descColor: 'text-[#52665A] dark:text-emerald-200/70',
+          },
+          {
+            icon: <Lock className="w-4 h-4" />,
+            title: 'Verify SSL & Certificates',
+            detail: 'Check that communication is encrypted and issued to a legitimate recognized authority.',
+            cardBg: 'border-[#B7E3C7] bg-[#E8F6ED]/50 hover:bg-[#E8F6ED] dark:bg-emerald-950/20 dark:border-emerald-900/60',
+            iconBg: 'bg-[#E8F6ED] border-[#B7E3C7] text-[#16794B]',
+            titleColor: 'text-[#16794B] dark:text-emerald-400',
+            descColor: 'text-[#52665A] dark:text-emerald-200/70',
+          },
+          {
+            icon: <UserCheck className="w-4 h-4" />,
+            title: 'Verify Sender Authenticity',
+            detail: isEmail ? 'Double-check sender email headers and reply addresses against verified contacts.' : 'Ensure the target destination was reached intentionally rather than via unsolicited links.',
+            cardBg: 'border-[#B7E3C7] bg-[#E8F6ED]/50 hover:bg-[#E8F6ED] dark:bg-emerald-950/20 dark:border-emerald-900/60',
+            iconBg: 'bg-[#E8F6ED] border-[#B7E3C7] text-[#16794B]',
+            titleColor: 'text-[#16794B] dark:text-emerald-400',
+            descColor: 'text-[#52665A] dark:text-emerald-200/70',
+          },
+          {
+            icon: <CheckCircle className="w-4 h-4" />,
+            title: 'Maintain Active Defenses',
+            detail: 'Keep browser protection, security extensions, and system updates regularly refreshed.',
+            cardBg: 'border-[#B7E3C7] bg-[#E8F6ED]/50 hover:bg-[#E8F6ED] dark:bg-emerald-950/20 dark:border-emerald-900/60',
+            iconBg: 'bg-[#E8F6ED] border-[#B7E3C7] text-[#16794B]',
+            titleColor: 'text-[#16794B] dark:text-emerald-400',
+            descColor: 'text-[#52665A] dark:text-emerald-200/70',
+          },
+        ];
+
+      case 'safe':
+      default:
+        return [
+          {
+            icon: <ShieldCheck className="w-4 h-4" />,
+            title: 'Secure Browsing Confirmed',
+            detail: 'No malicious indicators or spoofing heuristics detected. Safe for standard browsing.',
+            cardBg: 'border-[#B7E3C7] bg-[#E8F6ED]/50 hover:bg-[#E8F6ED] dark:bg-emerald-950/20 dark:border-emerald-900/60',
+            iconBg: 'bg-[#E8F6ED] border-[#B7E3C7] text-[#16794B]',
+            titleColor: 'text-[#16794B] dark:text-emerald-400',
+            descColor: 'text-[#52665A] dark:text-emerald-200/70',
+          },
+          {
+            icon: <Lock className="w-4 h-4" />,
+            title: 'HTTPS Verification',
+            detail: 'Ensure a valid padlock icon and trusted TLS certificate are present in your browser address bar.',
+            cardBg: 'border-[#B7E3C7] bg-[#E8F6ED]/50 hover:bg-[#E8F6ED] dark:bg-emerald-950/20 dark:border-emerald-900/60',
+            iconBg: 'bg-[#E8F6ED] border-[#B7E3C7] text-[#16794B]',
+            titleColor: 'text-[#16794B] dark:text-emerald-400',
+            descColor: 'text-[#52665A] dark:text-emerald-200/70',
+          },
+          {
+            icon: <Globe className="w-4 h-4" />,
+            title: 'Domain Verification',
+            detail: 'Confirm the browser address bar domain accurately matches your intended official organization.',
+            cardBg: 'border-[#B7E3C7] bg-[#E8F6ED]/50 hover:bg-[#E8F6ED] dark:bg-emerald-950/20 dark:border-emerald-900/60',
+            iconBg: 'bg-[#E8F6ED] border-[#B7E3C7] text-[#16794B]',
+            titleColor: 'text-[#16794B] dark:text-emerald-400',
+            descColor: 'text-[#52665A] dark:text-emerald-200/70',
+          },
+          {
+            icon: <Key className="w-4 h-4" />,
+            title: 'Account Protection',
+            detail: 'Use unique, strong passwords and leverage a trusted password manager for auto-fill security.',
+            cardBg: 'border-[#B7E3C7] bg-[#E8F6ED]/50 hover:bg-[#E8F6ED] dark:bg-emerald-950/20 dark:border-emerald-900/60',
+            iconBg: 'bg-[#E8F6ED] border-[#B7E3C7] text-[#16794B]',
+            titleColor: 'text-[#16794B] dark:text-emerald-400',
+            descColor: 'text-[#52665A] dark:text-emerald-200/70',
+          },
+          {
+            icon: <UserCheck className="w-4 h-4" />,
+            title: 'Multi-Factor Authentication',
+            detail: 'Keep MFA or authenticator apps active across accounts to protect against credential leaks.',
+            cardBg: 'border-[#B7E3C7] bg-[#E8F6ED]/50 hover:bg-[#E8F6ED] dark:bg-emerald-950/20 dark:border-emerald-900/60',
+            iconBg: 'bg-[#E8F6ED] border-[#B7E3C7] text-[#16794B]',
+            titleColor: 'text-[#16794B] dark:text-emerald-400',
+            descColor: 'text-[#52665A] dark:text-emerald-200/70',
+          },
+        ];
+    }
+  };
+
+  const actionCards = getActionCards();
 
   return (
     <div className="space-y-5 w-full pb-10 select-none animate-fadeIn">
@@ -573,80 +848,24 @@ export default function AnalysisResultView({ type = 'email', result, onBack }) {
         </h2>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
-          {/* Action 1: Do not provide credentials (Red) */}
-          <div className="p-3.5 sm:p-4 rounded-2xl border border-[#F5B7BD] bg-[#FEECEC]/50 hover:bg-[#FEECEC] dark:bg-rose-950/20 dark:border-rose-900/60 shadow-sm flex flex-col justify-between transition-colors">
-            <div>
-              <div className="w-8 h-8 rounded-xl bg-[#FEECEC] border border-[#F5B7BD] text-[#D92D20] flex items-center justify-center mb-3 shadow-2xs">
-                <ShieldAlert className="w-4 h-4" />
+          {actionCards.map((card, idx) => (
+            <div
+              key={`rec-card-${idx}`}
+              className={`p-3.5 sm:p-4 rounded-2xl border ${card.cardBg} shadow-sm flex flex-col justify-between transition-colors`}
+            >
+              <div>
+                <div className={`w-8 h-8 rounded-xl border flex items-center justify-center mb-3 shadow-2xs ${card.iconBg}`}>
+                  {card.icon}
+                </div>
+                <h3 className={`text-xs font-bold font-sans tracking-wide mb-1 ${card.titleColor}`}>
+                  {card.title}
+                </h3>
+                <p className={`text-[11px] leading-relaxed font-sans ${card.descColor}`}>
+                  {card.detail}
+                </p>
               </div>
-              <h3 className="text-xs font-bold text-[#B42332] dark:text-rose-400 font-sans tracking-wide mb-1">
-                Do not provide credentials
-              </h3>
-              <p className="text-[11px] text-[#52665A] dark:text-rose-200/70 leading-relaxed font-sans">
-                Never share passwords, MFA codes, or financial information.
-              </p>
             </div>
-          </div>
-
-          {/* Action 2: Avoid suspicious links (Orange) */}
-          <div className="p-3.5 sm:p-4 rounded-2xl border border-[#F5D08A] bg-[#FFF1DB]/50 hover:bg-[#FFF1DB] dark:bg-amber-950/20 dark:border-amber-900/60 shadow-sm flex flex-col justify-between transition-colors">
-            <div>
-              <div className="w-8 h-8 rounded-xl bg-[#FFF1DB] border border-[#F5D08A] text-[#B54708] flex items-center justify-center mb-3 shadow-2xs">
-                <LinkIcon className="w-4 h-4" />
-              </div>
-              <h3 className="text-xs font-bold text-[#B54708] dark:text-amber-400 font-sans tracking-wide mb-1">
-                Avoid suspicious links
-              </h3>
-              <p className="text-[11px] text-[#52665A] dark:text-amber-200/70 leading-relaxed font-sans">
-                Do not click links or download unverified attachments.
-              </p>
-            </div>
-          </div>
-
-          {/* Action 3: Verify the sender (Blue) */}
-          <div className="p-3.5 sm:p-4 rounded-2xl border border-[#B8DDF5] bg-[#EAF4FC]/50 hover:bg-[#EAF4FC] dark:bg-blue-950/20 dark:border-blue-900/60 shadow-sm flex flex-col justify-between transition-colors">
-            <div>
-              <div className="w-8 h-8 rounded-xl bg-[#EAF4FC] border border-[#B8DDF5] text-[#1D6FA5] flex items-center justify-center mb-3 shadow-2xs">
-                <UserCheck className="w-4 h-4" />
-              </div>
-              <h3 className="text-xs font-bold text-[#1D6FA5] dark:text-blue-400 font-sans tracking-wide mb-1">
-                Verify the sender
-              </h3>
-              <p className="text-[11px] text-[#52665A] dark:text-blue-200/70 leading-relaxed font-sans">
-                Confirm through an independent channel (e.g., official website or phone).
-              </p>
-            </div>
-          </div>
-
-          {/* Action 4: Report this email / URL (Green) */}
-          <div className="p-3.5 sm:p-4 rounded-2xl border border-[#B7E3C7] bg-[#E8F6ED]/50 hover:bg-[#E8F6ED] dark:bg-emerald-950/20 dark:border-emerald-900/60 shadow-sm flex flex-col justify-between transition-colors">
-            <div>
-              <div className="w-8 h-8 rounded-xl bg-[#E8F6ED] border border-[#B7E3C7] text-[#16794B] flex items-center justify-center mb-3 shadow-2xs">
-                <FileText className="w-4 h-4" />
-              </div>
-              <h3 className="text-xs font-bold text-[#16794B] dark:text-emerald-400 font-sans tracking-wide mb-1">
-                {isEmail ? 'Report this email' : 'Report this URL'}
-              </h3>
-              <p className="text-[11px] text-[#52665A] dark:text-emerald-200/70 leading-relaxed font-sans">
-                Forward to your organization's SOC or abuse@ provider.
-              </p>
-            </div>
-          </div>
-
-          {/* Action 5: Verify payment requests (Purple) */}
-          <div className="p-3.5 sm:p-4 rounded-2xl border border-[#D8C7F0] bg-[#F5F0FB]/50 hover:bg-[#F5F0FB] dark:bg-purple-950/20 dark:border-purple-900/60 shadow-sm flex flex-col justify-between transition-colors">
-            <div>
-              <div className="w-8 h-8 rounded-xl bg-[#F5F0FB] border border-[#D8C7F0] text-[#7E22CE] flex items-center justify-center mb-3 shadow-2xs">
-                <CreditCard className="w-4 h-4" />
-              </div>
-              <h3 className="text-xs font-bold text-[#7E22CE] dark:text-purple-400 font-sans tracking-wide mb-1">
-                Verify payment requests
-              </h3>
-              <p className="text-[11px] text-[#52665A] dark:text-purple-200/70 leading-relaxed font-sans">
-                Do not transfer money without independent multi-party verification.
-              </p>
-            </div>
-          </div>
+          ))}
         </div>
       </section>
 
