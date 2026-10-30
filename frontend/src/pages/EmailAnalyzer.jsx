@@ -22,7 +22,7 @@ export default function EmailAnalyzer({ onSelectScan }) {
     {
       label: 'Microsoft 365 Display Spoof (Critical)',
       severity: 'critical',
-      tagColor: 'bg-[#FEECEC] border-[#F5B7BD] text-[#B42318] hover:bg-[#D92D20] hover:text-white hover:border-[#D92D20] dark:bg-rose-950/60 dark:border-rose-700 dark:text-rose-100',
+      tagColor: 'bg-[#FEECEC] border-[#F5B7BD] text-[#B42318] hover:bg-[#D92D20] hover:text-white hover:border-[#D92D20] dark:bg-[#FEECEC] dark:border-[#F5B7BD] dark:text-[#B42318]',
       badgeBg: 'bg-[#D92D20]',
       text: `From: "Microsoft Security Team" <support-notice41@genericmail-alerts.xyz>
 Reply-To: security-reply@attacker-box.net
@@ -45,7 +45,7 @@ Microsoft Account Services`,
     {
       label: 'Urgent Banking Suspension (Critical)',
       severity: 'critical',
-      tagColor: 'bg-[#FEECEC] border-[#F5B7BD] text-[#B42318] hover:bg-[#D92D20] hover:text-white hover:border-[#D92D20] dark:bg-rose-950/60 dark:border-rose-700 dark:text-rose-100',
+      tagColor: 'bg-[#FEECEC] border-[#F5B7BD] text-[#B42318] hover:bg-[#D92D20] hover:text-white hover:border-[#D92D20] dark:bg-[#FEECEC] dark:border-[#F5B7BD] dark:text-[#B42318]',
       badgeBg: 'bg-[#D92D20]',
       text: `From: "Chase Online Security" <alerts@chase-banking-security.tk>
 Subject: Security Alert: Account Suspended
@@ -62,7 +62,7 @@ Do not ignore this warning.`,
     {
       label: 'CEO BEC Wire Transfer Scam (High)',
       severity: 'high',
-      tagColor: 'bg-[#FFF1DB] border-[#F5D08A] text-[#9A3412] hover:bg-[#B54708] hover:text-white hover:border-[#B54708] dark:bg-amber-950/60 dark:border-amber-700 dark:text-amber-100',
+      tagColor: 'bg-[#FFF1DB] border-[#F5D08A] text-[#9A3412] hover:bg-[#B54708] hover:text-white hover:border-[#B54708] dark:bg-[#FFF1DB] dark:border-[#F5D08A] dark:text-[#9A3412]',
       badgeBg: 'bg-[#B54708]',
       text: `From: John Davis <ceo@enterprise-solutions.com>
 Reply-To: wire-processing@overseas-fund.xyz
@@ -81,7 +81,7 @@ Chief Executive Officer`,
     {
       label: 'Legitimate Team Newsletter (Low)',
       severity: 'safe',
-      tagColor: 'bg-[#E8F6ED] border-[#B7E3C7] text-[#0E623B] hover:bg-[#16794B] hover:text-white hover:border-[#16794B] dark:bg-emerald-950/60 dark:border-emerald-700 dark:text-emerald-100',
+      tagColor: 'bg-[#E8F6ED] border-[#B7E3C7] text-[#0E623B] hover:bg-[#16794B] hover:text-white hover:border-[#16794B] dark:bg-[#E8F6ED] dark:border-[#B7E3C7] dark:text-[#0E623B]',
       badgeBg: 'bg-[#16794B]',
       text: `From: Security Team <security@company.internal>
 Subject: Monthly Engineering Security Best Practices Digest
@@ -160,10 +160,10 @@ The Internal Security Engineering Team`,
         >
           <div>
             <div className="flex items-center justify-between mb-2">
-              <label htmlFor="email-textarea" className="text-xs font-mono uppercase text-[#202E1E] dark:text-[#E2EAE0] font-extrabold tracking-wider">
+              <label htmlFor="email-textarea" className="text-xs font-mono uppercase text-[#1C2518] dark:text-[#1C2518] font-black tracking-wider">
                 Email Headers and Body Content:
               </label>
-              <span className="text-[11px] text-[#6C8480] font-mono font-medium">
+              <span className="text-[11px] text-[#2C3527] dark:text-[#2C3527] font-mono font-bold">
                 {emailText.length} characters (Max 200KB)
               </span>
             </div>
@@ -174,13 +174,13 @@ The Internal Security Engineering Team`,
               value={emailText}
               onChange={(e) => setEmailText(e.target.value)}
               placeholder="Paste raw email text here, including From:, Reply-To:, Subject: headers and message body..."
-              className="w-full rounded-xl bg-[#F4F7F4] dark:bg-[#1E281C] border border-[#404E3B]/25 dark:border-[#7B9669]/40 p-4 text-xs text-[#111827] dark:text-white font-mono font-medium placeholder:text-[#3B4D36] placeholder:not-italic dark:placeholder:text-[#B4CEAA] focus:outline-none focus:border-[#7B9669] focus:ring-2 focus:ring-[#7B9669]/25 transition-all leading-relaxed"
+              className="w-full rounded-xl bg-[#F4F7F4] border border-[#404E3B]/25 p-4 text-xs text-[#111827] dark:text-[#111827] font-mono font-medium placeholder:text-[#2D3D28] placeholder:not-italic dark:placeholder:text-[#2D3D28] focus:outline-none focus:border-[#7B9669] focus:ring-2 focus:ring-[#7B9669]/25 transition-all leading-relaxed"
             />
           </div>
 
           {/* Quick Preset Samples with distinct severity colors */}
           <div>
-            <span className="text-[11px] font-mono text-[#2B3A28] dark:text-[#D1DCD0] block mb-2 flex items-center gap-1.5 font-bold">
+            <span className="text-xs font-mono text-[#1C2518] dark:text-[#1C2518] block mb-2 flex items-center gap-1.5 font-extrabold tracking-wide">
               <Zap className="w-3.5 h-3.5 text-[#7B9669]" />
               <span>Quick Synthetic Email Test Samples:</span>
             </span>
@@ -200,8 +200,8 @@ The Internal Security Engineering Team`,
           </div>
 
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-3.5 border-t border-[#404E3B]/10">
-            <span className="text-[11px] text-[#6C8480] flex items-center gap-1.5">
-              <Shield className="w-3.5 h-3.5 text-[#7B9669] shrink-0" />
+            <span className="text-[11px] text-[#2C3527] dark:text-[#2C3527] flex items-center gap-1.5 font-semibold">
+              <Shield className="w-3.5 h-3.5 text-[#404E3B] shrink-0" />
               <span>Privacy protected: Raw email contents are evaluated in-memory and never logged to permanent plaintext tables.</span>
             </span>
 

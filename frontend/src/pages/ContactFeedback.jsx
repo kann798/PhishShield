@@ -108,7 +108,7 @@ export default function ContactFeedback({ initialSubject = '' }) {
           <form onSubmit={handleSubmit} className="space-y-4 text-xs font-sans">
             {/* Name Input */}
             <div>
-              <label htmlFor="contact-name" className="block text-[#404E3B] font-mono font-semibold mb-1.5 uppercase text-[11px] tracking-wider">
+              <label htmlFor="contact-name" className="block text-[#1C2518] dark:text-[#1C2518] font-mono font-bold mb-1.5 uppercase text-xs tracking-wider">
                 Name
               </label>
               <input
@@ -117,13 +117,13 @@ export default function ContactFeedback({ initialSubject = '' }) {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Enter your name"
-                className="w-full px-4 py-2.5 rounded-xl bg-[#F4F7F4] border border-[#404E3B]/20 text-[#2C3527] placeholder:text-[#627F51] placeholder:italic dark:placeholder:text-[#9FC48A] focus:outline-none focus:border-[#7B9669] focus:ring-1 focus:ring-[#7B9669]/40 transition-all font-sans"
+                className="w-full px-4 py-2.5 rounded-xl bg-[#F4F7F4] border border-[#404E3B]/20 text-[#2C3527] placeholder:text-[#2D3D28] placeholder:not-italic dark:placeholder:text-[#2D3D28] focus:outline-none focus:border-[#7B9669] focus:ring-1 focus:ring-[#7B9669]/40 transition-all font-sans"
               />
             </div>
 
             {/* Email Input */}
             <div>
-              <label htmlFor="contact-email" className="block text-[#404E3B] font-mono font-semibold mb-1.5 uppercase text-[11px] tracking-wider">
+              <label htmlFor="contact-email" className="block text-[#1C2518] dark:text-[#1C2518] font-mono font-bold mb-1.5 uppercase text-xs tracking-wider">
                 Email
               </label>
               <input
@@ -132,13 +132,13 @@ export default function ContactFeedback({ initialSubject = '' }) {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="Enter your email"
-                className="w-full px-4 py-2.5 rounded-xl bg-[#F4F7F4] border border-[#404E3B]/20 text-[#2C3527] placeholder:text-[#627F51] placeholder:italic dark:placeholder:text-[#9FC48A] focus:outline-none focus:border-[#7B9669] focus:ring-1 focus:ring-[#7B9669]/40 transition-all font-sans"
+                className="w-full px-4 py-2.5 rounded-xl bg-[#F4F7F4] border border-[#404E3B]/20 text-[#2C3527] placeholder:text-[#2D3D28] placeholder:not-italic dark:placeholder:text-[#2D3D28] focus:outline-none focus:border-[#7B9669] focus:ring-1 focus:ring-[#7B9669]/40 transition-all font-sans"
               />
             </div>
 
             {/* Subject Selector */}
             <div>
-              <label htmlFor="contact-subject" className="block text-[#404E3B] font-mono font-semibold mb-1.5 uppercase text-[11px] tracking-wider">
+              <label htmlFor="contact-subject" className="block text-[#1C2518] dark:text-[#1C2518] font-mono font-bold mb-1.5 uppercase text-xs tracking-wider">
                 Subject
               </label>
               <select
@@ -156,7 +156,7 @@ export default function ContactFeedback({ initialSubject = '' }) {
 
             {/* Message Textarea */}
             <div>
-              <label htmlFor="contact-message" className="block text-[#404E3B] font-mono font-semibold mb-1.5 uppercase text-[11px] tracking-wider">
+              <label htmlFor="contact-message" className="block text-[#1C2518] dark:text-[#1C2518] font-mono font-bold mb-1.5 uppercase text-xs tracking-wider">
                 Message
               </label>
               <textarea
@@ -165,7 +165,7 @@ export default function ContactFeedback({ initialSubject = '' }) {
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
                 placeholder="Type your message..."
-                className="w-full p-4 rounded-xl bg-[#F4F7F4] border border-[#404E3B]/20 text-[#2C3527] placeholder:text-[#627F51] placeholder:italic dark:placeholder:text-[#9FC48A] focus:outline-none focus:border-[#7B9669] focus:ring-1 focus:ring-[#7B9669]/40 transition-all font-sans leading-relaxed resize-y"
+                className="w-full p-4 rounded-xl bg-[#F4F7F4] border border-[#404E3B]/20 text-[#2C3527] placeholder:text-[#2D3D28] placeholder:not-italic dark:placeholder:text-[#2D3D28] focus:outline-none focus:border-[#7B9669] focus:ring-1 focus:ring-[#7B9669]/40 transition-all font-sans leading-relaxed resize-y"
               />
             </div>
 

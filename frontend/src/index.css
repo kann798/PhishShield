@@ -90,15 +90,15 @@
   /* Distinctive Colored Placeholder Styling */
   input::placeholder,
   textarea::placeholder {
-    color: #627F51 !important;
-    opacity: 0.85 !important;
-    font-style: italic;
+    color: #2D3D28 !important;
+    opacity: 0.9 !important;
+    font-style: normal !important;
   }
   .dark input::placeholder,
   .dark textarea::placeholder {
-    color: #9FC48A !important;
-    opacity: 0.85 !important;
-    font-style: italic;
+    color: #2D3D28 !important;
+    opacity: 0.9 !important;
+    font-style: normal !important;
   }
 }
 

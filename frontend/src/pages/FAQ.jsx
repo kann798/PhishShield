@@ -218,9 +218,9 @@ export default function FAQ({ setActivePage }) {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search questions..."
-            className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-[#F4F7F4] border border-[#404E3B]/20 text-xs text-[#2C3527] font-sans placeholder:text-[#627F51] placeholder:italic dark:placeholder:text-[#9FC48A] focus:outline-none focus:border-[#7B9669] focus:ring-1 focus:ring-[#7B9669]/40 transition-all"
+            className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-[#F4F7F4] border border-[#404E3B]/20 text-xs text-[#2C3527] font-sans placeholder:text-[#2D3D28] placeholder:not-italic dark:placeholder:text-[#2D3D28] focus:outline-none focus:border-[#7B9669] focus:ring-1 focus:ring-[#7B9669]/40 transition-all"
           />
-          <Search className="w-4 h-4 text-[#6C8480] absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+          <Search className="w-4 h-4 text-[#404E3B] absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
           {searchQuery && (
             <button
               onClick={() => setSearchQuery('')}

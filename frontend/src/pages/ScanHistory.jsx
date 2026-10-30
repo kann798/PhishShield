@@ -144,13 +144,13 @@ export default function ScanHistory({ onSelectScan }) {
         <form onSubmit={handleSearchSubmit} className="grid grid-cols-1 sm:grid-cols-12 gap-3">
           {/* Keyword Search Input */}
           <div className="sm:col-span-6 relative">
-            <Search className="w-4 h-4 text-[#6C8480] absolute left-3.5 top-1/2 -translate-y-1/2" />
+            <Search className="w-4 h-4 text-[#404E3B] absolute left-3.5 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search targets, URLs, subjects, or indicators..."
-              className="w-full rounded-xl bg-[#F4F7F4] border border-[#404E3B]/20 pl-10 pr-4 py-2.5 text-xs text-[#2C3527] font-mono placeholder:text-[#627F51] placeholder:italic dark:placeholder:text-[#9FC48A] focus:outline-none focus:border-[#7B9669] focus:ring-2 focus:ring-[#7B9669]/25 transition-all"
+              className="w-full rounded-xl bg-[#F4F7F4] border border-[#404E3B]/20 pl-10 pr-4 py-2.5 text-xs text-[#2C3527] font-mono placeholder:text-[#2D3D28] placeholder:not-italic dark:placeholder:text-[#2D3D28] focus:outline-none focus:border-[#7B9669] focus:ring-2 focus:ring-[#7B9669]/25 transition-all"
             />
           </div>
 
@@ -159,7 +159,7 @@ export default function ScanHistory({ onSelectScan }) {
             <select
               value={selectedType}
               onChange={(e) => setSelectedType(e.target.value)}
-              className="w-full rounded-xl bg-[#F4F7F4] border border-[#404E3B]/20 px-3 py-2.5 text-xs text-[#2C3527] font-mono focus:outline-none focus:border-[#7B9669]"
+              className="w-full rounded-xl bg-[#F4F7F4] border border-[#404E3B]/20 px-3 py-2.5 text-xs text-[#111827] dark:text-[#111827] font-mono font-semibold focus:outline-none focus:border-[#7B9669]"
             >
               <option value="all">All Targets (URLs & Emails)</option>
               <option value="url">URLs Only</option>
@@ -172,7 +172,7 @@ export default function ScanHistory({ onSelectScan }) {
             <select
               value={selectedRisk}
               onChange={(e) => setSelectedRisk(e.target.value)}
-              className="w-full rounded-xl bg-[#F4F7F4] border border-[#404E3B]/20 px-3 py-2.5 text-xs text-[#2C3527] font-mono focus:outline-none focus:border-[#7B9669]"
+              className="w-full rounded-xl bg-[#F4F7F4] border border-[#404E3B]/20 px-3 py-2.5 text-xs text-[#111827] dark:text-[#111827] font-mono font-semibold focus:outline-none focus:border-[#7B9669]"
             >
               <option value="all">All Risk Levels</option>
               <option value="critical">Critical Risk</option>
