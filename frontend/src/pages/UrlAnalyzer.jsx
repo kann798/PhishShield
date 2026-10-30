@@ -29,35 +29,35 @@ export default function UrlAnalyzer({ onSelectScan, onScanComplete }) {
       label: 'Raw IP Host (Critical)',
       url: 'http://192.168.1.45/paypal-login/verify.php',
       severity: 'critical',
-      tagColor: 'bg-[#FEECEC] border-[#F5B7BD] text-[#D92D20] hover:bg-[#D92D20] hover:text-white hover:border-[#D92D20] dark:bg-rose-950/40 dark:border-rose-800 dark:text-rose-300',
+      tagColor: 'bg-[#FEECEC] border-[#F5B7BD] text-[#B42318] hover:bg-[#D92D20] hover:text-white hover:border-[#D92D20] dark:bg-rose-950/60 dark:border-rose-700 dark:text-rose-100',
       badgeBg: 'bg-[#D92D20]',
     },
     {
       label: 'Brand Typosquatting (Critical)',
       url: 'http://paypa1-security-verification.com/signin',
       severity: 'critical',
-      tagColor: 'bg-[#FEECEC] border-[#F5B7BD] text-[#D92D20] hover:bg-[#D92D20] hover:text-white hover:border-[#D92D20] dark:bg-rose-950/40 dark:border-rose-800 dark:text-rose-300',
+      tagColor: 'bg-[#FEECEC] border-[#F5B7BD] text-[#B42318] hover:bg-[#D92D20] hover:text-white hover:border-[#D92D20] dark:bg-rose-950/60 dark:border-rose-700 dark:text-rose-100',
       badgeBg: 'bg-[#D92D20]',
     },
     {
       label: 'Subdomain Deception (High)',
       url: 'http://paypal.com.account-update.xyz/login',
       severity: 'high',
-      tagColor: 'bg-[#FEF2F2] border-[#FECACA] text-[#DC2626] hover:bg-[#DC2626] hover:text-white hover:border-[#DC2626] dark:bg-red-950/40 dark:border-red-800 dark:text-red-300',
+      tagColor: 'bg-[#FEF2F2] border-[#FECACA] text-[#C81E1E] hover:bg-[#DC2626] hover:text-white hover:border-[#DC2626] dark:bg-red-950/60 dark:border-red-700 dark:text-red-100',
       badgeBg: 'bg-[#DC2626]',
     },
     {
       label: 'URL Shortener (Medium)',
       url: 'https://bit.ly/3xY8a9Q',
       severity: 'medium',
-      tagColor: 'bg-[#FFF1DB] border-[#F5D08A] text-[#B54708] hover:bg-[#B54708] hover:text-white hover:border-[#B54708] dark:bg-amber-950/40 dark:border-amber-800 dark:text-amber-300',
+      tagColor: 'bg-[#FFF1DB] border-[#F5D08A] text-[#9A3412] hover:bg-[#B54708] hover:text-white hover:border-[#B54708] dark:bg-amber-950/60 dark:border-amber-700 dark:text-amber-100',
       badgeBg: 'bg-[#B54708]',
     },
     {
       label: 'Legitimate Site (Low)',
       url: 'https://www.google.com/search?q=cybersecurity',
       severity: 'safe',
-      tagColor: 'bg-[#E8F6ED] border-[#B7E3C7] text-[#16794B] hover:bg-[#16794B] hover:text-white hover:border-[#16794B] dark:bg-emerald-950/40 dark:border-emerald-800 dark:text-emerald-300',
+      tagColor: 'bg-[#E8F6ED] border-[#B7E3C7] text-[#0E623B] hover:bg-[#16794B] hover:text-white hover:border-[#16794B] dark:bg-emerald-950/60 dark:border-emerald-700 dark:text-emerald-100',
       badgeBg: 'bg-[#16794B]',
     },
   ];
@@ -123,7 +123,7 @@ export default function UrlAnalyzer({ onSelectScan, onScanComplete }) {
           className="space-y-4"
         >
           <div>
-            <label htmlFor="url-input" className="block text-xs font-mono uppercase text-[#404E3B] font-bold mb-2 tracking-wider">
+            <label htmlFor="url-input" className="block text-xs font-mono uppercase text-[#202E1E] dark:text-[#E2EAE0] font-extrabold mb-2 tracking-wider">
               Website URL to Inspect:
             </label>
             <div className="relative">
@@ -133,7 +133,7 @@ export default function UrlAnalyzer({ onSelectScan, onScanComplete }) {
                 value={urlInput}
                 onChange={(e) => setUrlInput(e.target.value)}
                 placeholder="e.g. http://192.168.1.1/login or https://paypa1-security-verification.com"
-                className="w-full rounded-xl bg-[#F4F7F4] border border-[#404E3B]/20 px-4 py-3.5 text-sm text-[#2C3527] font-mono placeholder:text-[#627F51] placeholder:italic dark:placeholder:text-[#9FC48A] focus:outline-none focus:border-[#7B9669] focus:ring-2 focus:ring-[#7B9669]/25 transition-all"
+                className="w-full rounded-xl bg-[#F4F7F4] dark:bg-[#1E281C] border border-[#404E3B]/25 dark:border-[#7B9669]/40 px-4 py-3.5 text-sm text-[#111827] dark:text-white font-mono font-semibold placeholder:text-[#3B4D36] placeholder:not-italic dark:placeholder:text-[#B4CEAA] focus:outline-none focus:border-[#7B9669] focus:ring-2 focus:ring-[#7B9669]/25 transition-all"
               />
               {urlInput && (
                 <button
@@ -152,7 +152,7 @@ export default function UrlAnalyzer({ onSelectScan, onScanComplete }) {
 
           {/* Quick-test Presets with distinct severity color styling */}
           <div>
-            <span className="text-[11px] font-mono text-[#6C8480] block mb-2 flex items-center gap-1.5 font-semibold">
+            <span className="text-[11px] font-mono text-[#2B3A28] dark:text-[#D1DCD0] block mb-2 flex items-center gap-1.5 font-bold">
               <Zap className="w-3.5 h-3.5 text-[#7B9669]" />
               <span>Quick Synthetic Test Samples:</span>
             </span>
@@ -162,7 +162,7 @@ export default function UrlAnalyzer({ onSelectScan, onScanComplete }) {
                   key={idx}
                   type="button"
                   onClick={() => handleSampleClick(sample.url)}
-                  className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-mono font-medium border transition-all shadow-xs cursor-pointer ${sample.tagColor}`}
+                  className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-mono font-bold border transition-all shadow-xs cursor-pointer ${sample.tagColor}`}
                 >
                   <span className={`w-2 h-2 rounded-full shrink-0 ${sample.badgeBg}`}></span>
                   <span>{sample.label}</span>
