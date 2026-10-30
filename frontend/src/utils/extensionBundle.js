@@ -121,7 +121,17 @@ export const EXTENSION_RAW_FILES = {
 export async function downloadExtensionZipPackage(apiBaseUrl) {
   let blob = null;
 
-  // 1. Attempt download from backend API if available
+  // 1. First attempt: fetch static pre-packaged ZIP from public assets
+  try {
+    const staticRes = await fetch('/phishshield-extension.zip');
+    if (staticRes.ok) {
+      blob = await staticRes.blob();
+    }
+  } catch (err) {
+    console.warn('Static zip asset fetch skipped or unavailable:', err);
+  }
+
+  // 2. Second attempt: download from backend API if available
   if (apiBaseUrl) {
     try {
       const controller = new AbortController();

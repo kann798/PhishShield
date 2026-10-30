@@ -49,8 +49,78 @@ class URLAnalyzer:
         "office365", "yahoo", "citibank", "steam", "linkedin", "meta"
     ]
 
-    # Non-standard or suspicious web ports
+# Non-standard or suspicious web ports
     UNUSUAL_PORTS = {2082, 2083, 2086, 2087, 8000, 8080, 8088, 8443, 8888, 9000, 9090, 10000}
+
+    # Authentic Domain Registries for major brands to eliminate false positives
+    AUTHENTIC_BRAND_DOMAINS = {
+        "amazon": [
+            r"^([a-z0-9-]+\.)*amazon\.(com|in|co\.uk|de|fr|ca|co\.jp|es|it|com\.au|com\.br|cn|com\.mx|nl|se|pl|eg|sa|ae|sg)$",
+            r"^([a-z0-9-]+\.)*media-amazon\.com$",
+            r"^([a-z0-9-]+\.)*images-amazon\.com$",
+            r"^([a-z0-9-]+\.)*ssl-images-amazon\.com$",
+            r"^([a-z0-9-]+\.)*a2z\.com$"
+        ],
+        "microsoft": [
+            r"^([a-z0-9-]+\.)*microsoft\.(com|net|org)$",
+            r"^([a-z0-9-]+\.)*microsoftonline\.com$",
+            r"^([a-z0-9-]+\.)*live\.(com|net)$",
+            r"^([a-z0-9-]+\.)*office\.(com|net)$",
+            r"^([a-z0-9-]+\.)*office365\.com$",
+            r"^([a-z0-9-]+\.)*windows\.(com|net)$",
+            r"^([a-z0-9-]+\.)*azure\.(com|net)$",
+            r"^([a-z0-9-]+\.)*msn\.(com|net)$",
+            r"^([a-z0-9-]+\.)*bing\.com$",
+            r"^([a-z0-9-]+\.)*sharepoint\.com$",
+            r"^([a-z0-9-]+\.)*visualstudio\.com$",
+            r"^([a-z0-9-]+\.)*skype\.com$"
+        ],
+        "google": [
+            r"^([a-z0-9-]+\.)*google\.(com|[a-z]{2}|co\.[a-z]{2}|com\.[a-z]{2})$",
+            r"^([a-z0-9-]+\.)*youtube\.com$",
+            r"^([a-z0-9-]+\.)*gmail\.com$",
+            r"^([a-z0-9-]+\.)*gstatic\.com$",
+            r"^([a-z0-9-]+\.)*googleusercontent\.com$",
+            r"^([a-z0-9-]+\.)*android\.com$"
+        ],
+        "apple": [
+            r"^([a-z0-9-]+\.)*apple\.(com|[a-z]{2}|co\.[a-z]{2})$",
+            r"^([a-z0-9-]+\.)*icloud\.com$",
+            r"^([a-z0-9-]+\.)*itunes\.com$"
+        ],
+        "paypal": [
+            r"^([a-z0-9-]+\.)*paypal\.(com|[a-z]{2}|me)$",
+            r"^([a-z0-9-]+\.)*paypal-communication\.com$"
+        ],
+        "netflix": [
+            r"^([a-z0-9-]+\.)*netflix\.(com|[a-z]{2}|net)$",
+            r"^([a-z0-9-]+\.)*nflxvideo\.net$"
+        ],
+        "chase": [
+            r"^([a-z0-9-]+\.)*chase\.com$",
+            r"^([a-z0-9-]+\.)*jpmorgan\.com$",
+            r"^([a-z0-9-]+\.)*jpmorganchase\.com$"
+        ],
+        "facebook": [
+            r"^([a-z0-9-]+\.)*facebook\.com$",
+            r"^([a-z0-9-]+\.)*fb\.com$",
+            r"^([a-z0-9-]+\.)*meta\.com$"
+        ],
+        "instagram": [
+            r"^([a-z0-9-]+\.)*instagram\.com$",
+            r"^([a-z0-9-]+\.)*cdninstagram\.com$"
+        ],
+        "linkedin": [
+            r"^([a-z0-9-]+\.)*linkedin\.com$",
+            r"^([a-z0-9-]+\.)*licdn\.com$"
+        ]
+    }
+
+    @classmethod
+    def _is_authentic_brand_domain(cls, brand: str, hostname: str) -> bool:
+        """Check if hostname is officially owned or registered by the legitimate brand."""
+        patterns = cls.AUTHENTIC_BRAND_DOMAINS.get(brand.lower(), [])
+        return any(bool(re.match(pat, hostname.lower())) for pat in patterns)
 
     @classmethod
     def analyze(cls, raw_url: str) -> Dict[str, Any]:
@@ -101,9 +171,19 @@ class URLAnalyzer:
 
         # Anatomy breakdown for the user
         domain_parts = hostname.split(".")
-        tld = domain_parts[-1] if len(domain_parts) > 1 else ""
-        subdomains = domain_parts[:-2] if len(domain_parts) > 2 else []
-        main_domain = ".".join(domain_parts[-2:]) if len(domain_parts) >= 2 else hostname
+        is_two_level_tld = (
+            len(domain_parts) >= 3 and
+            len(domain_parts[-1]) == 2 and
+            domain_parts[-2] in {"co", "com", "org", "net", "edu", "gov", "ac", "ne"}
+        )
+        if is_two_level_tld:
+            tld = ".".join(domain_parts[-2:])
+            subdomains = domain_parts[:-3] if len(domain_parts) > 3 else []
+            main_domain = ".".join(domain_parts[-3:]) if len(domain_parts) >= 3 else hostname
+        else:
+            tld = domain_parts[-1] if len(domain_parts) > 1 else ""
+            subdomains = domain_parts[:-2] if len(domain_parts) > 2 else []
+            main_domain = ".".join(domain_parts[-2:]) if len(domain_parts) >= 2 else hostname
 
         # Heuristic checks
         indicators: List[Dict[str, Any]] = []
@@ -191,7 +271,8 @@ class URLAnalyzer:
             })
 
         # 8. Suspicious Phishing Keywords in Path / Query
-        found_keywords = cls._find_phishing_keywords(f"{hostname} {path} {query}")
+        is_trusted_site = any(cls._is_authentic_brand_domain(b, hostname) for b in cls.TARGET_BRANDS)
+        found_keywords = [] if is_trusted_site else cls._find_phishing_keywords(f"{hostname} {path} {query}")
         if found_keywords:
             severity = "high" if len(found_keywords) >= 3 else ("medium" if len(found_keywords) >= 1 else "low")
             indicators.append({
@@ -387,6 +468,8 @@ class URLAnalyzer:
             normalized_domain = normalized_domain.replace(char, repl)
 
         for brand in cls.TARGET_BRANDS:
+            if cls._is_authentic_brand_domain(brand, hostname):
+                continue
             # If the normalized domain equals a brand but the actual domain does NOT match the authentic brand
             if brand in normalized_domain and brand not in domain_without_tld:
                 return {
@@ -426,6 +509,8 @@ class URLAnalyzer:
         Example: paypal.com.account-update.xyz
         """
         for brand in cls.TARGET_BRANDS:
+            if cls._is_authentic_brand_domain(brand, hostname):
+                continue
             # Brand is present in hostname, but the main domain is completely different
             if brand in hostname:
                 brand_domain_match = f"{brand}." in main_domain or main_domain.startswith(f"{brand}.")

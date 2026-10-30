@@ -204,81 +204,229 @@ export function computeDynamicDashboardStats() {
   };
 }
 
+// Comprehensive Authentic Brand Domain Registry for Client Heuristic Engine
+const AUTHENTIC_BRAND_DOMAINS = {
+  amazon: [
+    /^([a-z0-9-]+\.)*amazon\.(com|in|co\.uk|de|fr|ca|co\.jp|es|it|com\.au|com\.br|cn|com\.mx|nl|se|pl|eg|sa|ae|sg)$/,
+    /^([a-z0-9-]+\.)*media-amazon\.com$/,
+    /^([a-z0-9-]+\.)*images-amazon\.com$/,
+    /^([a-z0-9-]+\.)*ssl-images-amazon\.com$/,
+    /^([a-z0-9-]+\.)*a2z\.com$/
+  ],
+  microsoft: [
+    /^([a-z0-9-]+\.)*microsoft\.(com|net|org)$/,
+    /^([a-z0-9-]+\.)*live\.(com|net)$/,
+    /^([a-z0-9-]+\.)*office\.(com|net)$/,
+    /^([a-z0-9-]+\.)*windows\.(com|net)$/,
+    /^([a-z0-9-]+\.)*azure\.(com|net)$/,
+    /^([a-z0-9-]+\.)*msn\.(com|net)$/,
+    /^([a-z0-9-]+\.)*bing\.com$/,
+    /^([a-z0-9-]+\.)*sharepoint\.com$/,
+    /^([a-z0-9-]+\.)*visualstudio\.com$/,
+    /^([a-z0-9-]+\.)*skype\.com$/
+  ],
+  google: [
+    /^([a-z0-9-]+\.)*google\.(com|[a-z]{2}|co\.[a-z]{2}|com\.[a-z]{2})$/,
+    /^([a-z0-9-]+\.)*youtube\.com$/,
+    /^([a-z0-9-]+\.)*gmail\.com$/,
+    /^([a-z0-9-]+\.)*gstatic\.com$/,
+    /^([a-z0-9-]+\.)*googleusercontent\.com$/,
+    /^([a-z0-9-]+\.)*android\.com$/
+  ],
+  apple: [
+    /^([a-z0-9-]+\.)*apple\.(com|[a-z]{2}|co\.[a-z]{2})$/,
+    /^([a-z0-9-]+\.)*icloud\.com$/,
+    /^([a-z0-9-]+\.)*itunes\.com$/
+  ],
+  paypal: [
+    /^([a-z0-9-]+\.)*paypal\.(com|[a-z]{2}|me)$/,
+    /^([a-z0-9-]+\.)*paypal-communication\.com$/
+  ],
+  netflix: [
+    /^([a-z0-9-]+\.)*netflix\.(com|[a-z]{2}|net)$/,
+    /^([a-z0-9-]+\.)*nflxvideo\.net$/
+  ],
+  chase: [
+    /^([a-z0-9-]+\.)*chase\.com$/,
+    /^([a-z0-9-]+\.)*jpmorgan\.com$/,
+    /^([a-z0-9-]+\.)*jpmorganchase\.com$/
+  ],
+  facebook: [
+    /^([a-z0-9-]+\.)*facebook\.com$/,
+    /^([a-z0-9-]+\.)*fb\.com$/,
+    /^([a-z0-9-]+\.)*meta\.com$/
+  ],
+  instagram: [
+    /^([a-z0-9-]+\.)*instagram\.com$/,
+    /^([a-z0-9-]+\.)*cdninstagram\.com$/
+  ],
+  linkedin: [
+    /^([a-z0-9-]+\.)*linkedin\.com$/,
+    /^([a-z0-9-]+\.)*licdn\.com$/
+  ]
+};
+
+// Known Phishing Typosquatting / Character Substitution Patterns
+const KNOWN_HOMOGLYPH_TYPOS = [
+  { typo: 'paypa1', brand: 'paypal' },
+  { typo: 'micros0ft', brand: 'microsoft' },
+  { typo: 'arnazon', brand: 'amazon' },
+  { typo: 'app1e', brand: 'apple' },
+  { typo: 'netf1ix', brand: 'netflix' },
+  { typo: 'g00gle', brand: 'google' },
+  { typo: 'g0ogle', brand: 'google' },
+  { typo: 'goog1e', brand: 'google' },
+  { typo: 'ch4se', brand: 'chase' },
+  { typo: 'b1nance', brand: 'binance' },
+  { typo: 'c0inbase', brand: 'coinbase' }
+];
+
+function isAuthenticDomain(brand, hostname) {
+  const matchers = AUTHENTIC_BRAND_DOMAINS[brand];
+  if (!matchers) return false;
+  return matchers.some((regex) => regex.test(hostname));
+}
+
 // Client-side fallback URL heuristic analyzer
 export function clientAnalyzeUrl(url) {
   let score = 0;
   const indicators = [];
-  const u = (url || '').toLowerCase();
+  const rawUrl = (url || '').trim();
+  const u = rawUrl.toLowerCase();
+
+  let hostname = '';
+  let path = '/';
+  let query = '';
+  let protocol = 'https:';
+
+  try {
+    const withScheme = rawUrl.startsWith('http://') || rawUrl.startsWith('https://') ? rawUrl : `http://${rawUrl}`;
+    const urlObj = new URL(withScheme);
+    hostname = urlObj.hostname.toLowerCase();
+    path = urlObj.pathname || '/';
+    query = urlObj.search || '';
+    protocol = urlObj.protocol.toLowerCase();
+  } catch {
+    hostname = u.split('/')[0].split(':')[0].toLowerCase();
+  }
 
   // 1. IP Host
-  if (/\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\b/.test(u)) {
+  if (/\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\b/.test(hostname)) {
     score += 40;
     indicators.push({
       id: 'IP_ADDRESS_HOST',
       name: 'Direct IP Address Host',
       severity: 'Critical',
       weight: 40,
-      evidence: u,
+      evidence: hostname,
       description: 'URL uses a raw IP address instead of a legitimate domain name.'
     });
   }
 
-  // 2. Typosquatting
-  const brands = ['paypal', 'microsoft', 'google', 'apple', 'amazon', 'netflix', 'chase'];
-  for (const b of brands) {
-    if (u.includes(b.replace('o', '0')) || u.includes(b.replace('l', '1')) || (u.includes(b) && !u.includes(`${b}.com`))) {
-      score += 35;
+  // 2. Homoglyph / Typosquatting Checks (Accurate character substitutions)
+  let foundBrandTyposquat = false;
+  for (const hg of KNOWN_HOMOGLYPH_TYPOS) {
+    if (hostname.includes(hg.typo)) {
+      score += 45;
       indicators.push({
         id: 'TYPOSQUATTING',
-        name: `Possible Brand Spoofing (${b})`,
+        name: `Brand Typosquatting (${hg.brand})`,
         severity: 'Critical',
-        weight: 35,
-        evidence: `Detected pattern matching: ${b}`,
-        description: `URL contains visual variations or unauthorized mentions of ${b}.`
+        weight: 45,
+        evidence: `Hostname contains deceptive homoglyph '${hg.typo}' mimicking authentic brand '${hg.brand}'`,
+        description: `URL contains visual character substitutions designed to impersonate ${hg.brand}.`
       });
+      foundBrandTyposquat = true;
       break;
     }
   }
 
-  // 3. Suspicious TLD
-  if (/\.(xyz|top|buzz|tk|ml|ga|cf|gq|work|click|loan)\b/.test(u)) {
+  // 3. Brand Subdomain Abuse (Only when brand is used on an unofficial host)
+  if (!foundBrandTyposquat) {
+    const brands = Object.keys(AUTHENTIC_BRAND_DOMAINS);
+    for (const b of brands) {
+      if (hostname.includes(b)) {
+        if (!isAuthenticDomain(b, hostname)) {
+          score += 40;
+          indicators.push({
+            id: 'BRAND_SUBDOMAIN_ABUSE',
+            name: `Misleading Brand Subdomain (${b})`,
+            severity: 'High',
+            weight: 40,
+            evidence: `Host: ${hostname} (not an authorized ${b} domain)`,
+            description: `The URL contains the brand name '${b}' in its host, but is not registered under official ${b} infrastructure.`
+          });
+          break;
+        }
+      }
+    }
+  }
+
+  // 4. Suspicious TLD
+  if (/\.(xyz|top|buzz|tk|ml|ga|cf|gq|work|click|loan|monster|icu|surf)\b/.test(hostname)) {
     score += 25;
     indicators.push({
       id: 'SUSPICIOUS_TLD',
       name: 'High-Abuse Domain Extension',
       severity: 'High',
       weight: 25,
-      evidence: u.match(/\.(xyz|top|buzz|tk|ml|ga|cf|gq|work|click|loan)\b/)?.[0] || '.xyz',
+      evidence: hostname.match(/\.(xyz|top|buzz|tk|ml|ga|cf|gq|work|click|loan|monster|icu|surf)\b/)?.[0] || '.xyz',
       description: 'Domain uses an extension with statistically high correlation with phishing campaigns.'
     });
   }
 
-  // 4. Sensitive Keywords
-  if (/(?:login|verify|signin|banking|security|account|password|update|wallet)/.test(u)) {
+  // 5. Sensitive Credential Harvesting Keywords in Path (Excluded from legitimate domains)
+  const isTrustedBrandSite = Object.keys(AUTHENTIC_BRAND_DOMAINS).some(b => isAuthenticDomain(b, hostname));
+  if (!isTrustedBrandSite && /(?:login|verify|signin|banking|security|account|password|update|wallet|credential)/.test(path)) {
     score += 20;
     indicators.push({
       id: 'SENSITIVE_KEYWORD',
       name: 'Credential Harvesting Keywords',
       severity: 'Medium',
       weight: 20,
-      evidence: u.match(/(?:login|verify|signin|banking|security|account|password|update|wallet)/)?.[0] || 'login',
+      evidence: path.match(/(?:login|verify|signin|banking|security|account|password|update|wallet|credential)/)?.[0] || 'login',
       description: 'URL path contains terms frequently used to lure victims into credential submission.'
     });
   }
 
-  // Severity floor
+  // 6. Protocol Evaluation (Matching Python Backend standard)
+  if (protocol === 'https:') {
+    indicators.push({
+      id: 'https_present',
+      name: 'HTTPS Encryption Present (Not a Guarantee of Safety)',
+      severity: 'Info',
+      weight: 0,
+      evidence: 'https://',
+      description: 'HTTPS encrypts communication between the browser and server, but DOES NOT guarantee legitimacy. Over 80% of phishing websites now utilize free, automated SSL/TLS certificates (e.g., Let\'s Encrypt).'
+    });
+  } else if (protocol === 'http:') {
+    score += 15;
+    indicators.push({
+      id: 'unencrypted_http',
+      name: 'Unencrypted HTTP Protocol',
+      severity: 'Medium',
+      weight: 15,
+      evidence: 'http://',
+      description: 'The website uses plaintext HTTP instead of secure HTTPS. Any data entered can be intercepted.'
+    });
+  }
+
+  // Severity floor logic
   if (indicators.some(i => i.severity === 'Critical') && score < 75) score = 75;
   if (indicators.some(i => i.severity === 'High') && score < 50) score = 50;
-  score = Math.min(100, Math.max(5, score));
+  score = Math.min(100, Math.max(0, score));
 
   let classification = 'Low';
   let verdict = 'Likely Safe';
   if (score >= 70) {
     classification = 'Critical';
     verdict = 'Phishing Detected';
-  } else if (score >= 35) {
-    classification = 'Medium';
+  } else if (score >= 40) {
+    classification = 'High';
     verdict = 'Suspicious Link';
+  } else if (score >= 20) {
+    classification = 'Medium';
+    verdict = 'Elevated Risk';
   }
 
   // Parse URL Anatomy
