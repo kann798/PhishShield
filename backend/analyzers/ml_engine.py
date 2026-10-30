@@ -31,7 +31,8 @@ class MLEngine:
         "login", "signin", "verify", "verification", "account", "security",
         "update", "banking", "secure", "password", "credential", "recover",
         "wallet", "support", "auth", "validation", "confirm", "authenticate",
-        "identity", "billing", "suspend", "unlock", "passcode", "wire"
+        "identity", "billing", "suspend", "unlock", "passcode", "wire",
+        "prize", "winner", "reward", "lottery", "claim", "giveaway", "bonus", "jackpot"
     ]
 
     SUSPICIOUS_TLDS = {

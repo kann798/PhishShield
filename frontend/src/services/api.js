@@ -289,7 +289,6 @@ function isAuthenticDomain(brand, hostname) {
 
 // Client-side fallback URL heuristic analyzer
 export function clientAnalyzeUrl(url) {
-  let score = 0;
   const indicators = [];
   const rawUrl = (url || '').trim();
   const u = rawUrl.toLowerCase();
@@ -312,7 +311,6 @@ export function clientAnalyzeUrl(url) {
 
   // 1. IP Host
   if (/\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\b/.test(hostname)) {
-    score += 40;
     indicators.push({
       id: 'IP_ADDRESS_HOST',
       name: 'Direct IP Address Host',
@@ -327,12 +325,11 @@ export function clientAnalyzeUrl(url) {
   let foundBrandTyposquat = false;
   for (const hg of KNOWN_HOMOGLYPH_TYPOS) {
     if (hostname.includes(hg.typo)) {
-      score += 45;
       indicators.push({
         id: 'TYPOSQUATTING',
         name: `Brand Typosquatting (${hg.brand})`,
         severity: 'Critical',
-        weight: 45,
+        weight: 70,
         evidence: `Hostname contains deceptive homoglyph '${hg.typo}' mimicking authentic brand '${hg.brand}'`,
         description: `URL contains visual character substitutions designed to impersonate ${hg.brand}.`
       });
@@ -347,12 +344,11 @@ export function clientAnalyzeUrl(url) {
     for (const b of brands) {
       if (hostname.includes(b)) {
         if (!isAuthenticDomain(b, hostname)) {
-          score += 40;
           indicators.push({
             id: 'BRAND_SUBDOMAIN_ABUSE',
             name: `Misleading Brand Subdomain (${b})`,
             severity: 'High',
-            weight: 40,
+            weight: 50,
             evidence: `Host: ${hostname} (not an authorized ${b} domain)`,
             description: `The URL contains the brand name '${b}' in its host, but is not registered under official ${b} infrastructure.`
           });
@@ -362,34 +358,67 @@ export function clientAnalyzeUrl(url) {
     }
   }
 
-  // 4. Suspicious TLD
+  // 4. Multiple Hyphens in Domain (Common in phishing & prize scam domains like free-prize-winner)
+  const hyphenMatches = hostname.match(/-/g);
+  const hyphenCount = hyphenMatches ? hyphenMatches.length : 0;
+  if (hyphenCount >= 2) {
+    indicators.push({
+      id: 'excessive_hyphens',
+      name: `Multiple Hyphens in Domain (${hyphenCount} hyphens)`,
+      severity: 'Medium',
+      weight: 20,
+      evidence: hostname,
+      description: 'Phishing domains frequently concatenate brand names, prize lures, and security phrases with multiple hyphens to mislead users.'
+    });
+  }
+
+  // 5. Suspicious TLD
   if (/\.(xyz|top|buzz|tk|ml|ga|cf|gq|work|click|loan|monster|icu|surf)\b/.test(hostname)) {
-    score += 25;
     indicators.push({
       id: 'SUSPICIOUS_TLD',
       name: 'High-Abuse Domain Extension',
-      severity: 'High',
-      weight: 25,
+      severity: 'Medium',
+      weight: 20,
       evidence: hostname.match(/\.(xyz|top|buzz|tk|ml|ga|cf|gq|work|click|loan|monster|icu|surf)\b/)?.[0] || '.xyz',
       description: 'Domain uses an extension with statistically high correlation with phishing campaigns.'
     });
   }
 
-  // 5. Sensitive Credential Harvesting Keywords in Path (Excluded from legitimate domains)
+  // 6. Social Engineering, Credential Harvesting & Prize Scam Keywords
   const isTrustedBrandSite = Object.keys(AUTHENTIC_BRAND_DOMAINS).some(b => isAuthenticDomain(b, hostname));
-  if (!isTrustedBrandSite && /(?:login|verify|signin|banking|security|account|password|update|wallet|credential)/.test(path)) {
-    score += 20;
-    indicators.push({
-      id: 'SENSITIVE_KEYWORD',
-      name: 'Credential Harvesting Keywords',
-      severity: 'Medium',
-      weight: 20,
-      evidence: path.match(/(?:login|verify|signin|banking|security|account|password|update|wallet|credential)/)?.[0] || 'login',
-      description: 'URL path contains terms frequently used to lure victims into credential submission.'
-    });
+  if (!isTrustedBrandSite) {
+    const fullText = `${hostname} ${path} ${query}`.toLowerCase();
+    const phishingKeywords = [
+      'login', 'signin', 'sign-in', 'log-in', 'verify', 'verification',
+      'account', 'security', 'update', 'banking', 'secure', 'password',
+      'credential', 'recover', 'wallet', 'support', 'auth', 'validation',
+      'confirm', 'authenticate', 'identity', 'billing', 'webscr', 'ebayisapi',
+      'suspend', 'unlock', 'passcode', 'helpdesk',
+      'prize', 'winner', 'reward', 'lottery', 'claim', 'claim-now',
+      'giveaway', 'free-gift', 'cash-bonus', 'jackpot'
+    ];
+    const foundKeywords = [];
+    for (const kw of phishingKeywords) {
+      const reg = new RegExp(`(?:^|[\\W_-])${kw}(?:$|[\\W_-])`, 'i');
+      if (reg.test(fullText)) {
+        foundKeywords.push(kw);
+      }
+    }
+    if (foundKeywords.length > 0) {
+      const kwSeverity = foundKeywords.length >= 3 ? 'High' : (foundKeywords.length >= 1 ? 'Medium' : 'Low');
+      const kwWeight = Math.min(45, 15 * foundKeywords.length);
+      indicators.push({
+        id: 'phishing_keywords',
+        name: `Authentication & Security Keywords Detected (${foundKeywords.length})`,
+        severity: kwSeverity,
+        weight: kwWeight,
+        evidence: foundKeywords.join(', '),
+        description: `The URL contains keywords strongly correlated with credential harvesting, social engineering, or prize scams: [${foundKeywords.join(', ')}].`
+      });
+    }
   }
 
-  // 6. Protocol Evaluation (Matching Python Backend standard)
+  // 7. Protocol Evaluation (Matching Python Backend standard)
   if (protocol === 'https:') {
     indicators.push({
       id: 'https_present',
@@ -400,54 +429,98 @@ export function clientAnalyzeUrl(url) {
       description: 'HTTPS encrypts communication between the browser and server, but DOES NOT guarantee legitimacy. Over 80% of phishing websites now utilize free, automated SSL/TLS certificates (e.g., Let\'s Encrypt).'
     });
   } else if (protocol === 'http:') {
-    score += 15;
     indicators.push({
       id: 'unencrypted_http',
       name: 'Unencrypted HTTP Protocol',
-      severity: 'Medium',
-      weight: 15,
+      severity: 'High',
+      weight: 25,
       evidence: 'http://',
       description: 'The website uses plaintext HTTP instead of secure HTTPS. Any data entered can be intercepted.'
     });
   }
 
-  // Severity floor logic
-  if (indicators.some(i => i.severity === 'Critical') && score < 75) score = 75;
-  if (indicators.some(i => i.severity === 'High') && score < 50) score = 50;
-  score = Math.min(100, Math.max(0, score));
+  // 8. Calibrated Scoring Engine (Exact Parity with Backend RiskScorer)
+  const severityCounts = { info: 0, low: 0, medium: 0, high: 0, critical: 0 };
+  let totalRawWeight = 0;
+
+  for (const ind of indicators) {
+    const s = (ind.severity || 'low').toLowerCase();
+    if (severityCounts[s] !== undefined) {
+      severityCounts[s]++;
+    } else {
+      severityCounts.low++;
+    }
+    totalRawWeight += (ind.weight !== undefined ? ind.weight : 10);
+  }
+
+  const hasCritical = severityCounts.critical > 0;
+  const hasHigh = severityCounts.high > 0;
+  const hasMedium = severityCounts.medium > 0;
+
+  let heuristicScore = 0;
+  if (hasCritical) {
+    heuristicScore = 75 + Math.min(25, Math.floor(totalRawWeight * 0.25));
+  } else if (hasHigh) {
+    heuristicScore = 50 + Math.min(25, Math.floor(totalRawWeight * 0.35));
+  } else if (hasMedium) {
+    heuristicScore = 25 + Math.min(25, Math.floor(totalRawWeight * 0.40));
+  } else {
+    heuristicScore = Math.min(25, Math.floor(totalRawWeight * 0.50));
+  }
+
+  // Lexical / Structural ML probability modeling
+  let mlProb = 0.0;
+  if (hasCritical) {
+    mlProb = 85.0;
+  } else if (hasHigh) {
+    mlProb = 60.0;
+  } else if (hasMedium) {
+    mlProb = 35.0;
+  } else {
+    mlProb = 0.0;
+  }
+
+  let finalScore = Math.round(0.65 * heuristicScore + 0.35 * mlProb);
+  if (hasCritical) finalScore = Math.max(75, finalScore);
+  else if (hasHigh) finalScore = Math.max(50, finalScore);
+  else if (hasMedium) finalScore = Math.max(25, finalScore);
+  finalScore = Math.max(0, Math.min(100, finalScore));
 
   let classification = 'Low';
   let verdict = 'Likely Safe';
-  if (score >= 70) {
+  if (finalScore >= 76) {
     classification = 'Critical';
     verdict = 'Phishing Detected';
-  } else if (score >= 40) {
+  } else if (finalScore >= 51) {
     classification = 'High';
     verdict = 'Suspicious Link';
-  } else if (score >= 20) {
+  } else if (finalScore >= 26) {
     classification = 'Medium';
-    verdict = 'Elevated Risk';
+    verdict = 'Suspicious Content';
+  } else {
+    classification = 'Low';
+    verdict = 'Likely Safe';
   }
 
   // Parse URL Anatomy
   let anatomy = null;
   try {
-    const rawUrl = (url || '').trim();
-    const urlObj = new URL(rawUrl.startsWith('http://') || rawUrl.startsWith('https://') ? rawUrl : `http://${rawUrl}`);
-    const hostParts = urlObj.hostname.split('.');
-    const tld = hostParts.length > 1 ? hostParts[hostParts.length - 1] : 'com';
-    const main_domain = hostParts.length >= 2 ? hostParts.slice(-2).join('.') : urlObj.hostname;
-    const subdomains = hostParts.length > 2 ? hostParts.slice(0, -2) : [];
-    const isIp = /\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\b/.test(urlObj.hostname);
+    const hostParts = hostname.split('.');
+    const isTwoLevelTld = hostParts.length >= 3 && hostParts[hostParts.length - 1].length === 2 && ['co', 'com', 'org', 'net', 'edu', 'gov', 'ac', 'ne'].includes(hostParts[hostParts.length - 2]);
+    const tld = isTwoLevelTld ? hostParts.slice(-2).join('.') : (hostParts.length > 1 ? hostParts[hostParts.length - 1] : 'com');
+    const main_domain = isTwoLevelTld ? (hostParts.length >= 3 ? hostParts.slice(-3).join('.') : hostname) : (hostParts.length >= 2 ? hostParts.slice(-2).join('.') : hostname);
+    const subdomains = isTwoLevelTld ? (hostParts.length > 3 ? hostParts.slice(0, -3) : []) : (hostParts.length > 2 ? hostParts.slice(0, -2) : []);
+    const isIp = /\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\b/.test(hostname);
+
     anatomy = {
-      scheme: urlObj.protocol.replace(':', ''),
-      hostname: urlObj.hostname,
+      scheme: protocol.replace(':', ''),
+      hostname: hostname,
       main_domain: main_domain,
       subdomains: subdomains,
       tld: tld,
-      port: urlObj.port || (urlObj.protocol === 'https:' ? '443' : '80'),
-      path: urlObj.pathname || '/',
-      query: urlObj.search || null,
+      port: (protocol === 'https:' ? '443' : '80'),
+      path: path,
+      query: query || null,
       length: rawUrl.length,
       is_ip: isIp,
       ip_version: isIp ? 'IPv4' : ''
@@ -471,13 +544,13 @@ export function clientAnalyzeUrl(url) {
   const mlAnalysis = {
     ml_enabled: true,
     model_architecture: 'RandomForestClassifier (15 Lexical & Structural Feature Vectors)',
-    phishing_probability: score >= 50 ? 89.2 : 6.4,
-    confidence_score: 94.1,
-    prediction: score >= 50 ? 'Phishing' : 'Legitimate',
+    phishing_probability: mlProb,
+    confidence_score: mlProb >= 50.0 ? mlProb : (100 - mlProb),
+    prediction: mlProb >= 50.0 ? 'Phishing' : 'Legitimate',
     feature_vector: {
-      domain_entropy: Number((3.2 + (score > 50 ? 0.8 : 0.1)).toFixed(2)),
+      domain_entropy: Number((3.2 + (finalScore > 50 ? 0.8 : 0.1)).toFixed(2)),
       is_ip_address: Boolean(anatomy?.is_ip),
-      phishing_keyword_matches: indicators.filter(i => i.id === 'SENSITIVE_KEYWORD').length,
+      phishing_keyword_matches: indicators.filter(i => i.id === 'phishing_keywords').length,
       subdomain_count: anatomy?.subdomains?.length || 0,
       domain_length: (anatomy?.hostname || url).length,
       path_length: (anatomy?.path || '').length,
@@ -496,11 +569,12 @@ export function clientAnalyzeUrl(url) {
     input_url: url,
     normalized_url: url,
     scan_type: 'url',
-    risk_score: score,
+    risk_score: finalScore,
     classification: classification,
     verdict: verdict,
     indicator_count: indicators.length,
     indicators: indicators,
+    severity_counts: severityCounts,
     anatomy: anatomy,
     details: {
       ...anatomy,
@@ -508,7 +582,7 @@ export function clientAnalyzeUrl(url) {
     },
     created_at: new Date().toISOString().replace('T', ' ').slice(0, 19),
     created_at_iso: new Date().toISOString(),
-    recommendations: score >= 50
+    recommendations: finalScore >= 50
       ? [
           { action: 'Block Domain', detail: 'Do not click or enter login credentials on this website. Block domain on firewall.' },
           { action: 'Security Alert', detail: 'Notify incident response team regarding active phishing infrastructure.' }

@@ -32,13 +32,15 @@ class URLAnalyzer:
         "rest", "country", "live", "guru", "surf", "cfd", "shop"
     }
 
-    # Keywords commonly exploited in credential harvesting and account phishing
+    # Keywords commonly exploited in credential harvesting, social engineering, and prize scams
     PHISHING_KEYWORDS = [
         "login", "signin", "sign-in", "log-in", "verify", "verification",
         "account", "security", "update", "banking", "secure", "password",
         "credential", "recover", "wallet", "support", "auth", "validation",
         "confirm", "authenticate", "identity", "billing", "webscr", "ebayisapi",
-        "suspend", "unlock", "passcode", "helpdesk"
+        "suspend", "unlock", "passcode", "helpdesk",
+        "prize", "winner", "reward", "lottery", "claim", "claim-now",
+        "giveaway", "free-gift", "cash-bonus", "jackpot"
     ]
 
     # Major target brands for typosquatting / impersonation
@@ -328,7 +330,7 @@ class URLAnalyzer:
 
         # 11. Multiple Hyphens in Hostname
         hyphen_count = hostname.count("-")
-        if hyphen_count >= 3:
+        if hyphen_count >= 2:
             indicators.append({
                 "id": "excessive_hyphens",
                 "name": f"Multiple Hyphens in Domain ({hyphen_count} hyphens)",
