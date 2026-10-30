@@ -6,7 +6,7 @@ import ScanDetailModal from './components/ScanDetailModal';
 import ExtensionPreviewModal from './components/ExtensionPreviewModal';
 import SecurityDisclaimerModal from './components/SecurityDisclaimerModal';
 import GlobalWorldMapBackground from './components/GlobalWorldMapBackground';
-import FixedThreatTelemetryPanel from './components/FixedThreatTelemetryPanel';
+// import FixedThreatTelemetryPanel from './components/FixedThreatTelemetryPanel';
 import Dashboard from './pages/Dashboard';
 import UrlAnalyzer from './pages/UrlAnalyzer';
 import EmailAnalyzer from './pages/EmailAnalyzer';
@@ -105,8 +105,6 @@ export default function App() {
         mobileMenuOpen={mobileMenuOpen}
         setMobileMenuOpen={setMobileMenuOpen}
         onOpenExtension={() => setExtensionModalOpen(true)}
-        telemetryOpen={!telemetryCollapsed}
-        onToggleTelemetry={() => setTelemetryCollapsed(!telemetryCollapsed)}
       />
 
       {/* Main Layout: Left-Side Panel + Fluid Content Area (min-h-[calc(100vh-72px)] ensures content fills viewport so footer is naturally at the bottom) */}
@@ -122,7 +120,7 @@ export default function App() {
         {/* Main Content Area */}
         <main
           className={`flex-1 p-4 sm:p-6 lg:p-8 pb-6 w-full min-w-0 transition-all duration-300 relative z-10 flex flex-col ${
-            telemetryCollapsed ? '' : 'xl:pr-[330px]'
+            ''
           }`}
         >
           <div className="w-full max-w-[1920px] mx-auto flex-1">
@@ -141,11 +139,7 @@ export default function App() {
         />
       )}
 
-      {/* Fixed Threat Telemetry Panel on the Right Side */}
-      <FixedThreatTelemetryPanel
-        collapsed={telemetryCollapsed}
-        onToggleCollapse={() => setTelemetryCollapsed(!telemetryCollapsed)}
-      />
+
 
       {/* Global Scan Inspection Modal */}
       {selectedScanDetail && (

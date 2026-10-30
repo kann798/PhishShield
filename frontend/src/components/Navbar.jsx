@@ -28,8 +28,6 @@ export default function Navbar({
   mobileMenuOpen,
   setMobileMenuOpen,
   onOpenExtension,
-  telemetryOpen = false,
-  onToggleTelemetry = () => {},
 }) {
   const [engineStatus, setEngineStatus] = useState('checking'); // 'online' | 'offline' | 'checking'
   const { theme, toggleTheme } = useTheme();
@@ -142,33 +140,24 @@ export default function Navbar({
               <span className="text-xs font-mono font-semibold tracking-wide text-[#7B9669]">ML: ON</span>
             </div>
 
-            {/* Live Threat Telemetry (Icon only by default, expands on cursor hover to reveal live telemetry stats) */}
+            {/* Live Threat Telemetry Icon - Compact fixed w-8 h-8 button (never expands horizontally or disturbs other header elements) */}
             <div className="relative group flex items-center">
-              <button
-                type="button"
-                onClick={onToggleTelemetry}
-                title="Live Threat Telemetry (Hover for Sensor Data, Click to Pin Panel)"
+              <div
+                role="button"
+                tabIndex={0}
                 aria-label="Live Threat Telemetry"
-                className="flex items-center gap-1.5 h-8 px-2 sm:px-2.5 rounded-full border transition-all duration-300 bg-white dark:bg-[#404E3B] border-[#404E3B]/15 dark:border-[#7B9669]/60 text-[#404E3B] dark:text-white hover:bg-[#EEF3EC] dark:hover:bg-[#344030] shadow-sm cursor-pointer select-none group-hover:border-[#7B9669]/70 group-hover:shadow-md"
+                className="relative flex items-center justify-center w-8 h-8 rounded-full border transition-all duration-200 bg-white dark:bg-[#404E3B] border-[#404E3B]/15 dark:border-[#7B9669]/60 text-[#404E3B] dark:text-white hover:bg-[#BAC8B1]/30 hover:border-[#7B9669]/50 shadow-sm cursor-pointer select-none group-hover:shadow-md"
               >
-                <span className="relative flex h-2 w-2 shrink-0">
+                <span className="absolute -top-0.5 -right-0.5 flex h-2 w-2">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#7B9669] opacity-75"></span>
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-[#16A34A] dark:bg-[#86EFAC]"></span>
                 </span>
-                <Activity className="w-4 h-4 text-[#7B9669] dark:text-[#86EFAC] shrink-0" />
+                <Activity className="w-4 h-4 text-[#7B9669] dark:text-[#86EFAC] group-hover:scale-110 transition-transform" />
+              </div>
 
-                {/* Text revealed when cursor moves behind / over the icon */}
-                <div className="max-w-0 overflow-hidden whitespace-nowrap opacity-0 group-hover:max-w-[280px] group-hover:opacity-100 transition-all duration-300 ease-out flex items-center gap-1.5 text-xs font-mono">
-                  <span className="font-bold text-[#404E3B] dark:text-white tracking-wider">TELEMETRY:</span>
-                  <span className="text-rose-600 dark:text-rose-300 font-bold">298 ALERTS</span>
-                  <span className="text-[#6C8480] dark:text-[#BAC8B1]">•</span>
-                  <span className="text-emerald-700 dark:text-[#86EFAC] font-bold">50ms</span>
-                </div>
-              </button>
-
-              {/* Rich Telemetry Popover Card on Hover */}
+              {/* Rich Telemetry Popover Card on Hover ONLY (Never on click, zero header shift) */}
               <div className="absolute right-0 top-full pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 pointer-events-none group-hover:pointer-events-auto">
-                <div className="w-[300px] p-4 rounded-2xl border border-[#BAC8B1]/25 bg-[#303B2C] text-white shadow-2xl backdrop-blur-2xl text-xs font-mono select-none space-y-3">
+                <div className="w-[310px] p-4 rounded-2xl border border-[#BAC8B1]/25 bg-[#303B2C] text-white shadow-2xl backdrop-blur-2xl text-xs font-mono select-none space-y-3">
                   {/* Popover Header */}
                   <div className="flex items-center justify-between pb-2 border-b border-white/10">
                     <div className="flex items-center gap-2">
@@ -188,6 +177,19 @@ export default function Navbar({
                     </span>
                   </div>
 
+                  {/* Quick Summary Pill */}
+                  <div className="px-3 py-2 rounded-xl bg-[#283225] border border-[#7B9669]/40 flex items-center justify-between text-xs">
+                    <div className="flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-[#86EFAC]"></span>
+                      <span className="font-bold text-white tracking-wider">STATUS:</span>
+                      <span className="text-rose-300 font-bold">298 ALERTS</span>
+                    </div>
+                    <div className="flex items-center gap-1 text-[#86EFAC] font-bold">
+                      <span>•</span>
+                      <span>50ms RTT</span>
+                    </div>
+                  </div>
+
                   {/* Payloads Audited */}
                   <div className="p-2.5 rounded-xl bg-[#404E3B] border border-white/10 flex justify-between items-center">
                     <div>
@@ -205,11 +207,11 @@ export default function Navbar({
                   <div className="grid grid-cols-2 gap-2">
                     <div className="p-2.5 rounded-xl bg-[#4A2828] border border-rose-500/40">
                       <span className="text-[10px] uppercase font-bold text-rose-200 block">THREATS DETECTED</span>
-                      <span className="text-base sm:text-lg font-black text-rose-300">298 ALERTS</span>
+                      <span className="text-base font-black text-rose-300">298 ALERTS</span>
                     </div>
                     <div className="p-2.5 rounded-xl bg-[#404E3B] border border-white/10">
                       <span className="text-[10px] uppercase font-bold text-[#BAC8B1] block">LATENCY</span>
-                      <span className="text-base sm:text-lg font-black text-[#86EFAC]">50ms</span>
+                      <span className="text-base font-black text-[#86EFAC]">50ms</span>
                       <span className="text-[9.5px] text-[#BAC8B1] block">12ms P99</span>
                     </div>
                   </div>
@@ -245,12 +247,12 @@ export default function Navbar({
               </div>
             </div>
 
-            {/* Theme Mode Toggle Icon */}
+            {/* Theme Mode Toggle Icon with Tooltip */}
             <div className="relative group flex items-center">
               <button
                 onClick={toggleTheme}
                 aria-label="Toggle Theme"
-                className="flex items-center justify-center w-8 h-8 rounded-full border transition-all duration-200 bg-white border-[#404E3B]/15 text-[#404E3B] hover:bg-[#BAC8B1]/30 hover:border-[#7B9669]/50 shadow-sm"
+                className="flex items-center justify-center w-8 h-8 rounded-full border transition-all duration-200 bg-white border-[#404E3B]/15 text-[#404E3B] hover:bg-[#BAC8B1]/30 hover:border-[#7B9669]/50 shadow-sm cursor-pointer"
               >
                 {theme === 'dark' ? (
                   <Moon className="w-4 h-4 text-[#404E3B]" />
@@ -258,17 +260,29 @@ export default function Navbar({
                   <Sun className="w-4 h-4 text-[#D97706]" />
                 )}
               </button>
+              <div className="absolute right-0 top-full pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 pointer-events-none z-50">
+                <div className="px-2.5 py-1 rounded-lg bg-[#303B2C] text-white text-[11px] font-mono font-semibold whitespace-nowrap shadow-lg border border-[#BAC8B1]/30">
+                  {theme === 'dark' ? 'Light Mode' : 'Dark Mode'}
+                </div>
+              </div>
             </div>
 
-            {/* PhishShield Extension Preview Modal Trigger Icon */}
-            <div className="relative group flex items-center">
+            {/* PhishShield Extension Trigger Icon with High-Contrast Hover & Icon Name Tooltip */}
+            <div className="relative group/ext flex items-center">
               <button
                 onClick={onOpenExtension}
-                aria-label="Extension"
-                className="flex items-center justify-center w-8 h-8 rounded-full border transition-all duration-200 bg-white border-[#404E3B]/15 text-[#404E3B] hover:bg-[#7B9669] hover:text-white shadow-sm"
+                aria-label="Browser Extension"
+                className="flex items-center justify-center w-8 h-8 rounded-full border transition-all duration-200 bg-white border-[#404E3B]/15 text-[#404E3B] hover:bg-[#7B9669] hover:border-[#7B9669] shadow-sm cursor-pointer"
               >
-                <Shield className="w-4 h-4 text-[#7B9669]" />
+                <Shield className="w-4 h-4 text-[#7B9669] group-hover/ext:text-white transition-colors" />
               </button>
+
+              {/* Display icon name on hover */}
+              <div className="absolute right-0 top-full pt-2 opacity-0 invisible group-hover/ext:opacity-100 group-hover/ext:visible transition-all duration-200 pointer-events-none z-50">
+                <div className="px-2.5 py-1 rounded-lg bg-[#303B2C] text-white text-[11px] font-mono font-semibold whitespace-nowrap shadow-lg border border-[#BAC8B1]/30">
+                  Browser Extension
+                </div>
+              </div>
             </div>
           </div>
         </div>
