@@ -20,6 +20,7 @@ import {
 import RiskBadge from '../components/RiskBadge';
 import { api } from '../services/api';
 import { generateScanPdf } from '../utils/pdfGenerator';
+import { exportScanAsJson, exportScanAsCsv } from '../utils/exportUtils';
 
 export default function Reports() {
   const [scans, setScans] = useState([]);
@@ -95,7 +96,7 @@ export default function Reports() {
   return (
     <div className="space-y-6 w-full pb-8">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-[#404E3B]/15 pb-5">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-[#404E3B]/15 pb-5 no-print print:hidden">
         <div>
           <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-[#1C2518] dark:text-white font-heading flex items-center gap-3">
             <div className="p-3 bg-[#7B9669]/20 border border-[#7B9669]/40 rounded-2xl text-[#404E3B] dark:text-[#BAC8B1] shadow-sm">
@@ -118,22 +119,24 @@ export default function Reports() {
               <Download className="w-3.5 h-3.5 text-[#7B9669]" />
               <span>Download PDF</span>
             </button>
-            <a
-              href={api.getExportUrl(currentScan.id, 'json')}
-              download
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-white border border-[#404E3B]/15 hover:bg-[#EEF3EC] text-[#404E3B] text-xs font-mono font-semibold transition-all shadow-sm"
+            <button
+              type="button"
+              onClick={() => exportScanAsJson(currentScan)}
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-white border border-[#404E3B]/15 hover:bg-[#EEF3EC] text-[#404E3B] text-xs font-mono font-semibold transition-all shadow-sm cursor-pointer"
+              title="Download structured JSON report"
             >
               <Download className="w-3.5 h-3.5 text-[#7B9669]" />
               <span>Export JSON</span>
-            </a>
-            <a
-              href={api.getExportUrl(currentScan.id, 'csv')}
-              download
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-white border border-[#404E3B]/15 hover:bg-[#EEF3EC] text-[#404E3B] text-xs font-mono font-semibold transition-all shadow-sm"
+            </button>
+            <button
+              type="button"
+              onClick={() => exportScanAsCsv(currentScan)}
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-white border border-[#404E3B]/15 hover:bg-[#EEF3EC] text-[#404E3B] text-xs font-mono font-semibold transition-all shadow-sm cursor-pointer"
+              title="Download structured CSV report"
             >
               <Download className="w-3.5 h-3.5 text-[#7B9669]" />
               <span>Export CSV</span>
-            </a>
+            </button>
             <button
               onClick={handlePrint}
               className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-white border border-[#404E3B]/15 hover:bg-[#EEF3EC] text-[#404E3B] text-xs font-mono font-semibold transition-all shadow-sm cursor-pointer"
@@ -146,7 +149,7 @@ export default function Reports() {
       </div>
 
       {/* Select Scan Dropdown Bar */}
-      <div className="bg-white rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-center gap-3 shadow-sm border border-[#404E3B]/15 relative overflow-hidden">
+      <div className="bg-white rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-center gap-3 shadow-sm border border-[#404E3B]/15 relative overflow-hidden no-print print:hidden">
         <label htmlFor="scan-selector" className="text-xs font-mono text-[#243D2E] font-bold uppercase shrink-0 tracking-wider flex items-center gap-2">
           <Tag className="w-4 h-4 text-[#7B9669]" />
           <span>Select Scan Report:</span>
@@ -174,14 +177,35 @@ export default function Reports() {
       </div>
 
       {error && (
-        <div className="rounded-xl border border-rose-300 bg-rose-50 p-4 text-xs text-rose-800 font-mono">
+        <div className="rounded-xl border border-rose-300 bg-rose-50 p-4 text-xs text-rose-800 font-mono no-print print:hidden">
           {error}
         </div>
       )}
 
       {/* Report Preview Document */}
       {currentScan ? (
-        <div className="bg-white rounded-2xl border border-[#404E3B]/15 p-6 sm:p-8 space-y-6 shadow-sm relative overflow-hidden">
+        <div id="incident-memo-report" className="bg-white rounded-2xl border border-[#404E3B]/15 p-6 sm:p-8 space-y-6 shadow-sm relative overflow-hidden printable-memo-report print:p-0 print:border-none print:shadow-none print:rounded-none">
+          {/* Formal Print-Only Executive Header */}
+          <div className="hidden print:flex items-center justify-between border-b-2 border-[#1C2518] pb-4 mb-6">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-lg bg-[#404E3B] text-white flex items-center justify-center font-bold">
+                <Shield className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <div className="font-heading font-black text-xl tracking-tight text-[#1C2518]">
+                  PHISH<span className="text-[#53654E]">SHIELD</span>
+                </div>
+                <div className="text-[10px] font-mono font-bold text-[#52665A] uppercase tracking-wider">
+                  Cybersecurity & Threat Defense Platform
+                </div>
+              </div>
+            </div>
+            <div className="text-right text-[10px] font-mono text-[#52665A]">
+              <div className="font-bold uppercase tracking-wider text-[#1C2518]">Executive Threat Forensics Advisory</div>
+              <div className="text-[#B42332] font-bold">CONFIDENTIAL &bull; INCIDENT RECORD</div>
+            </div>
+          </div>
+
           {/* Memo Header */}
           <div className="border-b border-[#404E3B]/15 pb-6 flex flex-col sm:flex-row justify-between items-start gap-4">
             <div>
@@ -437,6 +461,17 @@ export default function Reports() {
                   </div>
                 );
               })}
+            </div>
+          </div>
+
+          {/* Formal Print-Only Executive Footer */}
+          <div className="hidden print:flex items-center justify-between border-t border-[#404E3B]/30 pt-4 mt-8 text-[9px] font-mono text-[#52665A]">
+            <div>
+              <span className="font-semibold text-[#1C2518]">PhishShield Automated Forensics Engine</span>
+              <span> &bull; Zero-SSRF Offline Analysis &bull; Confidential Incident Memorandum</span>
+            </div>
+            <div className="text-right">
+              <span>Report #{currentScan.id} &bull; Generated: {currentScan.created_at || new Date().toLocaleString()}</span>
             </div>
           </div>
         </div>

@@ -5,6 +5,7 @@ import IndicatorCard from './IndicatorCard';
 import MLTelemetryCard from './MLTelemetryCard';
 import { api } from '../services/api';
 import { generateScanPdf } from '../utils/pdfGenerator';
+import { exportScanAsJson, exportScanAsCsv } from '../utils/exportUtils';
 
 export default function ScanDetailModal({ scan, onClose, onDelete }) {
   if (!scan) return null;
@@ -224,22 +225,24 @@ export default function ScanDetailModal({ scan, onClose, onDelete }) {
               <Download className="w-3.5 h-3.5 text-[#7B9669]" />
               <span>Download PDF</span>
             </button>
-            <a
-              href={api.getExportUrl(scan.id, 'json')}
-              download
-              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-white hover:bg-[#F4F7F4] text-[#404E3B] text-xs font-semibold transition-colors border border-[#404E3B]/15 shadow-sm"
+            <button
+              type="button"
+              onClick={() => exportScanAsJson(scan)}
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-white hover:bg-[#F4F7F4] text-[#404E3B] text-xs font-semibold transition-colors border border-[#404E3B]/15 shadow-sm cursor-pointer"
+              title="Download structured JSON report"
             >
               <Download className="w-3.5 h-3.5 text-[#7B9669]" />
               <span>Export JSON</span>
-            </a>
-            <a
-              href={api.getExportUrl(scan.id, 'csv')}
-              download
-              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-white hover:bg-[#F4F7F4] text-[#404E3B] text-xs font-semibold transition-colors border border-[#404E3B]/15 shadow-sm"
+            </button>
+            <button
+              type="button"
+              onClick={() => exportScanAsCsv(scan)}
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-white hover:bg-[#F4F7F4] text-[#404E3B] text-xs font-semibold transition-colors border border-[#404E3B]/15 shadow-sm cursor-pointer"
+              title="Download structured CSV report"
             >
               <Download className="w-3.5 h-3.5 text-[#7B9669]" />
               <span>Export CSV</span>
-            </a>
+            </button>
           </div>
 
           <div className="flex items-center gap-2">

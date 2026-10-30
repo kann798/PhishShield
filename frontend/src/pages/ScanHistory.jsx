@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import RiskBadge from '../components/RiskBadge';
 import AlertBanner from '../components/AlertBanner';
+import { exportScanAsJson } from '../utils/exportUtils';
 import { api } from '../services/api';
 
 export default function ScanHistory({ onSelectScan }) {
@@ -259,15 +260,15 @@ export default function ScanHistory({ onSelectScan }) {
                         >
                           <Eye className="w-3.5 h-3.5" />
                         </button>
-                        <a
-                          href={api.getExportUrl(scan.id, 'json')}
-                          download
-                          className="p-1.5 rounded-lg bg-[#EEF3EC] hover:bg-[#7B9669] hover:text-white text-[#404E3B] transition-colors border border-[#404E3B]/15 shadow-sm"
+                        <button
+                          type="button"
+                          onClick={() => exportScanAsJson(scan)}
+                          className="p-1.5 rounded-lg bg-[#EEF3EC] hover:bg-[#7B9669] hover:text-white text-[#404E3B] transition-colors border border-[#404E3B]/15 shadow-sm cursor-pointer"
                           title="Download JSON Report"
                           aria-label={`Download JSON for Scan #${scan.id}`}
                         >
                           <Download className="w-3.5 h-3.5" />
-                        </a>
+                        </button>
                         <button
                           onClick={() => handleDeleteSingle(scan.id)}
                           className="p-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 transition-colors border border-rose-200 shadow-sm"

@@ -1307,3 +1307,125 @@ body.light-mode textarea:focus {
 }
 
 
+
+
+/* =========================================================================
+   EXECUTIVE INCIDENT MEMO PRINT STYLESHEET
+   Translates on-screen incident memo view into a publication-grade,
+   multi-page executive cybersecurity report.
+   ========================================================================= */
+@media print {
+  @page {
+    size: letter portrait;
+    margin: 12mm 15mm 12mm 15mm;
+  }
+
+  *, *:before, *:after {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+
+  html, body {
+    background: #FFFFFF !important;
+    background-color: #FFFFFF !important;
+    color: #111827 !important;
+    font-size: 11pt !important;
+    line-height: 1.4 !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  body::before {
+    display: none !important;
+  }
+
+  /* Completely eliminate website chrome & navigation elements */
+  header,
+  nav,
+  aside,
+  footer,
+  .no-print,
+  #no-print,
+  .print-hide,
+  button,
+  canvas,
+  svg.world-map,
+  .world-map-bg,
+  [aria-label="Global Threat Telemetry Panel"],
+  [aria-label="Website Footer"],
+  [aria-label="Toggle Navigation Menu"],
+  [role="dialog"] {
+    display: none !important;
+  }
+
+  /* Unconstrain body wrappers */
+  body > div,
+  main,
+  div[class*="min-h-screen"],
+  div[class*="max-w-"] {
+    display: block !important;
+    min-height: auto !important;
+    height: auto !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: visible !important;
+    background: #FFFFFF !important;
+    border: none !important;
+  }
+
+  /* Printable Incident Memo container */
+  .printable-memo-report {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+    background: #FFFFFF !important;
+  }
+
+  /* Prevent awkward page breaks in tables and sections */
+  .report-section,
+  .printable-memo-report > div {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    page-break-inside: auto;
+  }
+
+  tr {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  thead {
+    display: table-header-group !important;
+  }
+
+  /* Ensure print borders are crisp and visible */
+  .border,
+  th,
+  td {
+    border-color: #cbd5e1 !important;
+  }
+
+  /* Print-only elements show up */
+  .print-only-block {
+    display: block !important;
+  }
+
+  .print-only-flex {
+    display: flex !important;
+  }
+}
