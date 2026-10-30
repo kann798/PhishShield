@@ -20,19 +20,22 @@ class EmailAnalyzer:
 
     # Urgency & Threat Phrases
     URGENCY_PATTERNS = [
-        (r'\b(?:urgent|immediately|action required|immediate action|act now)\b', "Direct Urgency Command"),
-        (r'\b(?:within 24 hours|within 48 hours|in 12 hours|expires today|deadline)\b', "Artificial Time Limit"),
-        (r'\b(?:account suspended|account will be terminated|access restricted|account blocked|deactivated)\b', "Account Suspension Threat"),
-        (r'\b(?:unauthorized activity|unusual sign-in|security breach|suspicious login|compromised)\b', "False Security Alarm"),
+        (r'\b(?:urgent|immediately|action required|immediate action|act now|promptly|right away)\b', "Direct Urgency Command"),
+        (r'\b(?:within 24 hours|within 48 hours|in 12 hours|expires today|deadline|before \d{1,2}:?\d{0,2}\s*(?:am|pm)?)\b', "Artificial Time Limit"),
+        (r'\b(?:account suspended|account will be terminated|access restricted|account blocked|deactivated|account locked)\b', "Account Suspension Threat"),
+        (r'\b(?:unauthorized activity|unusual sign-in|security breach|suspicious login|compromised|detected unauthorized)\b', "False Security Alarm"),
         (r'\b(?:final notice|last warning|legal action|court summons|prosecution|police)\b', "Intimidation & Legal Threat"),
+        (r'\b(?:it security notice|security notice|mandatory (?:two-factor|migration|update|policy|compliance)|all staff are required|all employees are required|company policy requires|required to migrate)\b', "Mandatory Corporate Directive / IT Coercion"),
     ]
 
     # Credential Harvesting Patterns
     CREDENTIAL_PATTERNS = [
-        (r'\b(?:verify your account|confirm your identity|update your billing|validate your details)\b', "Identity/Account Verification"),
-        (r'\b(?:reset your password|change your password|enter your credentials|login to restore)\b', "Credential Solicitation"),
-        (r'\b(?:social security|ssn|credit card number|cvv|pin code|banking credentials)\b', "Sensitive Data Harvest"),
-        (r'\b(?:click here to login|sign in to your account|access your portal)\b', "Call-to-Action Login Link"),
+        (r'\b(?:verify your account|confirm your identity|update your billing|validate your details|identity sync|complete the identity sync)\b', "Identity/Account Verification"),
+        (r'\b(?:reset your password|change your password|enter your credentials|login to restore|authenticate with your|corporate domain email credentials|email credentials|domain credentials|corporate credentials|authenticate to decrypt|decrypt and view)\b', "Corporate Credential Harvester"),
+        (r'\b(?:social security|ssn|credit card number|cvv|pin code|banking credentials|debit card details)\b', "Sensitive Data Harvest"),
+        (r'\b(?:click here to login|sign in to your account|access your portal|sign in to view|login to view)\b', "Call-to-Action Login Link"),
+        (r'\b(?:two-factor|2fa|mfa|authenticator token|authenticator platform|authenticator migration|token migration|authentication migration|authenticator app)\b', "MFA / 2FA Security Token Harvester"),
+        (r'\b(?:scan the qr code|qr code embedded|embedded in this message with your mobile device camera|scan with your mobile device|scan the qr)\b', "QR Code Phishing (Quishing)"),
     ]
 
     # Financial / Scams / Wire Fraud Patterns
@@ -40,17 +43,31 @@ class EmailAnalyzer:
         (r'\b(?:wire transfer|direct deposit|bank transfer|swift code|ach transfer)\b', "Direct Wire / Transfer Request"),
         (r'\b(?:bitcoin|btc|cryptocurrency|crypto wallet|ethereum|usdt)\b', "Cryptocurrency Payment"),
         (r'\b(?:gift card|itunes card|amazon gift card|steam card|google play card)\b', "Gift Card Payment Scam"),
-        (r'\b(?:overdue invoice|unpaid invoice|invoice attached|payment receipt|remittance)\b', "Phony Invoice / Remittance Fraud"),
+        (r'\b(?:overdue invoice|unpaid invoice|invoice attached|payment receipt|remittance|overdue vendor invoice)\b', "Phony Invoice / Remittance Fraud"),
         (r'\b(?:lottery winner|inheritance fund|compensation fund|millions of dollars|claim prize)\b', "Advance Fee / Nigerian Prince Scam"),
+        (r'\b(?:salary revision|q[1-4] bonus|payroll update|compensation review|annual bonus|salary sheet|remuneration update)\b', "Payroll & Compensation Bait"),
     ]
 
-    # Malicious Attachment References
+    # Malicious Attachment & Confidential Lure References
     ATTACHMENT_PATTERNS = [
         (r'\b[\w-]+\.(?:exe|scr|vbs|bat|cmd|pif|ps1)\b', "Executable / Script Attachment"),
         (r'\b[\w-]+\.(?:iso|img|vhd)\b', "Disk Image Container (Malware Delivery)"),
         (r'\b[\w-]+\.(?:docm|xlsm|pptm|dotm)\b', "Macro-Enabled Office Document"),
         (r'\b[\w-]+\.(?:zip|rar|7z|tar\.gz)\b', "Compressed Archive Attachment"),
         (r'\b[\w-]+\.(?:html|htm|svg)\b', "HTML Phishing Attachment / Smuggling"),
+        (r'\b(?:confidential (?:pdf|document|sheet|file)|sensitive corporate data|shared a confidential|document contains sensitive corporate)\b', "Confidential Corporate Document Lure"),
+    ]
+
+    # High-Risk / Suspicious TLDs commonly abused in phishing
+    SUSPICIOUS_SENDER_TLDS = {
+        "top", "xyz", "club", "work", "click", "site", "cfd", "gq", "ml", "tk",
+        "buzz", "rest", "shop", "online", "surf", "monster", "fit", "icu", "cam", "kim", "zip"
+    }
+
+    # Deceptive administrative / security keywords in sender domains
+    DECEPTIVE_DOMAIN_KEYWORDS = [
+        "cloud-file", "file-share", "security-validation", "mfa-authenticator",
+        "auth-node", "secure-login", "verify-portal", "account-alert", "sharepoint-cloud"
     ]
 
     # Free Public Webmail Providers
@@ -97,9 +114,11 @@ class EmailAnalyzer:
         indicators: List[Dict[str, Any]] = []
         social_engineering_triggers = []
 
-        # 1. Header Analysis: From / Reply-To Mismatch & Display Name Spoofing
+        # 1. Header Analysis: From / Reply-To Mismatch, Suspicious TLDs, Brand Spoofing
         header_findings, sender_summary = cls._analyze_headers(headers)
         indicators.extend(header_findings)
+        if any(h["id"] in ("reply_to_mismatch", "display_name_spoofing", "deceptive_sender_domain") for h in header_findings):
+            social_engineering_triggers.append("Sender Identity Spoofing")
 
         # 2. Urgency & Threat Language
         urgency_findings, urg_count = cls._check_patterns(body_text, cls.URGENCY_PATTERNS, "urgent_coercion", "high", 30)
@@ -107,7 +126,7 @@ class EmailAnalyzer:
             indicators.extend(urgency_findings)
             social_engineering_triggers.append("Urgency & Fear")
 
-        # 3. Credential Harvesting Language
+        # 3. Credential Harvesting Language & Authentication Traps
         cred_findings, cred_count = cls._check_patterns(body_text, cls.CREDENTIAL_PATTERNS, "credential_solicitation", "high", 35)
         if cred_findings:
             indicators.extend(cred_findings)
@@ -119,7 +138,7 @@ class EmailAnalyzer:
             indicators.extend(fin_findings)
             social_engineering_triggers.append("Greed & Financial Fraud")
 
-        # 5. Dangerous Attachment References
+        # 5. Dangerous Attachment References & Confidential Lures
         attach_findings, attach_count = cls._check_patterns(body_text, cls.ATTACHMENT_PATTERNS, "suspicious_attachment", "high", 35)
         if attach_findings:
             indicators.extend(attach_findings)
@@ -129,7 +148,7 @@ class EmailAnalyzer:
         if greeting_finding:
             indicators.append(greeting_finding)
 
-        # 7. Extract & Deep-Analyze Embedded Links in Body
+        # 7. Extract & Deep-Analyze Embedded Links in Body (including defanged hxxps)
         extracted_urls, url_findings = cls._extract_and_inspect_urls(body_text)
         indicators.extend(url_findings)
 
@@ -203,7 +222,7 @@ class EmailAnalyzer:
 
     @classmethod
     def _analyze_headers(cls, headers: Dict[str, str]) -> Tuple[List[Dict[str, Any]], Dict[str, Any]]:
-        """Inspect headers for spoofing, reply-to discrepancies, and brand masquerading."""
+        """Inspect headers for spoofing, reply-to discrepancies, high-risk TLDs, and brand masquerading."""
         findings = []
         sender_summary = {
             "from": headers.get("From", None),
@@ -275,6 +294,38 @@ class EmailAnalyzer:
                     })
                     break
 
+        # 4. High-Risk / Suspicious Sender TLD (.top, .xyz, .club, etc.)
+        if from_domain:
+            tld = from_domain.split('.')[-1].lower()
+            if tld in cls.SUSPICIOUS_SENDER_TLDS:
+                findings.append({
+                    "id": "suspicious_sender_tld",
+                    "name": f"Suspicious Sender TLD (.{tld})",
+                    "severity": "high",
+                    "weight": 45,
+                    "evidence": f"Sender host: @{from_domain}",
+                    "description": (
+                        f"The sender address (@{from_domain}) utilizes the high-risk top-level domain '.{tld}', "
+                        "frequently leveraged in malware distribution, throwaway lures, and credential campaigns."
+                    )
+                })
+
+            # 5. Deceptive Service / Admin Masquerade in Domain
+            for kw in cls.DECEPTIVE_DOMAIN_KEYWORDS:
+                if kw in from_domain:
+                    findings.append({
+                        "id": "deceptive_sender_domain",
+                        "name": f"Deceptive Service Masquerade in Sender Domain ({kw})",
+                        "severity": "high",
+                        "weight": 45,
+                        "evidence": f"Sender domain: @{from_domain}",
+                        "description": (
+                            f"The sender domain embeds deceptive terminology '{kw}' to falsely manufacture "
+                            "administrative or enterprise security authority."
+                        )
+                    })
+                    break
+
         return findings, sender_summary
 
     @classmethod
@@ -332,12 +383,12 @@ class EmailAnalyzer:
 
     @classmethod
     def _extract_and_inspect_urls(cls, text: str) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
-        """Extract embedded URLs and inspect them using URLAnalyzer."""
+        """Extract embedded URLs (including defanged hxxp/hxxps) and inspect them using URLAnalyzer."""
         extracted = []
         findings = []
 
-        # Regex for URLs in text
-        url_pattern = r'(https?://[^\s<>"]+|www\.[^\s<>"]+)'
+        # Regex for standard and defanged URLs in text
+        url_pattern = r'((?:https?|hxxps?|hXXps?|ftps?)://[^\s<>"\'\)]+|www\.[^\s<>"\'\)]+)'
         raw_urls = re.findall(url_pattern, text)
 
         # Deduplicate while preserving order
@@ -352,11 +403,19 @@ class EmailAnalyzer:
 
         # Inspect up to 10 URLs
         high_risk_links = 0
+        medium_risk_links = 0
         for u in unique_urls[:10]:
-            analysis = URLAnalyzer.analyze(u)
+            # Refang URL if defanged (e.g. hxxps -> https, [.] -> .)
+            refanged = re.sub(r'^(?:hxxps|hXXps)://', 'https://', u, flags=re.IGNORECASE)
+            refanged = re.sub(r'^(?:hxxp|hXXp)://', 'http://', refanged, flags=re.IGNORECASE)
+            refanged = re.sub(r'\[\.\]', '.', refanged)
+            refanged = re.sub(r'\(\.\)', '.', refanged)
+
+            analysis = URLAnalyzer.analyze(refanged)
             if analysis.get("valid"):
                 extracted.append({
                     "url": u,
+                    "inspected_url": refanged,
                     "risk_score": analysis["risk_score"],
                     "classification": analysis["classification"],
                     "indicators_count": len(analysis.get("indicators", [])),
@@ -364,6 +423,8 @@ class EmailAnalyzer:
                 })
                 if analysis["classification"] in ("High", "Critical"):
                     high_risk_links += 1
+                elif analysis["classification"] == "Medium":
+                    medium_risk_links += 1
 
         if high_risk_links > 0:
             findings.append({
@@ -375,6 +436,17 @@ class EmailAnalyzer:
                 "description": (
                     "The email contains embedded hyperlinks classified as dangerous or spoofed. "
                     "Visiting these links will likely expose you to fake credential portals or malicious payloads."
+                )
+            })
+        elif medium_risk_links > 0:
+            findings.append({
+                "id": "suspicious_embedded_url",
+                "name": f"Suspicious Embedded Link{'s' if medium_risk_links > 1 else ''} ({medium_risk_links} detected)",
+                "severity": "medium",
+                "weight": 35,
+                "evidence": f"{medium_risk_links} of {len(unique_urls)} embedded URLs flagged as Medium Risk",
+                "description": (
+                    "Hyperlinks found in message body exhibited deceptive keywords, subdomains, or unencrypted protocols."
                 )
             })
         elif len(unique_urls) > 0:

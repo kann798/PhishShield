@@ -511,7 +511,10 @@ def serve_frontend_or_api_info(path):
         }), 404
 
     frontend_dist = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'frontend', 'dist'))
-    
+    root_dist = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'dist'))
+    if not os.path.exists(frontend_dist) and os.path.exists(root_dist):
+        frontend_dist = root_dist
+
     if path != "":
         requested_file = os.path.join(frontend_dist, path)
         if os.path.exists(requested_file) and not os.path.isdir(requested_file):

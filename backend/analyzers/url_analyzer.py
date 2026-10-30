@@ -138,6 +138,11 @@ class URLAnalyzer:
             }
 
         cleaned_url = raw_url.strip()
+
+        # Defanged URL refanging (e.g., hxxps:// -> https://, hxxp:// -> http://, [.] -> .)
+        cleaned_url = re.sub(r'^(?:hxxps|hXXps)://', 'https://', cleaned_url, flags=re.IGNORECASE)
+        cleaned_url = re.sub(r'^(?:hxxp|hXXp)://', 'http://', cleaned_url, flags=re.IGNORECASE)
+        cleaned_url = cleaned_url.replace('[.]', '.').replace('(.)', '.').replace('[:]', ':')
         
         # Enforce reasonable input size
         if len(cleaned_url) > 4096:
