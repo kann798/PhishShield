@@ -130,3 +130,4 @@ function triggerBlobDownload(blob, filename) {
   document.body.removeChild(link);
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
+

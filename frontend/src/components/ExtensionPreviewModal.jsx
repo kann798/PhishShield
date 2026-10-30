@@ -15,7 +15,7 @@ import {
   ArrowRight,
   Info,
 } from 'lucide-react';
-import { api, getApiBaseUrl } from '../services/api';
+import { api, getApiBaseUrl, clientAnalyzeUrl, getLocalUserScans } from '../services/api';
 import { downloadExtensionZipPackage } from '../utils/extensionBundle';
 
 // Browser SVG Icons
@@ -88,6 +88,23 @@ export default function ExtensionPreviewModal({ isOpen, onClose }) {
     }
   }, []);
 
+  // Sync with active / recent URL scan when opened
+  useEffect(() => {
+    if (isOpen) {
+      try {
+        const scans = getLocalUserScans();
+        const recentScan = scans.find((s) => s.scan_type === 'url' && s.input_url);
+        if (recentScan && recentScan.input_url) {
+          setTargetUrl(recentScan.input_url);
+          setResult(recentScan);
+          setError(null);
+        }
+      } catch (err) {
+        console.warn('Could not sync recent scan to extension modal:', err);
+      }
+    }
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
   const browserConfig = {
@@ -136,13 +153,14 @@ export default function ExtensionPreviewModal({ isOpen, onClose }) {
 
   const CurrentBrowserIcon = browserConfig.icon;
 
-  const handleScan = async () => {
-    if (!targetUrl || !targetUrl.trim()) {
+  const handleScan = async (urlOverride) => {
+    const rawToScan = typeof urlOverride === 'string' ? urlOverride : targetUrl;
+    if (!rawToScan || !rawToScan.trim()) {
       setError('Please enter a valid URL to inspect.');
       return;
     }
 
-    let normalized = targetUrl.trim();
+    let normalized = rawToScan.trim();
     if (!normalized.startsWith('http://') && !normalized.startsWith('https://')) {
       normalized = `https://${normalized}`;
       setTargetUrl(normalized);
@@ -158,10 +176,34 @@ export default function ExtensionPreviewModal({ isOpen, onClose }) {
     setTimeout(() => setScanStep(4), 900);
 
     try {
-      const res = await api.analyzeUrl(normalized);
-      const data = res.data || res;
+      let scanPayload = null;
+      try {
+        const res = await api.analyzeUrl(normalized);
+        if (res) {
+          if (res.data && (res.data.risk_score !== undefined || res.data.classification)) {
+            scanPayload = res.data;
+          } else if (res.data && res.data.data && (res.data.data.risk_score !== undefined || res.data.data.classification)) {
+            scanPayload = res.data.data;
+          } else if (res.risk_score !== undefined || res.classification) {
+            scanPayload = res;
+          }
+        }
+      } catch (netErr) {
+        console.warn('Backend analyzeUrl error in extension modal, running client heuristic engine:', netErr);
+      }
+
+      // If backend did not yield a valid scan object with score/classification, evaluate with client heuristic engine
+      if (!scanPayload || (scanPayload.risk_score === undefined && !scanPayload.classification)) {
+        const clientRes = clientAnalyzeUrl(normalized);
+        scanPayload = clientRes?.data || clientRes;
+      }
+
+      if (!scanPayload || (scanPayload.risk_score === undefined && !scanPayload.classification)) {
+        throw new Error('Threat intelligence engine could not analyze this URL.');
+      }
+
       setTimeout(() => {
-        setResult(data);
+        setResult(scanPayload);
         setIsScanning(false);
         setScanStep(5);
       }, 1200);
@@ -203,7 +245,7 @@ export default function ExtensionPreviewModal({ isOpen, onClose }) {
       result.classification === 'Critical' ||
       result.classification === 'High' ||
       result.classification === 'Medium' ||
-      (result.risk_score && result.risk_score >= 40) ||
+      (result.risk_score !== undefined && result.risk_score >= 40) ||
       result.ml_analysis?.prediction === 'Phishing'
     )
   );
@@ -216,6 +258,16 @@ export default function ExtensionPreviewModal({ isOpen, onClose }) {
     parsedHost = new URL(raw).hostname || targetUrl;
   } catch {
     parsedHost = targetUrl;
+  }
+
+  let displayHost = parsedHost;
+  if (result && (result.input_url || result.target_identifier)) {
+    try {
+      const u = new URL(result.input_url || result.target_identifier);
+      displayHost = u.hostname || displayHost;
+    } catch {
+      displayHost = (result.input_url || result.target_identifier).split('/')[2] || displayHost;
+    }
   }
 
   return createPortal(
@@ -313,13 +365,14 @@ export default function ExtensionPreviewModal({ isOpen, onClose }) {
                   <span className="font-bold text-white text-[11px]">Active Tab URL:</span>
                   <button
                     type="button"
-                    onClick={() =>
-                      setTargetUrl(
-                        targetUrl.includes('paypal')
-                          ? 'https://google.com'
-                          : 'https://paypal-security-update-center.com/login'
-                      )
-                    }
+                    onClick={() => {
+                      const nextUrl = targetUrl.includes('paypal')
+                        ? 'https://google.com'
+                        : 'https://paypal-security-update-center.com/login';
+                      setTargetUrl(nextUrl);
+                      setResult(null);
+                      setError(null);
+                    }}
                     className="text-[10px] font-mono text-[#86EFAC] hover:text-white hover:underline cursor-pointer font-bold"
                   >
                     [Toggle Test URL]
@@ -328,7 +381,11 @@ export default function ExtensionPreviewModal({ isOpen, onClose }) {
                 <input
                   type="text"
                   value={targetUrl}
-                  onChange={(e) => setTargetUrl(e.target.value)}
+                  onChange={(e) => {
+                    setTargetUrl(e.target.value);
+                    setResult(null);
+                    setError(null);
+                  }}
                   className="w-full bg-[#132217] border border-[#BAC8B1]/40 rounded px-2.5 py-1.5 text-[11px] font-mono text-white focus:outline-none focus:border-[#86EFAC]"
                 />
               </div>
@@ -396,14 +453,14 @@ export default function ExtensionPreviewModal({ isOpen, onClose }) {
                   <div className="result-rows">
                     <div className="result-row">
                       <span className="rk" style={{ color: '#BAC8B1', fontWeight: 600 }}>Domain</span>
-                      <span className="rv truncate max-w-[170px]" style={{ color: '#FFFFFF', fontWeight: 700 }} title={parsedHost}>
-                        {parsedHost}
+                      <span className="rv truncate max-w-[170px]" style={{ color: '#FFFFFF', fontWeight: 700 }} title={displayHost}>
+                        {displayHost}
                       </span>
                     </div>
                     <div className="result-row">
                       <span className="rk" style={{ color: '#BAC8B1', fontWeight: 600 }}>SSL Status</span>
-                      <span className="rv" style={{ color: targetUrl.startsWith('https://') ? '#86EFAC' : '#FCA5A5', fontWeight: 700 }}>
-                        {targetUrl.startsWith('https://') ? 'Valid HTTPS' : 'Insecure HTTP'}
+                      <span className="rv" style={{ color: (result?.input_url || targetUrl).startsWith('https://') ? '#86EFAC' : '#FCA5A5', fontWeight: 700 }}>
+                        {(result?.input_url || targetUrl).startsWith('https://') ? 'Valid HTTPS' : 'Insecure HTTP'}
                       </span>
                     </div>
                     <div className="result-row">

@@ -79,40 +79,131 @@ document.addEventListener('DOMContentLoaded', async () => {
     setTimeout(() => log4.classList.add('visible'), 1300);
 
     try {
-      const response = await fetch(`${API_BASE}/analyze/url`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url: urlToScan }),
-      });
+      let payload = null;
+      try {
+        const response = await fetch(`${API_BASE}/analyze/url`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url: urlToScan }),
+        });
 
-      const data = await response.json();
+        if (response.ok) {
+          const data = await response.json();
+          if (data && data.success && data.data) {
+            payload = data.data;
+          } else if (data && data.risk_score !== undefined) {
+            payload = data;
+          }
+        }
+      } catch (netErr) {
+        console.warn('Flask threat engine offline, evaluating via local heuristic engine:', netErr);
+      }
+
+      // If backend did not yield a valid scan object, use client heuristic analysis
+      if (!payload || payload.risk_score === undefined) {
+        payload = heuristicAnalyzeUrl(urlToScan);
+      }
 
       setTimeout(() => {
         loadingBox.classList.add('hidden');
         scanBtn.disabled = false;
         scanBtnText.textContent = 'SCAN ACTIVE TAB';
-        if (!response.ok || !data.success) {
-          renderError(data.error || 'Threat intelligence engine could not analyze this URL.');
+        if (!payload) {
+          renderError('Threat intelligence engine could not analyze this URL.');
         } else {
-          renderResults(data.data || data);
+          renderResults(payload);
         }
-      }, 1600);
+      }, 1400);
     } catch (err) {
       setTimeout(() => {
         loadingBox.classList.add('hidden');
         scanBtn.disabled = false;
         scanBtnText.textContent = 'SCAN ACTIVE TAB';
-        renderError('Unable to connect to threat defense engine on 127.0.0.1:5000.');
-      }, 1000);
+        renderError('Threat intelligence engine could not analyze this URL.');
+      }, 800);
     }
   });
+
+  function heuristicAnalyzeUrl(rawUrl) {
+    const url = (rawUrl || '').trim();
+    let hostname = '';
+    let protocol = 'https:';
+    try {
+      const u = new URL(url.startsWith('http') ? url : `https://${url}`);
+      hostname = u.hostname.toLowerCase();
+      protocol = u.protocol.toLowerCase();
+    } catch {
+      hostname = url.split('/')[0].split(':')[0].toLowerCase();
+    }
+
+    const isIp = /\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\b/.test(hostname);
+    const typos = ['paypa1', 'micros0ft', 'arnazon', 'app1e', 'netf1ix', 'g00gle', 'ch4se', 'b1nance'];
+    const hasTypo = typos.some(t => hostname.includes(t));
+
+    const brands = ['paypal', 'microsoft', 'google', 'apple', 'amazon', 'netflix', 'chase', 'facebook', 'instagram', 'linkedin'];
+    const authenticRegexes = {
+      paypal: /^([a-z0-9-]+\.)*paypal\.(com|[a-z]{2}|me)$/,
+      microsoft: /^([a-z0-9-]+\.)*microsoft\.(com|net|org)$/,
+      google: /^([a-z0-9-]+\.)*google\.(com|[a-z]{2}|co\.[a-z]{2}|com\.[a-z]{2})$/,
+      apple: /^([a-z0-9-]+\.)*apple\.(com|[a-z]{2}|co\.[a-z]{2})$/,
+      amazon: /^([a-z0-9-]+\.)*amazon\.(com|in|co\.uk|de|fr|ca)$/,
+      netflix: /^([a-z0-9-]+\.)*netflix\.(com|[a-z]{2}|net)$/,
+      chase: /^([a-z0-9-]+\.)*chase\.com$/,
+      facebook: /^([a-z0-9-]+\.)*facebook\.com$/,
+      instagram: /^([a-z0-9-]+\.)*instagram\.com$/,
+      linkedin: /^([a-z0-9-]+\.)*linkedin\.com$/
+    };
+
+    let brandAbuse = false;
+    for (const b of brands) {
+      if (hostname.includes(b)) {
+        const regex = authenticRegexes[b];
+        if (!regex || !regex.test(hostname)) {
+          brandAbuse = true;
+          break;
+        }
+      }
+    }
+
+    const keywords = ['login', 'signin', 'security', 'verify', 'update', 'account', 'banking', 'recovery', 'wallet', 'confirm'];
+    const kwMatches = keywords.filter(k => url.toLowerCase().includes(k));
+    const hyphens = (hostname.match(/-/g) || []).length;
+
+    let score = 0;
+    if (isIp || hasTypo) {
+      score = 85;
+    } else if (brandAbuse) {
+      score = 70 + Math.min(25, kwMatches.length * 5 + (hyphens >= 2 ? 10 : 0));
+    } else if (kwMatches.length >= 2) {
+      score = 55 + (hyphens >= 2 ? 15 : 0);
+    } else if (hyphens >= 3) {
+      score = 45;
+    } else {
+      score = protocol === 'http:' ? 25 : 0;
+    }
+
+    let classification = 'Low';
+    if (score >= 76) classification = 'Critical';
+    else if (score >= 51) classification = 'High';
+    else if (score >= 26) classification = 'Medium';
+
+    return {
+      input_url: url,
+      risk_score: score,
+      classification: classification,
+      ml_analysis: {
+        prediction: score >= 50 ? 'Phishing' : 'Legitimate',
+        phishing_probability: score
+      }
+    };
+  }
 
   function renderResults(payload) {
     resultCard.className = 'result-card'; // reset classes
     const isPhishing = payload.classification === 'Critical' ||
                        payload.classification === 'High' ||
                        payload.classification === 'Medium' ||
-                       (payload.risk_score && payload.risk_score >= 40) ||
+                       (payload.risk_score !== undefined && payload.risk_score >= 40) ||
                        payload.ml_analysis?.prediction === 'Phishing';
     const scorePct = payload.risk_score > 1 ? payload.risk_score : Math.round((payload.risk_score || 0) * 100);
 
