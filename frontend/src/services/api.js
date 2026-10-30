@@ -102,12 +102,32 @@ export const DEFAULT_BASE_SCANS = [
 ];
 
 const STORAGE_KEY_USER_SCANS = 'phishshield_live_user_scans';
+const STORAGE_KEY_HISTORY_CLEARED = 'phishshield_history_cleared';
 
 export function getLocalUserScans() {
   if (typeof window === 'undefined') return [];
   try {
+    const isCleared = localStorage.getItem(STORAGE_KEY_HISTORY_CLEARED) === 'true';
+    if (isCleared) {
+      return [];
+    }
+
     const raw = localStorage.getItem(STORAGE_KEY_USER_SCANS);
-    return raw ? JSON.parse(raw) : [];
+    if (raw !== null) {
+      try {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) {
+          return parsed;
+        }
+      } catch {
+        // invalid JSON
+      }
+    }
+
+    // First time visitor: seed default demo records into local store
+    const initial = [...DEFAULT_BASE_SCANS];
+    localStorage.setItem(STORAGE_KEY_USER_SCANS, JSON.stringify(initial));
+    return initial;
   } catch {
     return [];
   }
@@ -116,16 +136,17 @@ export function getLocalUserScans() {
 export function saveLocalUserScan(scanRecord) {
   if (typeof window === 'undefined' || !scanRecord) return;
   try {
+    // When a new scan is executed, history is active again
+    localStorage.removeItem(STORAGE_KEY_HISTORY_CLEARED);
     const scans = getLocalUserScans();
-    // Ensure accurate creation timestamp
     const record = {
       ...scanRecord,
       created_at: scanRecord.created_at || new Date().toISOString().replace('T', ' ').slice(0, 19),
       created_at_iso: scanRecord.created_at_iso || new Date().toISOString(),
     };
-    const updated = [record, ...scans];
+    const updated = [record, ...scans.filter(s => s.id !== record.id)];
     localStorage.setItem(STORAGE_KEY_USER_SCANS, JSON.stringify(updated));
-    // Notify all listeners (Dashboard, History) of new scan
+    // Notify all listeners (Dashboard, History, Reports) of new scan
     window.dispatchEvent(new CustomEvent('phishshield:new-scan', { detail: record }));
   } catch (err) {
     console.error('Failed to save local user scan:', err);
@@ -138,6 +159,9 @@ export function deleteLocalUserScan(id) {
     const scans = getLocalUserScans();
     const updated = scans.filter(s => s.id !== id && s.id !== Number(id));
     localStorage.setItem(STORAGE_KEY_USER_SCANS, JSON.stringify(updated));
+    if (updated.length === 0) {
+      localStorage.setItem(STORAGE_KEY_HISTORY_CLEARED, 'true');
+    }
     window.dispatchEvent(new CustomEvent('phishshield:new-scan', { detail: { action: 'delete', id } }));
   } catch (err) {
     console.error('Failed to delete local scan:', err);
@@ -147,31 +171,32 @@ export function deleteLocalUserScan(id) {
 export function clearAllLocalUserScans() {
   if (typeof window === 'undefined') return;
   try {
-    localStorage.removeItem(STORAGE_KEY_USER_SCANS);
+    localStorage.setItem(STORAGE_KEY_HISTORY_CLEARED, 'true');
+    localStorage.setItem(STORAGE_KEY_USER_SCANS, JSON.stringify([]));
     window.dispatchEvent(new CustomEvent('phishshield:new-scan', { detail: { action: 'clear' } }));
   } catch (err) {
     console.error('Failed to clear local scans:', err);
   }
 }
 
-// Compute dynamic stats by merging baseline starting data with user scans
+// Compute dynamic stats from actual stored scans
 export function computeDynamicDashboardStats() {
   const userScans = getLocalUserScans();
 
-  let total_urls = 9;
-  let total_emails = 5;
-  let suspicious_count = 6;
-  let clean_count = 8;
-  const risk_distribution = { Low: 8, Medium: 3, High: 2, Critical: 1 };
+  let total_urls = 0;
+  let total_emails = 0;
+  let suspicious_count = 0;
+  let clean_count = 0;
+  const risk_distribution = { Low: 0, Medium: 0, High: 0, Critical: 0 };
 
   for (const s of userScans) {
     if (s.scan_type === 'url') total_urls += 1;
     if (s.scan_type === 'email') total_emails += 1;
 
-    const cls = s.classification || (s.risk_score >= 70 ? 'Critical' : s.risk_score >= 35 ? 'Medium' : 'Low');
-    if (cls === 'Critical' || cls === 'High' || s.risk_score >= 50) {
+    const cls = s.classification || (s.risk_score >= 76 ? 'Critical' : s.risk_score >= 51 ? 'High' : s.risk_score >= 26 ? 'Medium' : 'Low');
+    if (cls === 'Critical' || cls === 'High' || (s.risk_score !== undefined && s.risk_score >= 51)) {
       suspicious_count += 1;
-    } else if (cls === 'Low' || s.risk_score < 35) {
+    } else if (cls === 'Low' || (s.risk_score !== undefined && s.risk_score <= 25)) {
       clean_count += 1;
     } else {
       suspicious_count += 1;
@@ -184,8 +209,6 @@ export function computeDynamicDashboardStats() {
     }
   }
 
-  const combinedRecent = [...userScans, ...DEFAULT_BASE_SCANS].slice(0, 10);
-
   return {
     total_scans: total_urls + total_emails,
     total_urls,
@@ -193,8 +216,8 @@ export function computeDynamicDashboardStats() {
     suspicious_count,
     clean_count,
     risk_distribution,
-    sample_records_count: DEFAULT_BASE_SCANS.length,
-    recent_scans: combinedRecent,
+    sample_records_count: userScans.filter(s => s.is_sample).length,
+    recent_scans: userScans.slice(0, 10),
     chart_distribution: [
       { name: "Low Risk", value: risk_distribution["Low"], color: "#10b981" },
       { name: "Medium Risk", value: risk_distribution["Medium"], color: "#f59e0b" },
@@ -828,7 +851,7 @@ export const api = {
 
       return await request(`/scans?${params.toString()}`);
     } catch {
-      let list = [...getLocalUserScans(), ...DEFAULT_BASE_SCANS];
+      let list = getLocalUserScans();
       if (type && type !== 'all') {
         list = list.filter(s => s.scan_type === type);
       }
@@ -848,9 +871,9 @@ export const api = {
     try {
       return await request(`/scans/${id}`);
     } catch {
-      const all = [...getLocalUserScans(), ...DEFAULT_BASE_SCANS];
+      const all = getLocalUserScans();
       const found = all.find(s => s.id === id || s.id === Number(id));
-      return { success: true, data: found || all[0] };
+      return { success: true, data: found || null };
     }
   },
 
@@ -862,7 +885,7 @@ export const api = {
       // In offline/fallback mode, remove from local storage
     }
     deleteLocalUserScan(id);
-    return { success: true };
+    return { success: true, message: `Scan #${id} deleted.` };
   },
 
   // Clear All History
@@ -873,7 +896,7 @@ export const api = {
       // In offline/fallback mode, clear from local storage
     }
     clearAllLocalUserScans();
-    return { success: true };
+    return { success: true, message: 'Scan history cleared.' };
   },
 
   // Set Custom Backend URL

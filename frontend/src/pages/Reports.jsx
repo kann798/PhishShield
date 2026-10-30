@@ -30,15 +30,28 @@ export default function Reports() {
 
   useEffect(() => {
     loadScanOptions();
+
+    const handleScanEvent = () => {
+      loadScanOptions();
+    };
+
+    window.addEventListener('phishshield:new-scan', handleScanEvent);
+    return () => {
+      window.removeEventListener('phishshield:new-scan', handleScanEvent);
+    };
   }, []);
 
   const loadScanOptions = async () => {
     try {
       const res = await api.getScans({ limit: 30 });
-      if (res.success && res.data.length > 0) {
+      if (res.success && res.data && res.data.length > 0) {
         setScans(res.data);
         setSelectedScanId(res.data[0].id);
         fetchScanDetail(res.data[0].id);
+      } else {
+        setScans([]);
+        setSelectedScanId('');
+        setCurrentScan(null);
       }
     } catch {
       setError('Unable to load scan list for report preview.');

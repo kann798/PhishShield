@@ -44,6 +44,15 @@ export default function ScanHistory({ onSelectScan }) {
 
   useEffect(() => {
     fetchScans();
+
+    const handleScanEvent = () => {
+      fetchScans();
+    };
+
+    window.addEventListener('phishshield:new-scan', handleScanEvent);
+    return () => {
+      window.removeEventListener('phishshield:new-scan', handleScanEvent);
+    };
   }, [selectedType, selectedRisk]);
 
   const handleSearchSubmit = (e) => {
@@ -57,8 +66,9 @@ export default function ScanHistory({ onSelectScan }) {
     }
 
     try {
-      await api.deleteScan(scanId);
-      setActionMessage(`Scan record #${scanId} deleted.`);
+      const res = await api.deleteScan(scanId);
+      setActionMessage(res?.message || `Scan record #${scanId} deleted.`);
+      setScans(prev => prev.filter(s => s.id !== scanId && s.id !== Number(scanId)));
       fetchScans();
       setTimeout(() => setActionMessage(null), 3000);
     } catch (err) {
@@ -73,7 +83,8 @@ export default function ScanHistory({ onSelectScan }) {
 
     try {
       const res = await api.clearAllScans();
-      setActionMessage(res.message || 'Scan history cleared.');
+      setActionMessage(res?.message || 'Scan history cleared.');
+      setScans([]);
       fetchScans();
       setTimeout(() => setActionMessage(null), 3000);
     } catch (err) {
