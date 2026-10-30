@@ -20,32 +20,12 @@ export default function FixedThreatTelemetryPanel({
   collapsed = false,
   onToggleCollapse = () => {},
 }) {
+  if (collapsed) return null;
+
   return (
     <>
-      {/* 1. COLLAPSED DOCK TAB (Shown when panel is minimized) */}
-      {collapsed && (
-        <button
-          onClick={onToggleCollapse}
-          className="fixed right-0 bottom-4 sm:bottom-6 z-40 flex items-center gap-2.5 px-3.5 py-2.5 bg-[#404E3B] hover:bg-[#344030] backdrop-blur-2xl border-l-2 border-y border-[#7B9669]/60 rounded-l-2xl shadow-xl text-xs font-mono text-white transition-all duration-300 group hover:translate-x-[-2px] select-none"
-          title="Expand Global Threat Telemetry Panel"
-          aria-label="Expand Telemetry Panel"
-        >
-          <span className="relative flex h-2.5 w-2.5">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#7B9669] opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#86EFAC]"></span>
-          </span>
-          <span className="font-bold text-white tracking-wider hidden sm:inline">TELEMETRY:</span>
-          <span className="text-rose-300 font-bold">298 ALERTS</span>
-          <span className="text-[#BAC8B1]">•</span>
-          <span className="text-[#86EFAC] font-bold">50ms</span>
-          <div className="p-1 rounded-md bg-white/10 group-hover:bg-[#7B9669]/30 text-white transition-colors ml-1">
-            <ChevronLeft className="w-3.5 h-3.5 group-hover:-translate-x-0.5 transition-transform" />
-          </div>
-        </button>
-      )}
-
-      {/* 2. EXPANDED FIXED TELEMETRY PANEL */}
-      {!collapsed && (
+      {/* EXPANDED FIXED TELEMETRY PANEL */}
+      {true && (
         <aside
           aria-label="Global Threat Telemetry Panel"
           className="fixed right-3 sm:right-4 bottom-3 sm:bottom-4 z-40 w-[290px] sm:w-[310px] max-h-[calc(100vh-6rem)] flex flex-col gap-3 p-3.5 sm:p-4 rounded-2xl border border-[#BAC8B1]/25 bg-[#303B2C] backdrop-blur-2xl shadow-2xl text-[#E6E6E6] select-none transition-all duration-300 overflow-y-auto no-scrollbar pointer-events-auto"

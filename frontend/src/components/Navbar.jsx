@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import {
   Shield,
+  Activity,
   Sun,
   Moon,
   Menu,
@@ -27,6 +28,8 @@ export default function Navbar({
   mobileMenuOpen,
   setMobileMenuOpen,
   onOpenExtension,
+  telemetryOpen = false,
+  onToggleTelemetry = () => {},
 }) {
   const [engineStatus, setEngineStatus] = useState('checking'); // 'online' | 'offline' | 'checking'
   const { theme, toggleTheme } = useTheme();
@@ -137,6 +140,109 @@ export default function Navbar({
             >
               <Cpu className="w-3.5 h-3.5 text-[#7B9669]" />
               <span className="text-xs font-mono font-semibold tracking-wide text-[#7B9669]">ML: ON</span>
+            </div>
+
+            {/* Live Threat Telemetry (Icon only by default, expands on cursor hover to reveal live telemetry stats) */}
+            <div className="relative group flex items-center">
+              <button
+                type="button"
+                onClick={onToggleTelemetry}
+                title="Live Threat Telemetry (Hover for Sensor Data, Click to Pin Panel)"
+                aria-label="Live Threat Telemetry"
+                className="flex items-center gap-1.5 h-8 px-2 sm:px-2.5 rounded-full border transition-all duration-300 bg-white dark:bg-[#404E3B] border-[#404E3B]/15 dark:border-[#7B9669]/60 text-[#404E3B] dark:text-white hover:bg-[#EEF3EC] dark:hover:bg-[#344030] shadow-sm cursor-pointer select-none group-hover:border-[#7B9669]/70 group-hover:shadow-md"
+              >
+                <span className="relative flex h-2 w-2 shrink-0">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#7B9669] opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-[#16A34A] dark:bg-[#86EFAC]"></span>
+                </span>
+                <Activity className="w-4 h-4 text-[#7B9669] dark:text-[#86EFAC] shrink-0" />
+
+                {/* Text revealed when cursor moves behind / over the icon */}
+                <div className="max-w-0 overflow-hidden whitespace-nowrap opacity-0 group-hover:max-w-[280px] group-hover:opacity-100 transition-all duration-300 ease-out flex items-center gap-1.5 text-xs font-mono">
+                  <span className="font-bold text-[#404E3B] dark:text-white tracking-wider">TELEMETRY:</span>
+                  <span className="text-rose-600 dark:text-rose-300 font-bold">298 ALERTS</span>
+                  <span className="text-[#6C8480] dark:text-[#BAC8B1]">•</span>
+                  <span className="text-emerald-700 dark:text-[#86EFAC] font-bold">50ms</span>
+                </div>
+              </button>
+
+              {/* Rich Telemetry Popover Card on Hover */}
+              <div className="absolute right-0 top-full pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 pointer-events-none group-hover:pointer-events-auto">
+                <div className="w-[300px] p-4 rounded-2xl border border-[#BAC8B1]/25 bg-[#303B2C] text-white shadow-2xl backdrop-blur-2xl text-xs font-mono select-none space-y-3">
+                  {/* Popover Header */}
+                  <div className="flex items-center justify-between pb-2 border-b border-white/10">
+                    <div className="flex items-center gap-2">
+                      <div className="p-1.5 rounded-lg bg-[#7B9669] text-white shadow-xs">
+                        <Globe className="w-3.5 h-3.5" />
+                      </div>
+                      <div>
+                        <span className="text-xs font-bold uppercase tracking-wider text-white flex items-center gap-1.5">
+                          <span>THREAT TELEMETRY</span>
+                          <span className="w-1.5 h-1.5 rounded-full bg-[#86EFAC] animate-ping"></span>
+                        </span>
+                        <span className="text-[10px] text-[#BAC8B1] block">Real-time Global Sensor Feed</span>
+                      </div>
+                    </div>
+                    <span className="text-[10px] font-bold text-[#86EFAC] bg-[#7B9669]/30 px-2 py-0.5 rounded border border-[#7B9669]/50">
+                      LIVE
+                    </span>
+                  </div>
+
+                  {/* Payloads Audited */}
+                  <div className="p-2.5 rounded-xl bg-[#404E3B] border border-white/10 flex justify-between items-center">
+                    <div>
+                      <span className="text-[10px] uppercase font-bold text-[#BAC8B1] block">PAYLOADS AUDITED</span>
+                      <span className="text-xl font-black text-white">300K</span>
+                      <span className="text-[10px] font-bold text-amber-300 ml-1.5">78% Risk</span>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-xs font-bold text-[#86EFAC]">14.5K</span>
+                      <span className="text-[9.5px] text-[#BAC8B1] block">+12% vs avg</span>
+                    </div>
+                  </div>
+
+                  {/* Threats & Latency Grid */}
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="p-2.5 rounded-xl bg-[#4A2828] border border-rose-500/40">
+                      <span className="text-[10px] uppercase font-bold text-rose-200 block">THREATS DETECTED</span>
+                      <span className="text-base sm:text-lg font-black text-rose-300">298 ALERTS</span>
+                    </div>
+                    <div className="p-2.5 rounded-xl bg-[#404E3B] border border-white/10">
+                      <span className="text-[10px] uppercase font-bold text-[#BAC8B1] block">LATENCY</span>
+                      <span className="text-base sm:text-lg font-black text-[#86EFAC]">50ms</span>
+                      <span className="text-[9.5px] text-[#BAC8B1] block">12ms P99</span>
+                    </div>
+                  </div>
+
+                  {/* Telemetry Taxonomy Breakdown */}
+                  <div className="p-2.5 rounded-xl bg-[#404E3B] border border-white/10 text-[11px] space-y-1">
+                    <div className="flex justify-between items-center">
+                      <span className="text-[#BAC8B1]">Phishing Origin:</span>
+                      <span className="text-rose-300 font-bold">176 / hr</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-[#BAC8B1]">Malware Delivery:</span>
+                      <span className="text-amber-300 font-bold">41.5%</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-[#BAC8B1]">Social Eng. Ratio:</span>
+                      <span className="text-[#86EFAC] font-bold">33.3%</span>
+                    </div>
+                  </div>
+
+                  {/* Live Threat Stream Ticker */}
+                  <div className="p-2 rounded-xl bg-[#283225] border border-[#7B9669]/40 text-[10px] flex items-center justify-between">
+                    <span className="flex items-center gap-1.5 truncate">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#86EFAC] animate-ping shrink-0"></span>
+                      <span className="text-[#BAC8B1]">Intercept:</span>
+                      <span className="text-white font-bold truncate">Honeypot [FRA-04]</span>
+                    </span>
+                    <span className="px-1.5 py-0.5 rounded bg-[#7B9669]/30 text-[#86EFAC] font-bold text-[9px] border border-[#7B9669]/50">
+                      ROUTED
+                    </span>
+                  </div>
+                </div>
+              </div>
             </div>
 
             {/* Theme Mode Toggle Icon */}

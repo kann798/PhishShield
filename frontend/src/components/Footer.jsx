@@ -55,7 +55,7 @@ export default function Footer({
       {/* Main Container: Compact, thin horizontal rectangle reduced by ~40% in height */}
       <div
         className={`w-full max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 py-1.5 sm:py-2 transition-all duration-300 ${
-          telemetryCollapsed ? 'pr-20 sm:pr-24 lg:pr-28' : 'xl:pr-[330px]'
+          telemetryCollapsed ? '' : 'xl:pr-[330px]'
         }`}
       >
         {/* Horizontal Columns Layout */}

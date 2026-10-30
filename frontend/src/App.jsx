@@ -28,8 +28,10 @@ export default function App() {
   const [extensionModalOpen, setExtensionModalOpen] = useState(false);
   const [telemetryCollapsed, setTelemetryCollapsed] = useState(true);
   const [securityModal, setSecurityModal] = useState({ open: false, section: 'disclaimer' });
-  const [contactSubject, setContactSubject] = useState('');
-  const [urlScanCompleted, setUrlScanCompleted] = useState(false);
+  const [contactSubject, setContactSubject] = useState('');
+
+  const [urlScanCompleted, setUrlScanCompleted] = useState(false);
+
   const [emailScanCompleted, setEmailScanCompleted] = useState(false);
 
   const handleOpenScanDetail = async (scanId) => {
@@ -103,6 +105,8 @@ export default function App() {
         mobileMenuOpen={mobileMenuOpen}
         setMobileMenuOpen={setMobileMenuOpen}
         onOpenExtension={() => setExtensionModalOpen(true)}
+        telemetryOpen={!telemetryCollapsed}
+        onToggleTelemetry={() => setTelemetryCollapsed(!telemetryCollapsed)}
       />
 
       {/* Main Layout: Left-Side Panel + Fluid Content Area (min-h-[calc(100vh-72px)] ensures content fills viewport so footer is naturally at the bottom) */}
