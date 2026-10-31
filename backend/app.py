@@ -60,6 +60,7 @@ def internal_server_error(error):
 
 
 @app.route('/api/health', methods=['GET'])
+@app.route('/health', methods=['GET'])
 def health_check():
     """Health check endpoint to verify API, database readiness, and ML engine status."""
     try:
@@ -86,6 +87,7 @@ def health_check():
 
 
 @app.route('/api/analyze/url', methods=['POST'])
+@app.route('/analyze/url', methods=['POST'])
 def analyze_url():
     """
     Inspect a user-submitted URL string for phishing indicators,
@@ -153,6 +155,7 @@ def analyze_url():
 
 
 @app.route('/api/analyze/email', methods=['POST'])
+@app.route('/analyze/email', methods=['POST'])
 def analyze_email():
     """
     Inspect email content and optional headers for phishing signatures,
@@ -211,6 +214,7 @@ def analyze_email():
 
 
 @app.route('/api/scans', methods=['GET'])
+@app.route('/scans', methods=['GET'])
 def list_scans():
     """Retrieve scan history with optional filtering by type, risk level, or keyword search."""
     scan_type = request.args.get("type", None)
@@ -277,6 +281,9 @@ def clear_scans():
 
 
 @app.route('/api/dashboard/stats', methods=['GET'])
+@app.route('/api/stats', methods=['GET'])
+@app.route('/dashboard/stats', methods=['GET'])
+@app.route('/stats', methods=['GET'])
 def dashboard_stats():
     """Retrieve aggregate statistics, risk distributions, and recent scan logs."""
     stats = db.get_dashboard_stats()
@@ -287,6 +294,7 @@ def dashboard_stats():
 
 
 @app.route('/api/reports/<int:scan_id>/export', methods=['GET'])
+@app.route('/reports/<int:scan_id>/export', methods=['GET'])
 def export_report(scan_id):
     """Export a scan analysis report as JSON or CSV."""
     scan = db.get_scan_by_id(scan_id)
@@ -486,6 +494,7 @@ def export_report(scan_id):
 
 
 @app.route('/api/extension/download', methods=['GET'])
+@app.route('/extension/download', methods=['GET'])
 def download_extension_zip():
     """Package and serve the PhishShield browser extension as a downloadable ZIP package."""
     ext_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'extension'))

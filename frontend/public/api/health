@@ -1,0 +1,13 @@
+{
+  "status": "healthy",
+  "service": "PhishShield Threat Intelligence Engine",
+  "version": "1.1.0",
+  "database": "connected",
+  "ml_engine": {
+    "status": "operational",
+    "models": {
+      "url": "RandomForestClassifier (15 Lexical/Structural Feature Vectors)",
+      "email": "TF-IDF (1-2 ngrams) + LogisticRegression Classifier"
+    }
+  }
+}

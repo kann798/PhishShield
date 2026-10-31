@@ -1,0 +1,17 @@
+{
+  "success": true,
+  "data": {
+    "total_scans": 18,
+    "total_urls": 12,
+    "total_emails": 6,
+    "suspicious_count": 11,
+    "clean_count": 7,
+    "risk_distribution": {
+      "Low": 7,
+      "Medium": 4,
+      "High": 5,
+      "Critical": 2
+    },
+    "recent_scans": []
+  }
+}
