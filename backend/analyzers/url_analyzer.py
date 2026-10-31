@@ -445,22 +445,58 @@ class URLAnalyzer:
                 detected_brand = b
                 break
 
+        # Check if typosquatting identified a brand if not found directly
+        typosquat_brand = typosquat_finding.get("brand") if typosquat_finding else None
+        if not detected_brand and typosquat_brand:
+            detected_brand = typosquat_brand
+
+        # Brand Impersonation:
         is_brand_impersonation = False
         brand_obs = "No brand impersonation detected"
         if detected_brand:
             if not cls._is_authentic_brand_domain(detected_brand, hostname):
                 is_brand_impersonation = True
-                brand_obs = f"Uses '{detected_brand}' in hostname / subdomain"
                 if "login.microsoft.com" in hostname.lower():
                     brand_obs = "Uses 'login.microsoft.com' in subdomain"
                 elif detected_brand in ".".join(subdomains):
                     brand_obs = f"Uses '{detected_brand}' in subdomain"
+                elif typosquat_finding:
+                    brand_obs = f"Deceptive brand mimicry (mimics {detected_brand.title()})"
+                elif tld_typosquat:
+                    brand_obs = f"Uses '{detected_brand}' with lookalike TLD (.{tld})"
+                else:
+                    brand_obs = f"Uses '{detected_brand}' in hostname / subdomain"
             else:
                 brand_obs = f"Authentic {detected_brand.title()} domain"
 
-        domain_mismatch = is_brand_impersonation and (main_domain.lower() != f"{detected_brand}.com" if detected_brand else False)
-        mismatch_obs = f"Actual registered domain: {main_domain}" if domain_mismatch else f"Registered domain matches identity ({main_domain})"
+        # Registered Domain Mismatch:
+        domain_mismatch = False
+        if detected_brand:
+            if cls._is_authentic_brand_domain(detected_brand, hostname):
+                domain_mismatch = False
+                mismatch_obs = f"Domain matches verified brand ({main_domain})"
+            elif tld_typosquat:
+                domain_mismatch = True
+                tgt_tld = tld_typosquat.get("target", "legitimate TLD")
+                mismatch_obs = f"Deceptive TLD: '{main_domain}' uses lookalike extension instead of .{tgt_tld}"
+            elif typosquat_finding:
+                domain_mismatch = True
+                mismatch_obs = f"Typosquatted domain '{main_domain}' does not match official {detected_brand.title()} domain"
+            else:
+                domain_mismatch = True
+                mismatch_obs = f"Actual registered domain: {main_domain} (unrelated to {detected_brand.title()})"
+        elif tld_typosquat:
+            domain_mismatch = True
+            tgt_tld = tld_typosquat.get("target", "legitimate TLD")
+            mismatch_obs = f"Deceptive TLD: '{main_domain}' uses lookalike extension instead of .{tgt_tld}"
+        elif (tld in cls.SUSPICIOUS_TLDS):
+            domain_mismatch = True
+            mismatch_obs = f"Untrusted registered domain: {main_domain}"
+        else:
+            domain_mismatch = False
+            mismatch_obs = f"Registered domain matches identity ({main_domain})"
 
+        # Suspicious Domain:
         is_suspicious_domain = is_brand_impersonation or (tld in cls.SUSPICIOUS_TLDS) or (typosquat_finding is not None) or (tld_typosquat is not None)
         if is_brand_impersonation and detected_brand:
             suspicious_domain_obs = f"Domain is not an official {detected_brand.title()} domain"
@@ -471,21 +507,32 @@ class URLAnalyzer:
         else:
             suspicious_domain_obs = "Domain is registered with standard reputation"
 
-        typosquat_detected = typosquat_finding is not None or tld_typosquat is not None or (is_brand_impersonation and detected_brand is not None)
-        if typosquat_finding is not None:
+        # Typosquatting:
+        typosquat_detected = (typosquat_finding is not None) or (tld_typosquat is not None)
+        if tld_typosquat is not None:
+            typosquat_obs = tld_typosquat.get("evidence", f"TLD '.{tld}' mimics legitimate extension")
+        elif typosquat_finding is not None:
             typosquat_obs = typosquat_finding.get("evidence", "Similar to official brand domain")
-        elif tld_typosquat is not None:
-            typosquat_obs = tld_typosquat.get("evidence", "Suspicious TLD mimics legitimate extension")
-        elif is_brand_impersonation and detected_brand:
-            typosquat_obs = f"Similar to official {detected_brand.title()} domain"
         else:
             typosquat_obs = "No typosquatting detected"
 
-        suspicious_subdomains = len(subdomains) >= 2 or is_brand_impersonation
-        if subdomains:
-            subdomain_obs = ".".join(subdomains)
-        else:
+        # Suspicious Subdomains: DO NOT flag 'www' by itself!
+        non_www_subdomains = [s for s in subdomains if s.lower() != 'www']
+        brand_in_sub = any(b in ".".join(non_www_subdomains).lower() for b in cls.TARGET_BRANDS) if (detected_brand and not is_trusted_site) else False
+        kw_in_sub = any(k in ".".join(non_www_subdomains).lower() for k in ["login", "verify", "signin", "account", "secure", "auth", "portal", "update", "banking"]) if non_www_subdomains else False
+
+        suspicious_subdomains = (len(non_www_subdomains) >= 2) or (brand_in_sub and not is_trusted_site) or (kw_in_sub and not is_trusted_site)
+        if suspicious_subdomains:
+            if brand_in_sub or kw_in_sub:
+                subdomain_obs = f"Deceptive keywords in subdomain: {'.'.join(subdomains)}"
+            else:
+                subdomain_obs = f"Excessive nested subdomains: {'.'.join(subdomains)}"
+        elif subdomains == ['www']:
+            subdomain_obs = "Standard single subdomain (www)"
+        elif not subdomains:
             subdomain_obs = "No subdomains used"
+        else:
+            subdomain_obs = f"Standard subdomain ({'.'.join(subdomains)})"
 
         is_shortener = hostname in cls.SHORTENERS
         shortener_obs = f"URL shortener detected ({hostname})" if is_shortener else "No URL shortener used"
@@ -502,11 +549,14 @@ class URLAnalyzer:
         else:
             cred_path_obs = "No credential-related path detected"
 
-        is_unusual_structure = len(subdomains) >= 3 or ("@" in cleaned_url) or (port and port in cls.UNUSUAL_PORTS) or is_brand_impersonation
-        if len(subdomains) >= 3 or is_brand_impersonation:
-            structure_obs = "Uses multiple subdomains to look legitimate"
-        elif is_unusual_structure:
-            structure_obs = "Contains anomalous structural traits"
+        # Unusual URL Structure: DO NOT flag if only 'www' exists!
+        is_unusual_structure = (len(non_www_subdomains) >= 2) or ("@" in cleaned_url) or bool(port and port in cls.UNUSUAL_PORTS)
+        if len(non_www_subdomains) >= 2:
+            structure_obs = f"Uses multiple subdomains ({len(subdomains)} levels) to look legitimate"
+        elif "@" in cleaned_url:
+            structure_obs = "Uses '@' symbol for credential/host redirection trick"
+        elif port and port in cls.UNUSUAL_PORTS:
+            structure_obs = f"Uses non-standard web port ({port})"
         else:
             structure_obs = "Standard URL structure"
 
@@ -725,30 +775,41 @@ class URLAnalyzer:
         )
         final_verdict_title = f"Suspicious URL — {risk_level} Risk" if is_threat else f"Likely Safe URL — {risk_level} Risk"
 
-        if is_brand_impersonation:
-            final_verdict_explanation = (
-                f"This URL uses {brand_label} branding in a subdomain, but the actual registered domain is {main_domain}. "
-                f"It contains login-related keywords and shows multiple phishing indicators. It should be treated as suspicious and avoided."
-            )
-        elif is_threat:
-            final_verdict_explanation = (
-                f"This URL exhibits elevated threat indicators including {main_threat_category.lower()}. "
-                f"It is likely intended for deception or credential solicitation and should not be accessed."
-            )
-        else:
-            final_verdict_explanation = (
-                f"This URL directs to {hostname} ({main_domain}). It exhibits standard domain structure, valid security protocols, "
-                f"and no anomalous phishing indicators. Standard safe browsing practices apply."
-            )
+        # Dynamically build specific reasons list based on indicators ACTUALLY detected
+        detected_threat_reasons = []
+        if tld_typosquat:
+            tgt = tld_typosquat.get("target", "legitimate extension")
+            detected_threat_reasons.append(f"lookalike TLD (.{tld} mimics .{tgt})")
+        if typosquat_finding:
+            tb = typosquat_finding.get("brand") or (detected_brand.title() if detected_brand else "brand")
+            detected_threat_reasons.append(f"typosquatted brand domain (mimics {tb.title()})")
+        if is_brand_impersonation and not (typosquat_finding or tld_typosquat):
+            detected_threat_reasons.append(f"brand impersonation ({detected_brand.title() if detected_brand else 'brand'})")
+        elif is_brand_impersonation and (typosquat_finding or tld_typosquat):
+            detected_threat_reasons.append(f"brand impersonation ({detected_brand.title() if detected_brand else 'brand'})")
+        if is_ip:
+            detected_threat_reasons.append("direct numeric IP host")
+        if is_shortener:
+            detected_threat_reasons.append("URL shortening service")
+        if found_keywords or cred_in_path:
+            detected_threat_reasons.append("credential harvesting keywords")
+        if suspicious_subdomains:
+            detected_threat_reasons.append("suspicious subdomain nesting")
+        elif is_unusual_structure:
+            detected_threat_reasons.append("anomalous URL structure")
+        if tld in cls.SUSPICIOUS_TLDS:
+            detected_threat_reasons.append(f"high-abuse domain extension (.{tld})")
 
-        summary_explanation = (
-            f"This URL is highly likely to be a phishing attempt due to brand impersonation and suspicious domain structure."
-            if is_brand_impersonation else (
-                f"This URL shows elevated threat indicators and should be treated with caution."
-                if is_threat else
-                f"This URL appears to be a legitimate and safe website with standard domain reputation."
-            )
-        )
+        if is_threat and detected_threat_reasons:
+            reasons_str = ", ".join(detected_threat_reasons[:3])
+            summary_explanation = f"This URL is highly likely to be a phishing attempt due to {reasons_str}. It should be treated with caution and avoided."
+            final_verdict_explanation = f"This URL exhibits elevated threat indicators including {reasons_str}. It is likely intended for deception or credential solicitation and should not be accessed."
+        elif is_threat:
+            summary_explanation = "This URL shows elevated threat indicators and should be treated with caution."
+            final_verdict_explanation = f"This URL exhibits elevated threat indicators including {main_threat_category.lower()}. It is likely intended for deception or credential solicitation and should not be accessed."
+        else:
+            summary_explanation = "This URL appears to be a legitimate and safe website with standard domain reputation."
+            final_verdict_explanation = f"This URL directs to {hostname} ({main_domain}). It exhibits standard domain structure, valid security protocols, and no anomalous phishing indicators. Standard safe browsing practices apply."
 
         return {
             "valid": True,
@@ -832,6 +893,7 @@ class URLAnalyzer:
                     "name": f"Brand Typosquatting / Homoglyph ({brand.title()})",
                     "severity": "critical",
                     "weight": 70,
+                    "brand": brand,
                     "evidence": f"Domain '{domain_without_tld}' mimics '{brand}'",
                     "description": (
                         f"The domain appears to impersonate '{brand.title()}' using character substitutions "
@@ -848,6 +910,7 @@ class URLAnalyzer:
                         "name": f"Typosquatted Brand Name ({brand.title()})",
                         "severity": "critical",
                         "weight": 65,
+                        "brand": brand,
                         "evidence": f"'{domain_without_tld}' is 1 character different from '{brand}'",
                         "description": (
                             f"The domain closely mimics the legitimate brand '{brand.title()}'. "
@@ -890,6 +953,7 @@ class URLAnalyzer:
                 "name": f"Lookalike / Typosquatted TLD (.{tld_clean})",
                 "severity": "critical",
                 "weight": 70,
+                "target": target,
                 "evidence": f"TLD '.{tld_clean}' mimics legitimate '.{target}' via {reason}",
                 "description": (
                     f"The domain uses '.{tld_clean}' which visually mimics the legitimate '.{target}' extension "

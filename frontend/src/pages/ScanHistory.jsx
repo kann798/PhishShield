@@ -11,10 +11,11 @@ import {
   Eye,
   CheckCircle2,
   Filter,
+  Trash2,
 } from 'lucide-react';
 import AnalysisResultView from '../components/AnalysisResultView';
 import AlertBanner from '../components/AlertBanner';
-import { api, getLocalUserScans } from '../services/api';
+import { api, getLocalUserScans, clearAllLocalUserScans } from '../services/api';
 
 export default function ScanHistory({ onSelectScan }) {
   const [scans, setScans] = useState([]);
@@ -26,7 +27,30 @@ export default function ScanHistory({ onSelectScan }) {
   const [actionMessage, setActionMessage] = useState(null);
   const [viewingScan, setViewingScan] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
+  const [clearing, setClearing] = useState(false);
   const itemsPerPage = 10;
+
+  const handleClearHistory = async () => {
+    try {
+      setClearing(true);
+      try {
+        await api.clearAllScans();
+      } catch (e) {
+        console.warn('Backend clear failed or offline, clearing local history:', e);
+      }
+      clearAllLocalUserScans();
+      setScans([]);
+      setShowClearConfirm(false);
+      setActionMessage('Scan history cleared successfully.');
+      setTimeout(() => setActionMessage(null), 4000);
+    } catch (err) {
+      setError(err.message || 'Failed to clear scan history');
+      setShowClearConfirm(false);
+    } finally {
+      setClearing(false);
+    }
+  };
 
   const fetchScans = async () => {
     try {
@@ -266,6 +290,27 @@ export default function ScanHistory({ onSelectScan }) {
               <option value="phishing">Phishing</option>
             </select>
           </div>
+
+          {/* Action Buttons: Refresh & Clear History */}
+          <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+            <button
+              onClick={fetchScans}
+              className="p-2 rounded-xl bg-white dark:bg-[#1E271D] border border-[#404E3B]/20 text-[#6C8480] hover:text-[#16794B] hover:border-[#16794B] transition-colors shadow-2xs cursor-pointer shrink-0"
+              title="Refresh Scan History"
+            >
+              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin text-[#16794B]' : ''}`} />
+            </button>
+
+            <button
+              onClick={() => setShowClearConfirm(true)}
+              disabled={scans.length === 0}
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900/60 text-red-700 dark:text-red-400 hover:bg-red-600 hover:text-white hover:border-red-600 transition-all font-mono font-bold text-xs disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer shrink-0 shadow-2xs"
+              title="Clear all scan history"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              <span>Clear History</span>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -412,6 +457,55 @@ export default function ScanHistory({ onSelectScan }) {
           </div>
         </div>
       </div>
+      {/* Clear History Confirmation Modal */}
+      {showClearConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fadeIn">
+          <div className="w-full max-w-md rounded-2xl bg-white dark:bg-[#182417] border border-[#404E3B]/25 dark:border-[#384E36] p-5 sm:p-6 shadow-2xl space-y-4">
+            <div className="flex items-start gap-3.5">
+              <div className="w-10 h-10 rounded-full bg-red-100 dark:bg-red-900/40 text-red-600 dark:text-red-400 flex items-center justify-center shrink-0">
+                <Trash2 className="w-5 h-5" />
+              </div>
+              <div className="space-y-1">
+                <h3 className="text-base font-bold font-heading text-[#1C2518] dark:text-white">
+                  Clear Scan History?
+                </h3>
+                <p className="text-xs text-[#52665A] dark:text-gray-300 leading-relaxed font-sans">
+                  This will permanently remove all URL and Email scan records from your history. This action cannot be undone. Saved reports and application settings are preserved.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-[#404E3B]/10 dark:border-[#384E36]">
+              <button
+                type="button"
+                onClick={() => setShowClearConfirm(false)}
+                disabled={clearing}
+                className="px-4 py-2 rounded-xl border border-[#404E3B]/20 dark:border-[#384E36] bg-transparent text-xs font-mono font-bold text-[#52665A] dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#223321] transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleClearHistory}
+                disabled={clearing}
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-mono font-bold transition-all shadow-xs cursor-pointer disabled:opacity-50"
+              >
+                {clearing ? (
+                  <>
+                    <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                    <span>Clearing...</span>
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span>Confirm Clear</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

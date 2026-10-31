@@ -271,6 +271,7 @@ def delete_scan_record(scan_id):
 
 
 @app.route('/api/scans', methods=['DELETE'])
+@app.route('/scans', methods=['DELETE'])
 def clear_scans():
     """Clear all records from scan history."""
     deleted_count = db.clear_all_scans()

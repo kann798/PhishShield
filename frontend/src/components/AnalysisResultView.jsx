@@ -120,31 +120,64 @@ export default function AnalysisResultView({ type = 'email', result, onBack }) {
   const bodySnippet = result.body_snippet || (result.raw_text ? result.raw_text.slice(0, 180) : 'Body content analyzed in-memory.');
   const emailSize = result.email_size_chars || (result.raw_text ? result.raw_text.length : 380);
 
-  // Helper for Section 1 result badges
+  // Helper for Section 1 result badges (strictly matching color specification)
   const renderIndicatorBadge = (status, resultText) => {
-    const s = (status || '').toLowerCase();
-    const t = (resultText || '').toLowerCase();
+    const s = (status || '').toLowerCase().trim();
+    const t = (resultText || '').toLowerCase().trim();
 
-    if (s === 'suspicious' || s === 'detected' || t.includes('suspicious') || t.includes('detected')) {
+    // 1. Not detected / Benign / Legitimate -> Green
+    if (
+      s === 'not_detected' ||
+      s === 'benign' ||
+      s === 'legitimate' ||
+      t === 'not detected' ||
+      t === 'benign' ||
+      t === 'legitimate' ||
+      t.startsWith('not detected') ||
+      t.includes('safe')
+    ) {
       return (
-        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-[#DC2626] text-white shadow-xs">
-          <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
-          <span>{resultText}</span>
-        </span>
-      );
-    }
-    if (s === 'legitimate' || s === 'benign' || s === 'not_detected' || t.includes('legitimate') || t.includes('benign') || t.includes('not detected')) {
-      return (
-        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-[#16794B] text-white shadow-xs">
+        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-[#16794B] text-white shadow-xs">
           <Check className="w-2.5 h-2.5" />
-          <span>{resultText}</span>
+          <span>{resultText || 'Not detected'}</span>
         </span>
       );
     }
-    // Default / Not available
+
+    // 2. Suspicious -> Orange
+    if (s === 'suspicious' || t.includes('suspicious')) {
+      return (
+        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-[#D97706] text-white shadow-xs">
+          <AlertTriangle className="w-2.5 h-2.5" />
+          <span>{resultText || 'Suspicious'}</span>
+        </span>
+      );
+    }
+
+    // 3. Detected -> Red
+    if (s === 'detected' || (t.includes('detected') && !t.includes('not detected'))) {
+      return (
+        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-[#DC2626] text-white shadow-xs">
+          <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+          <span>{resultText || 'Detected'}</span>
+        </span>
+      );
+    }
+
+    // 4. Informational / Info / Present -> Blue
+    if (s === 'info' || s === 'informational' || t === 'informational' || t === 'present') {
+      return (
+        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-[#0284C7] text-white shadow-xs">
+          <Info className="w-2.5 h-2.5" />
+          <span>{resultText || 'Informational'}</span>
+        </span>
+      );
+    }
+
+    // 5. Not available -> Blue or Gray
     return (
-      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-[#0284C7] text-white shadow-xs">
-        <span>{resultText}</span>
+      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-[#64748B] text-white shadow-xs">
+        <span>{resultText || 'Not available'}</span>
       </span>
     );
   };
@@ -224,7 +257,7 @@ export default function AnalysisResultView({ type = 'email', result, onBack }) {
 
     const summaryText = result.summary_explanation || result.summary || (
       isThreat
-        ? "This URL is highly likely to be a phishing attempt due to brand impersonation and suspicious domain structure."
+        ? "This URL shows elevated threat indicators and should be treated with caution."
         : "This URL appears to be a legitimate and safe website with standard domain reputation."
     );
 
@@ -234,35 +267,43 @@ export default function AnalysisResultView({ type = 'email', result, onBack }) {
     const bannerSubtitle = isThreat ? "This URL shows multiple signs of a phishing attempt." : "This URL appears to be a legitimate and safe website.";
 
     const renderResultBadge = (resStr) => {
-      const r = (resStr || '').toLowerCase();
+      const r = (resStr || '').toLowerCase().trim();
       if (r === 'present') {
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-[#16794B] text-white">
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-[#16794B] text-white shadow-xs">
             <Check className="w-2.5 h-2.5" />
             <span>Present</span>
           </span>
         );
       }
-      if (r === 'insecure' || r === 'detected') {
+      if (r === 'not detected') {
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-[#DC2626] text-white">
-            <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
-            <span>{resStr}</span>
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-[#16794B] text-white shadow-xs">
+            <Check className="w-2.5 h-2.5" />
+            <span>Not detected</span>
           </span>
         );
       }
       if (r === 'suspicious') {
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-[#D97706] text-white">
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-[#D97706] text-white shadow-xs">
             <AlertTriangle className="w-2.5 h-2.5" />
             <span>Suspicious</span>
           </span>
         );
       }
+      if (r === 'insecure' || r === 'detected') {
+        return (
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-[#DC2626] text-white shadow-xs">
+            <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+            <span>{resStr}</span>
+          </span>
+        );
+      }
       return (
-        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-[#16794B] text-white">
+        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-[#16794B] text-white shadow-xs">
           <Check className="w-2.5 h-2.5" />
-          <span>Not detected</span>
+          <span>{resStr || 'Not detected'}</span>
         </span>
       );
     };
@@ -285,7 +326,7 @@ export default function AnalysisResultView({ type = 'email', result, onBack }) {
     };
 
     return (
-      <div className="space-y-5 w-full pb-12 select-none animate-fadeIn font-sans">
+      <div className="space-y-3.5 w-full pb-8 select-none animate-fadeIn font-sans">
         {/* Back button */}
         {onBack && (
           <button
@@ -298,7 +339,7 @@ export default function AnalysisResultView({ type = 'email', result, onBack }) {
         )}
 
         {/* TOP HERO BANNER */}
-        <div className={`w-full rounded-2xl p-5 sm:p-6 text-white shadow-md flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${bannerClass}`}>
+        <div className={`w-full rounded-xl p-3.5 sm:p-4 text-white shadow-md flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${bannerClass}`}>
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 rounded-full bg-white/15 flex items-center justify-center shrink-0 shadow-inner">
               <Globe className="w-6 h-6 text-white" />
@@ -327,7 +368,7 @@ export default function AnalysisResultView({ type = 'email', result, onBack }) {
         </div>
 
         {/* URL ANALYZED BAR */}
-        <div className="rounded-2xl border border-[#404E3B]/15 bg-white dark:bg-[#1E271D] p-3 sm:p-4 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div className="rounded-xl border border-[#404E3B]/20 dark:border-[#384E36] bg-white dark:bg-[#182417] p-2.5 sm:p-3 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-2.5">
           <div className="flex-1 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 w-full overflow-hidden">
             <span className="text-[11px] font-mono font-bold text-[#6C8480] uppercase tracking-wider shrink-0">
               URL ANALYZED:
@@ -366,7 +407,7 @@ export default function AnalysisResultView({ type = 'email', result, onBack }) {
             </h2>
           </div>
 
-          <div className="rounded-2xl border border-[#404E3B]/15 bg-white dark:bg-[#1E271D] p-5 shadow-xs grid grid-cols-1 lg:grid-cols-12 gap-5 items-center">
+          <div className="rounded-xl border border-[#404E3B]/20 dark:border-[#384E36] bg-white dark:bg-[#182417] p-3.5 sm:p-4 shadow-xs grid grid-cols-1 lg:grid-cols-12 gap-3.5 items-center">
             {/* Left Score Gauge & Explanation */}
             <div className="lg:col-span-7 flex flex-col sm:flex-row items-center sm:items-start gap-5">
               <div className="relative w-24 h-24 shrink-0 flex items-center justify-center">
@@ -466,10 +507,10 @@ export default function AnalysisResultView({ type = 'email', result, onBack }) {
             </h2>
           </div>
 
-          <div className="rounded-2xl border border-[#404E3B]/15 bg-white dark:bg-[#1E271D] overflow-hidden shadow-xs">
+          <div className="rounded-xl border border-[#404E3B]/20 dark:border-[#384E36] bg-white dark:bg-[#182417] overflow-hidden shadow-xs">
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs font-sans">
-                <thead className="bg-[#EEF3EC] dark:bg-[#283526] text-[#404E3B] dark:text-[#E6ECE1] font-mono uppercase text-[11px] font-bold border-b border-[#404E3B]/15">
+                <thead className="bg-[#EEF3EC] dark:bg-[#1F2E1E] text-[#404E3B] dark:text-[#E2E8F0] font-mono uppercase text-[10px] font-bold border-b border-[#404E3B]/20 dark:border-[#384E36]">
                   <tr>
                     <th className="py-2.5 px-3 w-10 text-center">#</th>
                     <th className="py-2.5 px-3 w-48">Indicator</th>
@@ -480,7 +521,7 @@ export default function AnalysisResultView({ type = 'email', result, onBack }) {
                 </thead>
                 <tbody className="divide-y divide-[#404E3B]/10">
                   {indicatorsList.map((item, idx) => (
-                    <tr key={idx} className="hover:bg-[#F4F7F4]/60 dark:hover:bg-[#283526]/50 transition-colors">
+                    <tr key={idx} className="hover:bg-[#F4F7F4]/70 dark:hover:bg-[#223321] transition-colors">
                       <td className="py-2.5 px-3 text-center font-mono text-[#6C8480] text-[11px] font-bold">
                         {item.id || idx + 1}
                       </td>
@@ -515,7 +556,7 @@ export default function AnalysisResultView({ type = 'email', result, onBack }) {
               </h2>
             </div>
 
-            <div className="flex-1 rounded-2xl border border-[#404E3B]/15 bg-white dark:bg-[#1E271D] p-4 sm:p-5 shadow-xs overflow-hidden">
+            <div className="flex-1 rounded-xl border border-[#404E3B]/20 dark:border-[#384E36] bg-white dark:bg-[#182417] p-3 sm:p-3.5 shadow-xs overflow-hidden">
               <table className="w-full text-xs">
                 <tbody className="divide-y divide-[#404E3B]/10 font-sans">
                   <tr>
@@ -570,7 +611,7 @@ export default function AnalysisResultView({ type = 'email', result, onBack }) {
               </h2>
             </div>
 
-            <div className="flex-1 rounded-2xl border border-[#404E3B]/15 bg-white dark:bg-[#1E271D] p-5 shadow-xs space-y-4 flex flex-col justify-between">
+            <div className="flex-1 rounded-xl border border-[#404E3B]/20 dark:border-[#384E36] bg-white dark:bg-[#182417] p-3.5 sm:p-4 shadow-xs space-y-3 flex flex-col justify-between">
               {/* Top Score & Class Summary */}
               <div className="flex items-center justify-between gap-4 border-b border-[#404E3B]/10 pb-4">
                 <div className="relative w-20 h-20 shrink-0 flex items-center justify-center">
@@ -662,7 +703,7 @@ export default function AnalysisResultView({ type = 'email', result, onBack }) {
               </h2>
             </div>
 
-            <div className="flex-1 rounded-2xl border border-[#404E3B]/15 bg-white dark:bg-[#1E271D] p-5 shadow-xs space-y-4">
+            <div className="flex-1 rounded-xl border border-[#404E3B]/20 dark:border-[#384E36] bg-white dark:bg-[#182417] p-3.5 sm:p-4 shadow-xs space-y-3">
               <div className="flex items-center justify-between gap-3 border-b border-[#404E3B]/10 pb-3">
                 <div className="flex items-center gap-2">
                   <Brain className="w-4 h-4 text-[#16794B]" />
@@ -778,7 +819,7 @@ export default function AnalysisResultView({ type = 'email', result, onBack }) {
             </h2>
           </div>
 
-          <div className={`rounded-2xl border p-5 shadow-xs flex items-start gap-4 ${
+          <div className={`rounded-xl border p-3.5 sm:p-4 shadow-xs flex items-start gap-3.5 ${
             isThreat
               ? 'bg-[#FEF2F2] border-[#FECACA] dark:bg-[#2A1818] dark:border-[#7F1D1D]'
               : 'bg-[#F0FDF4] border-[#BBF7D0] dark:bg-[#15281E] dark:border-[#166534]'
@@ -821,7 +862,7 @@ export default function AnalysisResultView({ type = 'email', result, onBack }) {
   const nlp = ml.nlp_features || {};
 
   return (
-    <div className="space-y-5 w-full pb-12 select-none animate-fadeIn font-sans">
+    <div className="space-y-3.5 w-full pb-8 select-none animate-fadeIn font-sans">
       {/* Back button */}
       {onBack && (
         <button
@@ -834,7 +875,7 @@ export default function AnalysisResultView({ type = 'email', result, onBack }) {
       )}
 
       {/* TOP HERO BANNER */}
-      <div className={`w-full rounded-2xl p-5 sm:p-6 text-white shadow-md flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${
+      <div className={`w-full rounded-xl p-3.5 sm:p-4 text-white shadow-md flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
         isCriticalOrHigh
           ? 'bg-[#991B1B] border border-red-800'
           : isMedium
@@ -883,7 +924,7 @@ export default function AnalysisResultView({ type = 'email', result, onBack }) {
       </div>
 
       {/* METADATA BLOCK */}
-      <div className="rounded-2xl border border-[#404E3B]/15 bg-white dark:bg-[#1E271D] p-4 sm:p-5 shadow-xs grid grid-cols-1 lg:grid-cols-12 gap-4 text-xs font-sans">
+      <div className="rounded-xl border border-[#404E3B]/20 dark:border-[#384E36] bg-white dark:bg-[#182417] p-3 sm:p-3.5 shadow-xs grid grid-cols-1 lg:grid-cols-12 gap-3 text-xs font-sans">
         <div className="lg:col-span-8 space-y-2">
           <div className="flex items-start gap-2.5">
             <span className="font-bold font-mono text-[#6C8480] w-14 shrink-0 flex items-center gap-1.5">
@@ -945,11 +986,11 @@ export default function AnalysisResultView({ type = 'email', result, onBack }) {
             </h2>
           </div>
 
-          <div className="flex-1 rounded-2xl border border-[#404E3B]/15 bg-white dark:bg-[#1E271D] overflow-hidden shadow-xs">
+          <div className="flex-1 rounded-xl border border-[#404E3B]/20 dark:border-[#384E36] bg-white dark:bg-[#182417] overflow-hidden shadow-xs">
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse text-xs">
                 <thead>
-                  <tr className="border-b border-[#404E3B]/15 bg-[#F4F7F4] dark:bg-[#253224] text-[#1C2518] dark:text-[#E6ECE1] font-mono text-[11px]">
+                  <tr className="border-b border-[#404E3B]/20 dark:border-[#384E36] bg-[#F4F7F4] dark:bg-[#1F2E1E] text-[#1C2518] dark:text-[#E2E8F0] font-mono text-[10px]">
                     <th className="py-2.5 px-3.5 font-bold w-44">Indicator</th>
                     <th className="py-2.5 px-3.5 font-bold w-28">Result</th>
                     <th className="py-2.5 px-3.5 font-bold">Details</th>
@@ -978,7 +1019,7 @@ export default function AnalysisResultView({ type = 'email', result, onBack }) {
         {/* RIGHT COLUMN: 2. Why Bullets + 3. Threat Assessment Gauge */}
         <div className="lg:col-span-5 flex flex-col space-y-5">
           {/* 2. Why Does This Email Look Suspicious or Safe? */}
-          <div className="rounded-2xl border border-[#404E3B]/15 bg-white dark:bg-[#1E271D] p-5 shadow-xs">
+          <div className="rounded-xl border border-[#404E3B]/20 dark:border-[#384E36] bg-white dark:bg-[#182417] p-3.5 sm:p-4 shadow-xs">
             <div className="flex items-center gap-2 mb-3">
               <div className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 ${
                 isCriticalOrHigh ? 'bg-[#DC2626] text-white' : 'bg-[#16794B] text-white'
@@ -1002,7 +1043,7 @@ export default function AnalysisResultView({ type = 'email', result, onBack }) {
           </div>
 
           {/* 3. Threat Assessment & Risk Scoring */}
-          <div className="rounded-2xl border border-[#404E3B]/15 bg-white dark:bg-[#1E271D] p-5 shadow-xs flex-1 flex flex-col justify-between">
+          <div className="rounded-xl border border-[#404E3B]/20 dark:border-[#384E36] bg-white dark:bg-[#182417] p-3.5 sm:p-4 shadow-xs flex-1 flex flex-col justify-between">
             <div className="flex items-center gap-2 mb-3">
               <div className="w-5 h-5 rounded-full bg-[#16794B] text-white flex items-center justify-center font-mono font-bold text-xs shrink-0">
                 3
@@ -1092,12 +1133,12 @@ export default function AnalysisResultView({ type = 'email', result, onBack }) {
             </h2>
           </div>
 
-          <div className="flex-1 rounded-2xl border border-[#404E3B]/15 bg-white dark:bg-[#1E271D] p-4 sm:p-5 shadow-xs flex flex-col justify-center">
+          <div className="flex-1 rounded-xl border border-[#404E3B]/20 dark:border-[#384E36] bg-white dark:bg-[#182417] p-3 sm:p-3.5 shadow-xs flex flex-col justify-center">
             {urlAndAttachmentList.length > 0 && urlAndAttachmentList.some(item => item.name !== '-') ? (
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse text-xs">
                   <thead>
-                    <tr className="border-b border-[#404E3B]/15 bg-[#F4F7F4] dark:bg-[#253224] text-[#1C2518] dark:text-[#E6ECE1] font-mono text-[11px]">
+                    <tr className="border-b border-[#404E3B]/20 dark:border-[#384E36] bg-[#F4F7F4] dark:bg-[#1F2E1E] text-[#1C2518] dark:text-[#E2E8F0] font-mono text-[10px]">
                       <th className="py-2 px-3 w-8">#</th>
                       <th className="py-2 px-3 w-20">Type</th>
                       <th className="py-2 px-3">URL / File Name</th>
@@ -1170,7 +1211,7 @@ export default function AnalysisResultView({ type = 'email', result, onBack }) {
             </h2>
           </div>
 
-          <div className="flex-1 rounded-2xl border border-[#404E3B]/15 bg-white dark:bg-[#1E271D] p-5 shadow-xs space-y-4">
+          <div className="flex-1 rounded-xl border border-[#404E3B]/20 dark:border-[#384E36] bg-white dark:bg-[#182417] p-3.5 sm:p-4 shadow-xs space-y-3">
             <div className="grid grid-cols-2 gap-3 pb-3 border-b border-[#404E3B]/10 text-xs">
               <div>
                 <span className="text-[11px] font-mono text-[#6C8480] block">Model</span>
@@ -1323,7 +1364,7 @@ export default function AnalysisResultView({ type = 'email', result, onBack }) {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {/* Left: Important Notes */}
-          <div className="rounded-2xl border border-[#404E3B]/15 bg-white dark:bg-[#1E271D] p-5 shadow-xs">
+          <div className="rounded-xl border border-[#404E3B]/20 dark:border-[#384E36] bg-white dark:bg-[#182417] p-3.5 sm:p-4 shadow-xs">
             <div className="flex items-center gap-2 mb-3">
               <div className="w-5 h-5 rounded-full bg-[#0284C7] text-white flex items-center justify-center shrink-0">
                 <Info className="w-3 h-3" />
@@ -1342,7 +1383,7 @@ export default function AnalysisResultView({ type = 'email', result, onBack }) {
           </div>
 
           {/* Right: Final Verdict Card */}
-          <div className={`rounded-2xl p-5 shadow-xs border flex flex-col justify-between ${
+          <div className={`rounded-xl p-3.5 sm:p-4 shadow-xs border flex flex-col justify-between ${
             isCriticalOrHigh
               ? 'bg-red-50/80 border-red-300 text-red-950 dark:bg-red-950/30 dark:border-red-800'
               : isMedium

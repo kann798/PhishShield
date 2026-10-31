@@ -182,7 +182,7 @@ export function createMockUrlScan(id, url, score, classification, riskLevel, dat
     recommendations_4_cards: recommendations4Cards,
     final_verdict_title: finalVerdictTitle,
     final_verdict_explanation: finalVerdictExplanation,
-    summary_explanation: isSuspicious ? "This URL is highly likely to be a phishing attempt due to brand impersonation and suspicious domain structure." : "This URL appears to be a legitimate and safe website with standard domain reputation.",
+    summary_explanation: summaryExplanation,
     anatomy,
     ml_analysis: mlAnalysis,
     details: {
@@ -197,7 +197,7 @@ export function createMockUrlScan(id, url, score, classification, riskLevel, dat
       recommendations_4_cards: recommendations4Cards,
       final_verdict_title: finalVerdictTitle,
       final_verdict_explanation: finalVerdictExplanation,
-      summary_explanation: isSuspicious ? "This URL is highly likely to be a phishing attempt due to brand impersonation and suspicious domain structure." : "This URL appears to be a legitimate and safe website with standard domain reputation.",
+      summary_explanation: summaryExplanation,
       risk_level: riskLevel
     },
     is_sample: true,
@@ -1239,28 +1239,125 @@ export function clientAnalyzeUrl(url) {
 
   // Build the 11 indicators table
   const isSuspicious = finalScore >= 50 || classification === 'Suspicious' || classification === 'High' || classification === 'Critical';
-  const detectedBrand = Object.keys(AUTHENTIC_BRAND_DOMAINS).find(b => hostname.includes(b));
-  const isBrandImpersonation = detectedBrand && !isAuthenticDomain(detectedBrand, hostname);
-  const domainMismatch = isBrandImpersonation;
+
+  // 1. Identify target brand
+  let detectedBrand = Object.keys(AUTHENTIC_BRAND_DOMAINS).find(b => hostname.includes(b));
+  if (!detectedBrand && foundBrandTyposquat) {
+    const typoIndicator = indicators.find(i => i.id === 'TYPOSQUATTING');
+    if (typoIndicator) {
+      const match = typoIndicator.name?.match(/\(([^)]+)\)/);
+      if (match) detectedBrand = match[1].toLowerCase();
+    }
+  }
+
+  // 2. Brand Impersonation
+  let isBrandImpersonation = false;
+  let brandObs = "No brand impersonation detected";
+  if (detectedBrand) {
+    if (!isAuthenticDomain(detectedBrand, hostname)) {
+      isBrandImpersonation = true;
+      if (hostname.includes('login.microsoft.com')) {
+        brandObs = "Uses 'login.microsoft.com' in subdomain";
+      } else if ((anatomy?.subdomains || []).some(s => s.includes(detectedBrand))) {
+        brandObs = `Uses '${detectedBrand}' in subdomain`;
+      } else if (foundBrandTyposquat) {
+        brandObs = `Deceptive brand mimicry (mimics ${detectedBrand.charAt(0).toUpperCase() + detectedBrand.slice(1)})`;
+      } else if (tldTyposquatResult) {
+        brandObs = `Uses '${detectedBrand}' with lookalike TLD (.${anatomy?.tld || ''})`;
+      } else {
+        brandObs = `Uses '${detectedBrand}' in hostname / subdomain`;
+      }
+    } else {
+      brandObs = `Authentic ${detectedBrand.charAt(0).toUpperCase() + detectedBrand.slice(1)} domain`;
+    }
+  }
+
+  // 3. Registered Domain Mismatch
+  let domainMismatch = false;
+  let mismatchObs = `Registered domain matches identity (${anatomy?.main_domain})`;
+  if (detectedBrand) {
+    if (isAuthenticDomain(detectedBrand, hostname)) {
+      domainMismatch = false;
+      mismatchObs = `Domain matches verified brand (${anatomy?.main_domain})`;
+    } else if (tldTyposquatResult) {
+      domainMismatch = true;
+      const tgtTld = tldTyposquatResult.target || 'legitimate TLD';
+      mismatchObs = `Deceptive TLD: '${anatomy?.main_domain}' uses lookalike extension instead of .${tgtTld}`;
+    } else if (foundBrandTyposquat) {
+      domainMismatch = true;
+      const brandCap = detectedBrand.charAt(0).toUpperCase() + detectedBrand.slice(1);
+      mismatchObs = `Typosquatted domain '${anatomy?.main_domain}' does not match official ${brandCap} domain`;
+    } else {
+      domainMismatch = true;
+      const brandCap = detectedBrand.charAt(0).toUpperCase() + detectedBrand.slice(1);
+      mismatchObs = `Actual registered domain: ${anatomy?.main_domain} (unrelated to ${brandCap})`;
+    }
+  } else if (tldTyposquatResult) {
+    domainMismatch = true;
+    const tgtTld = tldTyposquatResult.target || 'legitimate TLD';
+    mismatchObs = `Deceptive TLD: '${anatomy?.main_domain}' uses lookalike extension instead of .${tgtTld}`;
+  } else if (indicators.some(i => i.id === 'SUSPICIOUS_TLD')) {
+    domainMismatch = true;
+    mismatchObs = `Untrusted registered domain: ${anatomy?.main_domain}`;
+  }
+
+  // 4. Typosquatting
+  const typosquatDetected = foundBrandTyposquat || tldTyposquatResult !== null;
+  let typosquatObs = "No typosquatting detected";
+  if (tldTyposquatResult) {
+    typosquatObs = tldTyposquatResult.evidence;
+  } else if (foundBrandTyposquat) {
+    const typoInd = indicators.find(i => i.id === 'TYPOSQUATTING');
+    typosquatObs = typoInd?.evidence || "Similar to official brand domain";
+  }
+
+  // 5. Suspicious Subdomains: DO NOT flag 'www' by itself!
+  const subdomainsList = anatomy?.subdomains || [];
+  const nonWwwSubdomains = subdomainsList.filter(s => s.toLowerCase() !== 'www');
+  const brandInSub = detectedBrand && !isAuthenticDomain(detectedBrand, hostname) && nonWwwSubdomains.some(s => s.includes(detectedBrand));
+  const kwInSub = nonWwwSubdomains.some(s => ['login', 'verify', 'signin', 'account', 'secure', 'auth', 'portal', 'update', 'banking'].some(k => s.includes(k)));
+
+  const suspiciousSubdomains = (nonWwwSubdomains.length >= 2) || brandInSub || kwInSub;
+  let subdomainObs = "No subdomains used";
+  if (suspiciousSubdomains) {
+    if (brandInSub || kwInSub) {
+      subdomainObs = `Deceptive keywords in subdomain: ${subdomainsList.join('.')}`;
+    } else {
+      subdomainObs = `Excessive nested subdomains: ${subdomainsList.join('.')}`;
+    }
+  } else if (subdomainsList.length === 1 && subdomainsList[0].toLowerCase() === 'www') {
+    subdomainObs = "Standard single subdomain (www)";
+  } else if (subdomainsList.length > 0) {
+    subdomainObs = `Standard subdomain (${subdomainsList.join('.')})`;
+  }
+
   const isShortener = KNOWN_SHORTENERS.has(hostname) || Array.from(KNOWN_SHORTENERS).some(s => hostname.includes(s));
   const isIp = Boolean(anatomy?.is_ip);
-  const credInPath = ['login', 'verify', 'signin', 'auth', 'account', 'password', 'security', 'update'].some(k => path.toLowerCase().includes(k));
-  const suspiciousSubdomains = (anatomy?.subdomains?.length || 0) >= 2 || isBrandImpersonation;
-  const isUnusualStructure = (anatomy?.subdomains?.length || 0) >= 3 || rawUrl.includes('@') || isBrandImpersonation;
-  const typosquatDetected = foundBrandTyposquat || tldTyposquatResult !== null;
+  const credInPath = ['login', 'verify', 'signin', 'auth', 'account', 'password', 'security', 'update', 'claim'].some(k => path.toLowerCase().includes(k));
+
+  // 6. Unusual URL Structure: DO NOT flag 'www' by itself!
+  const isUnusualStructure = (nonWwwSubdomains.length >= 2) || rawUrl.includes('@') || (anatomy?.port && !['80', '443'].includes(String(anatomy?.port)));
+  let structureObs = "Standard URL structure";
+  if (nonWwwSubdomains.length >= 2) {
+    structureObs = `Uses multiple subdomains (${subdomainsList.length} levels) to look legitimate`;
+  } else if (rawUrl.includes('@')) {
+    structureObs = "Uses '@' symbol for credential/host redirection trick";
+  } else if (anatomy?.port && !['80', '443'].includes(String(anatomy?.port))) {
+    structureObs = `Uses non-standard web port (${anatomy?.port})`;
+  }
 
   const urlSecurityIndicators = [
     { id: 1, indicator: "Protocol (HTTPS)", result: protocol === 'https:' ? "Present" : "Insecure", observation: protocol === 'https:' ? "Uses HTTPS (does not guarantee safety)" : "Uses unencrypted HTTP protocol", severity: protocol === 'https:' ? "Info" : "High", is_flagged: protocol !== 'https:' },
-    { id: 2, indicator: "Brand Impersonation", result: isBrandImpersonation ? "Detected" : "Not detected", observation: isBrandImpersonation ? `Uses '${detectedBrand}' in hostname / subdomain` : "No brand impersonation detected", severity: isBrandImpersonation ? "High" : "Low", is_flagged: isBrandImpersonation },
-    { id: 3, indicator: "Suspicious Domain", result: isSuspicious ? "Detected" : "Not detected", observation: isSuspicious ? (isBrandImpersonation ? `Domain is not an official ${detectedBrand} domain` : "Domain exhibits untrusted reputation traits") : "Domain is registered with standard reputation", severity: isSuspicious ? "High" : "Low", is_flagged: isSuspicious },
-    { id: 4, indicator: "Registered Domain Mismatch", result: domainMismatch ? "Detected" : "Not detected", observation: domainMismatch ? `Actual registered domain: ${anatomy?.main_domain}` : `Domain matches identity (${anatomy?.main_domain})`, severity: domainMismatch ? "High" : "Low", is_flagged: domainMismatch },
-    { id: 5, indicator: "Typosquatting", result: typosquatDetected ? "Suspicious" : "Not detected", observation: tldTyposquatResult ? tldTyposquatResult.evidence : (typosquatDetected ? "Similar to official brand domain" : "No typosquatting detected"), severity: typosquatDetected ? "Critical" : "Low", is_flagged: typosquatDetected },
-    { id: 6, indicator: "Suspicious Subdomains", result: suspiciousSubdomains ? "Detected" : "Not detected", observation: (anatomy?.subdomains || []).join('.') || "No subdomains used", severity: (anatomy?.subdomains?.length || 0) >= 3 ? "High" : (suspiciousSubdomains ? "Medium" : "Low"), is_flagged: suspiciousSubdomains },
+    { id: 2, indicator: "Brand Impersonation", result: isBrandImpersonation ? "Detected" : "Not detected", observation: brandObs, severity: isBrandImpersonation ? "High" : "Low", is_flagged: isBrandImpersonation },
+    { id: 3, indicator: "Suspicious Domain", result: isSuspicious ? "Detected" : "Not detected", observation: isSuspicious ? (isBrandImpersonation ? `Domain is not an official ${detectedBrand || 'brand'} domain` : "Domain exhibits untrusted reputation traits") : "Domain is registered with standard reputation", severity: isSuspicious ? "High" : "Low", is_flagged: isSuspicious },
+    { id: 4, indicator: "Registered Domain Mismatch", result: domainMismatch ? "Detected" : "Not detected", observation: mismatchObs, severity: domainMismatch ? "High" : "Low", is_flagged: domainMismatch },
+    { id: 5, indicator: "Typosquatting", result: typosquatDetected ? "Suspicious" : "Not detected", observation: typosquatObs, severity: typosquatDetected ? "Critical" : "Low", is_flagged: typosquatDetected },
+    { id: 6, indicator: "Suspicious Subdomains", result: suspiciousSubdomains ? "Detected" : "Not detected", observation: subdomainObs, severity: (nonWwwSubdomains.length >= 2) ? "High" : (suspiciousSubdomains ? "Medium" : "Low"), is_flagged: suspiciousSubdomains },
     { id: 7, indicator: "URL Shortener", result: isShortener ? "Detected" : "Not detected", observation: isShortener ? `URL shortener detected (${hostname})` : "No URL shortener used", severity: isShortener ? "Medium" : "Low", is_flagged: isShortener },
     { id: 8, indicator: "Raw IP Address", result: isIp ? "Detected" : "Not detected", observation: isIp ? "Direct raw IP address used" : "No IP address used", severity: isIp ? "High" : "Low", is_flagged: isIp },
     { id: 9, indicator: "Suspicious Keywords", result: indicators.some(i => i.id === 'phishing_keywords') ? "Detected" : "Not detected", observation: indicators.find(i => i.id === 'phishing_keywords')?.evidence || "No suspicious keywords detected", severity: indicators.some(i => i.id === 'phishing_keywords') ? "High" : "Low", is_flagged: indicators.some(i => i.id === 'phishing_keywords') },
     { id: 10, indicator: "Credential-related Path", result: credInPath ? "Detected" : "Not detected", observation: credInPath ? `Contains ${path} (login related)` : "No credential-related path detected", severity: credInPath ? "High" : "Low", is_flagged: credInPath },
-    { id: 11, indicator: "Unusual URL Structure", result: isUnusualStructure ? "Detected" : "Not detected", observation: isUnusualStructure ? "Uses multiple subdomains to look legitimate" : "Standard URL structure", severity: isUnusualStructure ? "High" : "Low", is_flagged: isUnusualStructure }
+    { id: 11, indicator: "Unusual URL Structure", result: isUnusualStructure ? "Detected" : "Not detected", observation: structureObs, severity: isUnusualStructure ? "High" : "Low", is_flagged: isUnusualStructure }
   ];
 
   const detectedCount = urlSecurityIndicators.filter(i => i.is_flagged && i.indicator !== "Protocol (HTTPS)").length;
@@ -1271,21 +1368,49 @@ export function clientAnalyzeUrl(url) {
     hostname,
     registered_domain: anatomy?.main_domain || hostname,
     is_registered_domain_suspicious: isSuspicious,
-    subdomains: (anatomy?.subdomains || []).join('.') || "None",
+    subdomains: subdomainsList.join('.') || "None",
     tld: `.${anatomy?.tld || 'com'}`,
     protocol: protocol === 'https:' ? "HTTPS (443)" : "HTTP (80)",
     port: protocol === 'https:' ? "443" : "80",
     url_path: path,
-    url_structure: isBrandImpersonation && (anatomy?.subdomains?.length || 0) >= 2 ? "Multiple subdomains (Brand Impersonation)" : ((anatomy?.subdomains?.length || 0) >= 3 ? "Multiple nested subdomains" : (isIp ? "Direct numeric IP host" : "Standard domain structure"))
+    url_structure: nonWwwSubdomains.length >= 2 ? `Multiple subdomains (${subdomainsList.length} levels)` : (isIp ? "Direct numeric IP host" : "Standard domain structure")
   };
 
   const mainThreatCategory = isBrandImpersonation ? "Brand Impersonation" : (typosquatDetected ? "Typosquatting" : (isIp ? "Raw IP Host" : (isShortener ? "URL Shortener" : (isSuspicious ? "Credential Harvesting" : "None"))));
   const finalVerdictTitle = isSuspicious ? `Suspicious URL — ${riskLevel} Risk` : `Likely Safe URL — ${riskLevel} Risk`;
-  const finalVerdictExplanation = isBrandImpersonation
-    ? `This URL uses ${detectedBrand || 'brand'} branding in a subdomain, but the actual registered domain is ${anatomy?.main_domain}. It contains login-related keywords and shows multiple phishing indicators. It should be treated as suspicious and avoided.`
-    : (isSuspicious
-      ? `This URL exhibits elevated threat indicators including ${mainThreatCategory.toLowerCase()}. It should be treated as suspicious and avoided.`
-      : `This URL directs to ${hostname} (${anatomy?.main_domain}). It exhibits standard domain structure, valid security protocols, and no anomalous phishing indicators. Standard safe browsing practices apply.`);
+
+  // Dynamically build explanation from detected indicators ONLY
+  const detectedThreatReasons = [];
+  if (tldTyposquatResult) {
+    const tgt = tldTyposquatResult.target || 'legitimate extension';
+    detectedThreatReasons.push(`lookalike TLD (.${anatomy?.tld || ''} mimics .${tgt})`);
+  }
+  if (foundBrandTyposquat) {
+    const brandCap = detectedBrand ? (detectedBrand.charAt(0).toUpperCase() + detectedBrand.slice(1)) : 'brand';
+    detectedThreatReasons.push(`typosquatted brand domain (mimics ${brandCap})`);
+  }
+  if (isBrandImpersonation) {
+    const brandCap = detectedBrand ? (detectedBrand.charAt(0).toUpperCase() + detectedBrand.slice(1)) : 'brand';
+    detectedThreatReasons.push(`brand impersonation (${brandCap})`);
+  }
+  if (isIp) detectedThreatReasons.push("direct numeric IP host");
+  if (isShortener) detectedThreatReasons.push("URL shortening service");
+  if (indicators.some(i => i.id === 'phishing_keywords') || credInPath) detectedThreatReasons.push("credential harvesting keywords");
+  if (suspiciousSubdomains) detectedThreatReasons.push("suspicious subdomain nesting");
+  else if (isUnusualStructure) detectedThreatReasons.push("anomalous URL structure");
+  if (indicators.some(i => i.id === 'SUSPICIOUS_TLD')) detectedThreatReasons.push(`high-abuse domain extension (.${anatomy?.tld || ''})`);
+
+  let summaryExplanation = "This URL appears to be a legitimate and safe website with standard domain reputation.";
+  let finalVerdictExplanation = `This URL directs to ${hostname} (${anatomy?.main_domain}). It exhibits standard domain structure, valid security protocols, and no anomalous phishing indicators. Standard safe browsing practices apply.`;
+
+  if (isSuspicious && detectedThreatReasons.length > 0) {
+    const reasonsStr = detectedThreatReasons.slice(0, 3).join(', ');
+    summaryExplanation = `This URL is highly likely to be a phishing attempt due to ${reasonsStr}. It should be treated with caution and avoided.`;
+    finalVerdictExplanation = `This URL exhibits elevated threat indicators including ${reasonsStr}. It is likely intended for deception or credential solicitation and should not be accessed.`;
+  } else if (isSuspicious) {
+    summaryExplanation = "This URL shows elevated threat indicators and should be treated with caution.";
+    finalVerdictExplanation = `This URL exhibits elevated threat indicators including ${mainThreatCategory.toLowerCase()}. It should be treated as suspicious and avoided.`;
+  }
 
   const recommendations4Cards = isSuspicious ? [
     { title: "Do not visit this URL", detail: "This URL may be a phishing site.", icon: "shield-alert", variant: "danger" },
@@ -1333,7 +1458,7 @@ export function clientAnalyzeUrl(url) {
     recommendations_4_cards: recommendations4Cards,
     final_verdict_title: finalVerdictTitle,
     final_verdict_explanation: finalVerdictExplanation,
-    summary_explanation: isSuspicious ? "This URL is highly likely to be a phishing attempt due to brand impersonation and suspicious domain structure." : "This URL appears to be a legitimate and safe website with standard domain reputation.",
+    summary_explanation: summaryExplanation,
     severity_counts: severityCounts,
     anatomy: anatomy,
     details: {
@@ -1348,7 +1473,7 @@ export function clientAnalyzeUrl(url) {
       recommendations_4_cards: recommendations4Cards,
       final_verdict_title: finalVerdictTitle,
       final_verdict_explanation: finalVerdictExplanation,
-      summary_explanation: isSuspicious ? "This URL is highly likely to be a phishing attempt due to brand impersonation and suspicious domain structure." : "This URL appears to be a legitimate and safe website with standard domain reputation.",
+      summary_explanation: summaryExplanation,
       risk_level: riskLevel
     },
     created_at: new Date().toISOString().replace('T', ' ').slice(0, 19),
