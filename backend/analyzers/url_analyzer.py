@@ -32,6 +32,26 @@ class URLAnalyzer:
         "rest", "country", "live", "guru", "surf", "cfd", "shop"
     }
 
+    # Legitimate TLDs — used to skip typosquatting checks on valid extensions
+    LEGITIMATE_TLDS = {
+        'com', 'org', 'net', 'edu', 'gov', 'mil', 'int', 'in', 'io', 'ai', 'co',
+        'uk', 'us', 'ca', 'de', 'fr', 'it', 'es', 'nl', 'ru', 'cn', 'jp', 'kr',
+        'au', 'nz', 'br', 'mx', 'ch', 'se', 'no', 'fi', 'dk', 'be', 'at', 'pl',
+        'za', 'sg', 'hk', 'tw', 'ie', 'app', 'dev', 'tech', 'online', 'site',
+        'store', 'shop', 'blog', 'live', 'news', 'me', 'info', 'biz', 'pro', 'tv',
+        'cc', 'ws', 'mobi', 'name', 'agency', 'cloud', 'global', 'xyz', 'top',
+        'club', 'icu', 'click', 'vip', 'work', 'fit', 'link', 'fun', 'zone',
+        'today', 'space', 'website', 'page', 'life', 'world', 'network', 'digital',
+        'tk', 'ml', 'ga', 'cf', 'gq', 'buzz', 'cam', 'monster', 'rest', 'country',
+        'guru', 'surf', 'cfd', 'loan', 'id', 'ph', 'th', 'my', 'vn', 'ar', 'cl',
+        'pe', 'ec', 'uy', 'py', 'bo', 've', 'cr', 'gt', 'hn', 'sv', 'ni', 'pa',
+        'do', 'cu', 'pt', 'gr', 'cz', 'sk', 'hu', 'ro', 'bg', 'hr', 'rs', 'si',
+        'lt', 'lv', 'ee', 'is', 'lu', 'mt', 'cy', 'cat', 'eu', 'asia',
+    }
+
+    # Target TLDs to check against for typosquatting mimicry
+    TARGET_CHECK_TLDS = ['com', 'org', 'net', 'in', 'edu', 'gov', 'io', 'ai', 'co', 'info', 'biz', 'app', 'dev']
+
     # Keywords commonly exploited in credential harvesting, social engineering, and prize scams
     PHISHING_KEYWORDS = [
         "login", "signin", "sign-in", "log-in", "verify", "verification",
@@ -229,6 +249,11 @@ class URLAnalyzer:
         typosquat_finding = cls._check_typosquatting(hostname, main_domain)
         if typosquat_finding:
             indicators.append(typosquat_finding)
+
+        # 3b. TLD Typosquatting / Lookalike TLD Detection
+        tld_typosquat = cls._check_tld_typosquatting(tld)
+        if tld_typosquat:
+            indicators.append(tld_typosquat)
 
         # 4. Brand Keyword Abuse in Subdomain or Path (e.g. paypal.security-login.xyz)
         brand_abuse_finding = cls._check_brand_keyword_abuse(hostname, main_domain, path)
@@ -436,7 +461,7 @@ class URLAnalyzer:
         domain_mismatch = is_brand_impersonation and (main_domain.lower() != f"{detected_brand}.com" if detected_brand else False)
         mismatch_obs = f"Actual registered domain: {main_domain}" if domain_mismatch else f"Registered domain matches identity ({main_domain})"
 
-        is_suspicious_domain = is_brand_impersonation or (tld in cls.SUSPICIOUS_TLDS) or (typosquat_finding is not None)
+        is_suspicious_domain = is_brand_impersonation or (tld in cls.SUSPICIOUS_TLDS) or (typosquat_finding is not None) or (tld_typosquat is not None)
         if is_brand_impersonation and detected_brand:
             suspicious_domain_obs = f"Domain is not an official {detected_brand.title()} domain"
         elif is_trusted_site:
@@ -446,9 +471,11 @@ class URLAnalyzer:
         else:
             suspicious_domain_obs = "Domain is registered with standard reputation"
 
-        typosquat_detected = typosquat_finding is not None or (is_brand_impersonation and detected_brand is not None)
+        typosquat_detected = typosquat_finding is not None or tld_typosquat is not None or (is_brand_impersonation and detected_brand is not None)
         if typosquat_finding is not None:
             typosquat_obs = typosquat_finding.get("evidence", "Similar to official brand domain")
+        elif tld_typosquat is not None:
+            typosquat_obs = tld_typosquat.get("evidence", "Suspicious TLD mimics legitimate extension")
         elif is_brand_impersonation and detected_brand:
             typosquat_obs = f"Similar to official {detected_brand.title()} domain"
         else:
@@ -522,7 +549,7 @@ class URLAnalyzer:
                 "indicator": "Typosquatting",
                 "result": "Suspicious" if typosquat_detected else "Not detected",
                 "observation": typosquat_obs,
-                "severity": "Medium" if typosquat_detected else "Low",
+                "severity": "Critical" if (typosquat_finding is not None or tld_typosquat is not None) else ("Medium" if typosquat_detected else "Low"),
                 "is_flagged": typosquat_detected
             },
             {
@@ -827,6 +854,86 @@ class URLAnalyzer:
                             f"Attackers register misspelled versions of popular domains to trap users who mistype URLs."
                         )
                     }
+
+        return None
+
+    @classmethod
+    def _check_tld_typosquatting(cls, tld: str):
+        """
+        Detect lookalike / typosquatted TLDs that mimic legitimate extensions.
+        e.g., .corn -> .com, .c0m -> .com, .rn -> .in, .0rg -> .org, .n3t -> .net
+        """
+        if not tld:
+            return None
+        tld_clean = tld.lower().lstrip(".")
+        if not tld_clean or tld_clean in cls.LEGITIMATE_TLDS:
+            return None
+
+        # Character substitution pairs: (from, to, explanation)
+        char_subs = [
+            ('rn', 'm', "homoglyph 'rn' -> 'm'"),
+            ('vv', 'w', "homoglyph 'vv' -> 'w'"),
+            ('cl', 'd', "homoglyph 'cl' -> 'd'"),
+            ('0', 'o', "leetspeak '0' -> 'o'"),
+            ('1', 'i', "leetspeak '1' -> 'i'"),
+            ('1', 'l', "leetspeak '1' -> 'l'"),
+            ('3', 'e', "leetspeak '3' -> 'e'"),
+            ('4', 'a', "leetspeak '4' -> 'a'"),
+            ('5', 's', "leetspeak '5' -> 's'"),
+            ('7', 't', "leetspeak '7' -> 't'"),
+            ('8', 'b', "leetspeak '8' -> 'b'"),
+        ]
+
+        def _make_indicator(target, reason):
+            return {
+                "id": "tld_typosquatting",
+                "name": f"Lookalike / Typosquatted TLD (.{tld_clean})",
+                "severity": "critical",
+                "weight": 70,
+                "evidence": f"TLD '.{tld_clean}' mimics legitimate '.{target}' via {reason}",
+                "description": (
+                    f"The domain uses '.{tld_clean}' which visually mimics the legitimate '.{target}' extension "
+                    f"through {reason}. This is a TLD typosquatting technique used to deceive users."
+                )
+            }
+
+        # 1. Direct single-substitution match against target TLDs
+        for sub_from, sub_to, reason in char_subs:
+            if sub_from in tld_clean:
+                candidate = tld_clean.replace(sub_from, sub_to)
+                if candidate in cls.TARGET_CHECK_TLDS:
+                    return _make_indicator(candidate, reason)
+
+        # 2. Full normalization pass
+        normalized = tld_clean
+        for sub_from, sub_to, _ in [
+            ('rn', 'm', ''), ('vv', 'w', ''), ('cl', 'd', ''),
+            ('0', 'o', ''), ('1', 'i', ''), ('3', 'e', ''),
+            ('4', 'a', ''), ('5', 's', ''), ('7', 't', ''), ('8', 'b', ''),
+        ]:
+            normalized = normalized.replace(sub_from, sub_to)
+        if normalized != tld_clean and normalized in cls.TARGET_CHECK_TLDS:
+            return _make_indicator(normalized, "character substitution")
+
+        # 3. Special case: .rn mimicking .in (visual homoglyph)
+        if tld_clean == 'rn':
+            return _make_indicator('in', "visual homoglyph 'rn' -> 'in'")
+
+        # 4. Levenshtein edit distance = 1 from any target TLD
+        for target in cls.TARGET_CHECK_TLDS:
+            if abs(len(tld_clean) - len(target)) <= 1:
+                d_raw = cls._levenshtein_distance(tld_clean, target)
+                if d_raw == 1:
+                    return _make_indicator(target, "1-character typo/edit distance")
+                d_norm = cls._levenshtein_distance(normalized, target)
+                if d_norm == 1:
+                    return _make_indicator(target, "1-character typo after normalization")
+
+        # 5. Any digits in TLD is suspicious (TLDs should be alphabetic)
+        if any(c.isdigit() for c in tld_clean):
+            for target in cls.TARGET_CHECK_TLDS:
+                if cls._levenshtein_distance(normalized, target) <= 1:
+                    return _make_indicator(target, "numeric substitution")
 
         return None
 

@@ -41,7 +41,7 @@ export default function ScanHistory({ onSelectScan }) {
       });
 
       let list = [];
-      if (res && res.success && Array.isArray(res.data)) {
+      if (res && res.success && Array.isArray(res.data) && res.data.length > 0) {
         list = res.data;
       } else {
         list = getLocalUserScans();

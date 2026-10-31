@@ -713,19 +713,123 @@ const AUTHENTIC_BRAND_DOMAINS = {
   ]
 };
 
-// Known Phishing Typosquatting / Character Substitution Patterns
-const KNOWN_HOMOGLYPH_TYPOS = [
-  { typo: 'paypa1', brand: 'paypal' },
-  { typo: 'micros0ft', brand: 'microsoft' },
-  { typo: 'arnazon', brand: 'amazon' },
-  { typo: 'app1e', brand: 'apple' },
-  { typo: 'netf1ix', brand: 'netflix' },
-  { typo: 'g00gle', brand: 'google' },
-  { typo: 'g0ogle', brand: 'google' },
-  { typo: 'goog1e', brand: 'google' },
-  { typo: 'ch4se', brand: 'chase' },
-  { typo: 'b1nance', brand: 'binance' },
-  { typo: 'c0inbase', brand: 'coinbase' }
+// Dynamic Character Substitution Map for Homoglyph / Leetspeak Normalization
+const CHAR_SUBS = {
+  '0': 'o', '1': 'l', '3': 'e', '4': 'a', '5': 's',
+  '8': 'b', 'vv': 'w', 'rn': 'm', 'cl': 'd'
+};
+
+// Normalize a string by applying all character substitutions
+function normalizeHomoglyphs(str) {
+  let result = str.toLowerCase();
+  // Apply multi-char subs first (rn->m, vv->w, cl->d), then single-char
+  for (const [from, to] of [['rn','m'],['vv','w'],['cl','d'],['0','o'],['1','l'],['3','e'],['4','a'],['5','s'],['8','b']]) {
+    result = result.split(from).join(to);
+  }
+  return result;
+}
+
+// Levenshtein distance for brand/TLD similarity checks
+function levenshteinDistance(s1, s2) {
+  if (s1.length < s2.length) return levenshteinDistance(s2, s1);
+  if (s2.length === 0) return s1.length;
+  let prev = Array.from({ length: s2.length + 1 }, (_, i) => i);
+  for (let i = 0; i < s1.length; i++) {
+    const curr = [i + 1];
+    for (let j = 0; j < s2.length; j++) {
+      curr.push(Math.min(prev[j + 1] + 1, curr[j] + 1, prev[j] + (s1[i] !== s2[j] ? 1 : 0)));
+    }
+    prev = curr;
+  }
+  return prev[s2.length];
+}
+
+// Comprehensive set of legitimate TLDs (will NOT trigger typosquatting)
+const LEGITIMATE_TLDS_SET = new Set([
+  'com','org','net','edu','gov','mil','int','in','io','ai','co',
+  'uk','us','ca','de','fr','it','es','nl','ru','cn','jp','kr',
+  'au','nz','br','mx','ch','se','no','fi','dk','be','at','pl',
+  'za','sg','hk','tw','ie','app','dev','tech','online','site',
+  'store','shop','blog','live','news','me','info','biz','pro','tv',
+  'cc','ws','mobi','name','agency','cloud','global','xyz','top',
+  'club','icu','click','vip','work','fit','link','fun','zone',
+  'today','space','website','page','life','world','network','digital',
+  'tk','ml','ga','cf','gq','buzz','cam','monster','rest','country',
+  'guru','surf','cfd','loan','id','ph','th','my','vn','ar','cl',
+  'pe','ec','uy','py','bo','ve','cr','gt','hn','sv','ni','pa',
+  'do','cu','pt','gr','cz','sk','hu','ro','bg','hr','rs','si',
+  'lt','lv','ee','is','lu','mt','cy','cat','eu','asia',
+]);
+
+const TARGET_CHECK_TLDS = ['com','org','net','in','edu','gov','io','ai','co','info','biz','app','dev'];
+
+// TLD Typosquatting Detection (mirrors backend _check_tld_typosquatting)
+function checkTldTyposquatting(tld) {
+  if (!tld) return null;
+  const tldClean = tld.toLowerCase().replace(/^\./, '');
+  if (!tldClean || LEGITIMATE_TLDS_SET.has(tldClean)) return null;
+
+  const charSubPairs = [
+    ['rn','m',"homoglyph 'rn' -> 'm'"], ['vv','w',"homoglyph 'vv' -> 'w'"],
+    ['cl','d',"homoglyph 'cl' -> 'd'"], ['0','o',"leetspeak '0' -> 'o'"],
+    ['1','i',"leetspeak '1' -> 'i'"], ['1','l',"leetspeak '1' -> 'l'"],
+    ['3','e',"leetspeak '3' -> 'e'"], ['4','a',"leetspeak '4' -> 'a'"],
+    ['5','s',"leetspeak '5' -> 's'"], ['7','t',"leetspeak '7' -> 't'"],
+    ['8','b',"leetspeak '8' -> 'b'"],
+  ];
+
+  const makeResult = (target, reason) => ({
+    id: 'tld_typosquatting',
+    name: `Lookalike / Typosquatted TLD (.${tldClean})`,
+    severity: 'Critical',
+    weight: 70,
+    evidence: `TLD '.${tldClean}' mimics legitimate '.${target}' via ${reason}`,
+    description: `The domain uses '.${tldClean}' which visually mimics the legitimate '.${target}' extension through ${reason}.`,
+    target,
+  });
+
+  // 1. Direct single-substitution
+  for (const [from, to, reason] of charSubPairs) {
+    if (tldClean.includes(from)) {
+      const candidate = tldClean.split(from).join(to);
+      if (TARGET_CHECK_TLDS.includes(candidate)) return makeResult(candidate, reason);
+    }
+  }
+
+  // 2. Full normalization
+  let norm = tldClean;
+  for (const [f,t] of [['rn','m'],['vv','w'],['cl','d'],['0','o'],['1','i'],['3','e'],['4','a'],['5','s'],['7','t'],['8','b']]) {
+    norm = norm.split(f).join(t);
+  }
+  if (norm !== tldClean && TARGET_CHECK_TLDS.includes(norm)) return makeResult(norm, 'character substitution');
+
+  // 3. Special: .rn -> .in
+  if (tldClean === 'rn') return makeResult('in', "visual homoglyph 'rn' -> 'in'");
+
+  // 4. Levenshtein distance 1
+  for (const tgt of TARGET_CHECK_TLDS) {
+    if (Math.abs(tldClean.length - tgt.length) <= 1) {
+      if (levenshteinDistance(tldClean, tgt) === 1) return makeResult(tgt, '1-character typo/edit distance');
+      if (levenshteinDistance(norm, tgt) === 1) return makeResult(tgt, '1-character typo after normalization');
+    }
+  }
+
+  // 5. Digits in TLD
+  if (/\d/.test(tldClean)) {
+    for (const tgt of TARGET_CHECK_TLDS) {
+      if (levenshteinDistance(norm, tgt) <= 1) return makeResult(tgt, 'numeric substitution');
+    }
+  }
+
+  return null;
+}
+
+// All brands to check for dynamic homoglyph/typosquatting detection
+const ALL_TARGET_BRANDS = [
+  'paypal','microsoft','google','apple','amazon','netflix',
+  'chase','wellsfargo','bankofamerica','facebook','instagram',
+  'binance','coinbase','dropbox','dhl','fedex','outlook',
+  'office365','yahoo','citibank','steam','linkedin','meta'
 ];
 
 function isAuthenticDomain(brand, hostname) {
@@ -831,20 +935,56 @@ export function clientAnalyzeUrl(url) {
     });
   }
 
-  // 2. Homoglyph / Typosquatting Checks (Accurate character substitutions)
+  // 2. Dynamic Homoglyph / Typosquatting Detection (character substitution normalization)
   let foundBrandTyposquat = false;
-  for (const hg of KNOWN_HOMOGLYPH_TYPOS) {
-    if (hostname.includes(hg.typo)) {
-      indicators.push({
-        id: 'TYPOSQUATTING',
-        name: `Brand Typosquatting (${hg.brand})`,
-        severity: 'Critical',
-        weight: 70,
-        evidence: `Hostname contains deceptive homoglyph '${hg.typo}' mimicking authentic brand '${hg.brand}'`,
-        description: `URL contains visual character substitutions designed to impersonate ${hg.brand}.`
-      });
-      foundBrandTyposquat = true;
-      break;
+  {
+    // Extract domain without TLD for brand checking
+    const hostParts2 = hostname.split('.');
+    const domainWithoutTld = hostParts2.length >= 2 ? hostParts2.slice(0, -1).join('.') : hostname;
+    const normalizedDomain = normalizeHomoglyphs(domainWithoutTld);
+
+    for (const brand of ALL_TARGET_BRANDS) {
+      if (isAuthenticDomain(brand, hostname)) continue;
+      // Check if normalized domain reveals a brand that raw domain doesn't contain
+      if (normalizedDomain.includes(brand) && !domainWithoutTld.includes(brand)) {
+        indicators.push({
+          id: 'TYPOSQUATTING',
+          name: `Brand Typosquatting / Homoglyph (${brand})`,
+          severity: 'Critical',
+          weight: 70,
+          evidence: `Domain '${domainWithoutTld}' mimics '${brand}' via character substitutions`,
+          description: `The domain uses character substitutions (e.g., '0' for 'o', '1' for 'l') to impersonate ${brand}.`
+        });
+        foundBrandTyposquat = true;
+        break;
+      }
+      // Levenshtein distance 1 check for close typos
+      if (domainWithoutTld.length >= 5 && Math.abs(domainWithoutTld.length - brand.length) <= 1) {
+        if (levenshteinDistance(domainWithoutTld, brand) === 1) {
+          indicators.push({
+            id: 'TYPOSQUATTING',
+            name: `Typosquatted Brand Name (${brand})`,
+            severity: 'Critical',
+            weight: 65,
+            evidence: `'${domainWithoutTld}' is 1 character different from '${brand}'`,
+            description: `The domain closely mimics the legitimate brand '${brand}' through a single-character variation.`
+          });
+          foundBrandTyposquat = true;
+          break;
+        }
+      }
+    }
+  }
+
+  // 2b. TLD Typosquatting Detection
+  let tldTyposquatResult = null;
+  {
+    const tldParts = hostname.split('.');
+    const rawTld = tldParts.length >= 2 ? tldParts[tldParts.length - 1] : '';
+    tldTyposquatResult = checkTldTyposquatting(rawTld);
+    if (tldTyposquatResult) {
+      indicators.push(tldTyposquatResult);
+      foundBrandTyposquat = true; // Also count as a typosquat detection
     }
   }
 
@@ -1107,14 +1247,14 @@ export function clientAnalyzeUrl(url) {
   const credInPath = ['login', 'verify', 'signin', 'auth', 'account', 'password', 'security', 'update'].some(k => path.toLowerCase().includes(k));
   const suspiciousSubdomains = (anatomy?.subdomains?.length || 0) >= 2 || isBrandImpersonation;
   const isUnusualStructure = (anatomy?.subdomains?.length || 0) >= 3 || rawUrl.includes('@') || isBrandImpersonation;
-  const typosquatDetected = foundBrandTyposquat;
+  const typosquatDetected = foundBrandTyposquat || tldTyposquatResult !== null;
 
   const urlSecurityIndicators = [
     { id: 1, indicator: "Protocol (HTTPS)", result: protocol === 'https:' ? "Present" : "Insecure", observation: protocol === 'https:' ? "Uses HTTPS (does not guarantee safety)" : "Uses unencrypted HTTP protocol", severity: protocol === 'https:' ? "Info" : "High", is_flagged: protocol !== 'https:' },
     { id: 2, indicator: "Brand Impersonation", result: isBrandImpersonation ? "Detected" : "Not detected", observation: isBrandImpersonation ? `Uses '${detectedBrand}' in hostname / subdomain` : "No brand impersonation detected", severity: isBrandImpersonation ? "High" : "Low", is_flagged: isBrandImpersonation },
     { id: 3, indicator: "Suspicious Domain", result: isSuspicious ? "Detected" : "Not detected", observation: isSuspicious ? (isBrandImpersonation ? `Domain is not an official ${detectedBrand} domain` : "Domain exhibits untrusted reputation traits") : "Domain is registered with standard reputation", severity: isSuspicious ? "High" : "Low", is_flagged: isSuspicious },
     { id: 4, indicator: "Registered Domain Mismatch", result: domainMismatch ? "Detected" : "Not detected", observation: domainMismatch ? `Actual registered domain: ${anatomy?.main_domain}` : `Domain matches identity (${anatomy?.main_domain})`, severity: domainMismatch ? "High" : "Low", is_flagged: domainMismatch },
-    { id: 5, indicator: "Typosquatting", result: typosquatDetected ? "Suspicious" : "Not detected", observation: typosquatDetected ? "Similar to official brand domain" : "No typosquatting detected", severity: typosquatDetected ? "Medium" : "Low", is_flagged: typosquatDetected },
+    { id: 5, indicator: "Typosquatting", result: typosquatDetected ? "Suspicious" : "Not detected", observation: tldTyposquatResult ? tldTyposquatResult.evidence : (typosquatDetected ? "Similar to official brand domain" : "No typosquatting detected"), severity: typosquatDetected ? "Critical" : "Low", is_flagged: typosquatDetected },
     { id: 6, indicator: "Suspicious Subdomains", result: suspiciousSubdomains ? "Detected" : "Not detected", observation: (anatomy?.subdomains || []).join('.') || "No subdomains used", severity: (anatomy?.subdomains?.length || 0) >= 3 ? "High" : (suspiciousSubdomains ? "Medium" : "Low"), is_flagged: suspiciousSubdomains },
     { id: 7, indicator: "URL Shortener", result: isShortener ? "Detected" : "Not detected", observation: isShortener ? `URL shortener detected (${hostname})` : "No URL shortener used", severity: isShortener ? "Medium" : "Low", is_flagged: isShortener },
     { id: 8, indicator: "Raw IP Address", result: isIp ? "Detected" : "Not detected", observation: isIp ? "Direct raw IP address used" : "No IP address used", severity: isIp ? "High" : "Low", is_flagged: isIp },
@@ -1139,7 +1279,7 @@ export function clientAnalyzeUrl(url) {
     url_structure: isBrandImpersonation && (anatomy?.subdomains?.length || 0) >= 2 ? "Multiple subdomains (Brand Impersonation)" : ((anatomy?.subdomains?.length || 0) >= 3 ? "Multiple nested subdomains" : (isIp ? "Direct numeric IP host" : "Standard domain structure"))
   };
 
-  const mainThreatCategory = isBrandImpersonation ? "Brand Impersonation" : (isIp ? "Raw IP Host" : (isShortener ? "URL Shortener" : (isSuspicious ? "Credential Harvesting" : "None")));
+  const mainThreatCategory = isBrandImpersonation ? "Brand Impersonation" : (typosquatDetected ? "Typosquatting" : (isIp ? "Raw IP Host" : (isShortener ? "URL Shortener" : (isSuspicious ? "Credential Harvesting" : "None"))));
   const finalVerdictTitle = isSuspicious ? `Suspicious URL — ${riskLevel} Risk` : `Likely Safe URL — ${riskLevel} Risk`;
   const finalVerdictExplanation = isBrandImpersonation
     ? `This URL uses ${detectedBrand || 'brand'} branding in a subdomain, but the actual registered domain is ${anatomy?.main_domain}. It contains login-related keywords and shows multiple phishing indicators. It should be treated as suspicious and avoided.`
@@ -2021,12 +2161,24 @@ export const api = {
 
   // Dashboard Stats with dynamic real-time recalculation
   async getDashboardStats() {
+    // Always compute dynamic stats from actual local scans for accuracy
+    // This ensures dashboard reflects real scan activity on both localhost and deployed environments
+    const dynamicStats = computeDynamicDashboardStats();
     try {
       const res = await request('/dashboard/stats');
-      return res;
+      if (res && res.success && res.data) {
+        // Merge: if server returns real data with recent_scans, use it; otherwise overlay dynamic
+        const serverData = res.data;
+        const hasRealServerScans = Array.isArray(serverData.recent_scans) && serverData.recent_scans.length > 0;
+        if (hasRealServerScans) {
+          return res; // Real backend with actual data
+        }
+        // Static/empty server response: use dynamic local stats instead
+        return { success: true, data: dynamicStats, isFallback: true };
+      }
+      return { success: true, data: dynamicStats, isFallback: true };
     } catch {
-      // Return dynamic stats incorporating all completed user scans
-      return { success: true, data: computeDynamicDashboardStats(), isFallback: true };
+      return { success: true, data: dynamicStats, isFallback: true };
     }
   },
 
@@ -2082,7 +2234,13 @@ export const api = {
       params.append('limit', limit);
       params.append('offset', offset);
 
-      return await request(`/scans?${params.toString()}`);
+      const res = await request(`/scans?${params.toString()}`);
+      // If server returns empty data (static file), fall through to local scans
+      if (res && res.success && Array.isArray(res.data) && res.data.length > 0) {
+        return res;
+      }
+      // Empty server response: merge with local scans
+      throw new Error('Empty server response, using local fallback');
     } catch {
       let list = getLocalUserScans();
       if (type && type !== 'all') {
