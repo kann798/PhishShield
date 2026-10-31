@@ -161,6 +161,10 @@ export function createMockUrlScan(id, url, score, classification, riskLevel, dat
       : `This URL directs to ${hostname} (${mainDomain}). It exhibits standard domain structure, valid security protocols, and no anomalous phishing indicators. Standard safe browsing practices apply.`
   );
 
+  const summaryExplanation = isSuspicious
+    ? (brand ? `This URL is highly likely to be a phishing attempt due to brand impersonation (${brand.charAt(0).toUpperCase() + brand.slice(1)}). It should be treated with caution and avoided.` : "This URL shows elevated threat indicators and should be treated with caution.")
+    : "This URL appears to be a legitimate and safe website with standard domain reputation.";
+
   return {
     id,
     scan_type: "url",
