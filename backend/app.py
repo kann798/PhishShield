@@ -126,7 +126,18 @@ def analyze_url():
             recommendations=analysis.get("recommendations", []),
             details={
                 **analysis.get("anatomy", {}),
-                "ml_analysis": analysis.get("ml_analysis")
+                "anatomy": analysis.get("anatomy", {}),
+                "ml_analysis": analysis.get("ml_analysis"),
+                "url_security_indicators": analysis.get("url_security_indicators", []),
+                "domain_and_url_details": analysis.get("domain_and_url_details", {}),
+                "detected_indicator_count": analysis.get("detected_indicator_count"),
+                "main_threat_category": analysis.get("main_threat_category"),
+                "key_ml_indicators": analysis.get("key_ml_indicators", []),
+                "recommendations_4_cards": analysis.get("recommendations_4_cards", []),
+                "final_verdict_title": analysis.get("final_verdict_title"),
+                "final_verdict_explanation": analysis.get("final_verdict_explanation"),
+                "summary_explanation": analysis.get("summary_explanation"),
+                "risk_level": analysis.get("risk_level")
             },
             is_sample=0
         )

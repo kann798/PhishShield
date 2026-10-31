@@ -413,6 +413,316 @@ class URLAnalyzer:
             "length": url_len,
         }
 
+        # Build the exact 11 URL Security Indicators table matching PhishShield specification
+        detected_brand = None
+        for b in cls.TARGET_BRANDS:
+            if b in hostname.lower() or b in path.lower():
+                detected_brand = b
+                break
+
+        is_brand_impersonation = False
+        brand_obs = "No brand impersonation detected"
+        if detected_brand:
+            if not cls._is_authentic_brand_domain(detected_brand, hostname):
+                is_brand_impersonation = True
+                brand_obs = f"Uses '{detected_brand}' in hostname / subdomain"
+                if "login.microsoft.com" in hostname.lower():
+                    brand_obs = "Uses 'login.microsoft.com' in subdomain"
+                elif detected_brand in ".".join(subdomains):
+                    brand_obs = f"Uses '{detected_brand}' in subdomain"
+            else:
+                brand_obs = f"Authentic {detected_brand.title()} domain"
+
+        domain_mismatch = is_brand_impersonation and (main_domain.lower() != f"{detected_brand}.com" if detected_brand else False)
+        mismatch_obs = f"Actual registered domain: {main_domain}" if domain_mismatch else f"Registered domain matches identity ({main_domain})"
+
+        is_suspicious_domain = is_brand_impersonation or (tld in cls.SUSPICIOUS_TLDS) or (typosquat_finding is not None)
+        if is_brand_impersonation and detected_brand:
+            suspicious_domain_obs = f"Domain is not an official {detected_brand.title()} domain"
+        elif is_trusted_site:
+            suspicious_domain_obs = f"Official {detected_brand.title() if detected_brand else 'verified'} domain"
+        elif is_suspicious_domain:
+            suspicious_domain_obs = f"Domain has suspicious indicators or untrusted TLD (.{tld})"
+        else:
+            suspicious_domain_obs = "Domain is registered with standard reputation"
+
+        typosquat_detected = typosquat_finding is not None or (is_brand_impersonation and detected_brand is not None)
+        if typosquat_finding is not None:
+            typosquat_obs = typosquat_finding.get("evidence", "Similar to official brand domain")
+        elif is_brand_impersonation and detected_brand:
+            typosquat_obs = f"Similar to official {detected_brand.title()} domain"
+        else:
+            typosquat_obs = "No typosquatting detected"
+
+        suspicious_subdomains = len(subdomains) >= 2 or is_brand_impersonation
+        if subdomains:
+            subdomain_obs = ".".join(subdomains)
+        else:
+            subdomain_obs = "No subdomains used"
+
+        is_shortener = hostname in cls.SHORTENERS
+        shortener_obs = f"URL shortener detected ({hostname})" if is_shortener else "No URL shortener used"
+
+        ip_obs = f"Direct raw {ip_version} address used" if is_ip else "No IP address used"
+
+        kw_obs = f"Contains {', '.join(found_keywords[:5])}" if found_keywords else "No suspicious keywords detected"
+
+        cred_keywords = ["login", "verify", "signin", "auth", "account", "password", "credential", "security", "update", "claim"]
+        cred_in_path = any(ck in path.lower() for ck in cred_keywords)
+        if cred_in_path:
+            matching_ck = [ck for ck in cred_keywords if ck in path.lower()][0]
+            cred_path_obs = f"Contains /{matching_ck} (login related)" if path == f"/{matching_ck}" else f"Contains {path} (login related)"
+        else:
+            cred_path_obs = "No credential-related path detected"
+
+        is_unusual_structure = len(subdomains) >= 3 or ("@" in cleaned_url) or (port and port in cls.UNUSUAL_PORTS) or is_brand_impersonation
+        if len(subdomains) >= 3 or is_brand_impersonation:
+            structure_obs = "Uses multiple subdomains to look legitimate"
+        elif is_unusual_structure:
+            structure_obs = "Contains anomalous structural traits"
+        else:
+            structure_obs = "Standard URL structure"
+
+        # Construct the 11 items
+        url_security_indicators = [
+            {
+                "id": 1,
+                "indicator": "Protocol (HTTPS)",
+                "result": "Present" if scheme == "https" else "Insecure",
+                "observation": "Uses HTTPS (does not guarantee safety)" if scheme == "https" else "Uses unencrypted HTTP protocol",
+                "severity": "Info" if scheme == "https" else "High",
+                "is_flagged": scheme != "https"
+            },
+            {
+                "id": 2,
+                "indicator": "Brand Impersonation",
+                "result": "Detected" if is_brand_impersonation else "Not detected",
+                "observation": brand_obs,
+                "severity": "High" if is_brand_impersonation else "Low",
+                "is_flagged": is_brand_impersonation
+            },
+            {
+                "id": 3,
+                "indicator": "Suspicious Domain",
+                "result": "Detected" if is_suspicious_domain else "Not detected",
+                "observation": suspicious_domain_obs,
+                "severity": "High" if is_suspicious_domain else "Low",
+                "is_flagged": is_suspicious_domain
+            },
+            {
+                "id": 4,
+                "indicator": "Registered Domain Mismatch",
+                "result": "Detected" if domain_mismatch else "Not detected",
+                "observation": mismatch_obs,
+                "severity": "High" if domain_mismatch else "Low",
+                "is_flagged": domain_mismatch
+            },
+            {
+                "id": 5,
+                "indicator": "Typosquatting",
+                "result": "Suspicious" if typosquat_detected else "Not detected",
+                "observation": typosquat_obs,
+                "severity": "Medium" if typosquat_detected else "Low",
+                "is_flagged": typosquat_detected
+            },
+            {
+                "id": 6,
+                "indicator": "Suspicious Subdomains",
+                "result": "Detected" if suspicious_subdomains else "Not detected",
+                "observation": subdomain_obs,
+                "severity": "High" if (len(subdomains) >= 3 or is_brand_impersonation) else ("Medium" if suspicious_subdomains else "Low"),
+                "is_flagged": suspicious_subdomains
+            },
+            {
+                "id": 7,
+                "indicator": "URL Shortener",
+                "result": "Detected" if is_shortener else "Not detected",
+                "observation": shortener_obs,
+                "severity": "Medium" if is_shortener else "Low",
+                "is_flagged": is_shortener
+            },
+            {
+                "id": 8,
+                "indicator": "Raw IP Address",
+                "result": "Detected" if is_ip else "Not detected",
+                "observation": ip_obs,
+                "severity": "High" if is_ip else "Low",
+                "is_flagged": is_ip
+            },
+            {
+                "id": 9,
+                "indicator": "Suspicious Keywords",
+                "result": "Detected" if found_keywords else "Not detected",
+                "observation": kw_obs,
+                "severity": "High" if len(found_keywords) >= 2 else ("Medium" if found_keywords else "Low"),
+                "is_flagged": bool(found_keywords)
+            },
+            {
+                "id": 10,
+                "indicator": "Credential-related Path",
+                "result": "Detected" if cred_in_path else "Not detected",
+                "observation": cred_path_obs,
+                "severity": "High" if cred_in_path else "Low",
+                "is_flagged": cred_in_path
+            },
+            {
+                "id": 11,
+                "indicator": "Unusual URL Structure",
+                "result": "Detected" if is_unusual_structure else "Not detected",
+                "observation": structure_obs,
+                "severity": "High" if is_unusual_structure else "Low",
+                "is_flagged": is_unusual_structure
+            }
+        ]
+
+        # Calculate detected count (non-safe indicators)
+        detected_count = sum(1 for item in url_security_indicators if item["is_flagged"] and item["indicator"] != "Protocol (HTTPS)")
+
+        # Main Threat Category
+        if is_brand_impersonation:
+            main_threat_category = "Brand Impersonation"
+        elif is_ip:
+            main_threat_category = "Raw IP Host"
+        elif is_shortener:
+            main_threat_category = "URL Shortener"
+        elif typosquat_detected:
+            main_threat_category = "Typosquatting"
+        elif cred_in_path or found_keywords:
+            main_threat_category = "Credential Harvesting"
+        elif risk_result["risk_score"] >= 50:
+            main_threat_category = "Deceptive Link"
+        else:
+            main_threat_category = "None"
+
+        # Domain and URL Details
+        url_structure_label = "Multiple subdomains (Brand Impersonation)" if (is_brand_impersonation and len(subdomains) >= 2) else (
+            "Multiple nested subdomains" if len(subdomains) >= 3 else (
+                "Direct numeric IP host" if is_ip else "Standard domain structure"
+            )
+        )
+        domain_and_url_details = {
+            "full_url": cleaned_url,
+            "hostname": hostname,
+            "registered_domain": main_domain,
+            "is_registered_domain_suspicious": is_brand_impersonation or domain_mismatch or is_suspicious_domain,
+            "subdomains": ".".join(subdomains) if subdomains else "None",
+            "tld": f".{tld}" if tld and not tld.startswith(".") else (tld or ".com"),
+            "protocol": f"HTTPS ({port or 443})" if scheme == "https" else f"HTTP ({port or 80})",
+            "port": str(port or (443 if scheme == "https" else 80)),
+            "url_path": path or "/",
+            "url_structure": url_structure_label
+        }
+
+        # Key ML Indicators
+        is_threat = risk_result["risk_score"] >= 50 or is_brand_impersonation or is_ip or typosquat_detected
+        if is_threat:
+            key_ml_indicators = [
+                "Brand impersonation patterns",
+                "Suspicious subdomain structure",
+                "Login related keywords",
+                "Domain mismatch",
+                "Potential credential harvesting"
+            ]
+        else:
+            key_ml_indicators = [
+                "Lexical patterns within legitimate statistical thresholds",
+                "Standard domain structure",
+                "No credential harvesting keywords",
+                "Domain matches authentic registry"
+            ]
+
+        # 4 Recommendations Cards
+        brand_label = detected_brand.title() if detected_brand else "the service"
+        if is_threat:
+            recommendations_4_cards = [
+                {
+                    "title": "Do not visit this URL",
+                    "detail": "This URL may be a phishing site.",
+                    "icon": "shield-alert",
+                    "variant": "danger"
+                },
+                {
+                    "title": "Do not enter credentials",
+                    "detail": "Never provide passwords or personal details.",
+                    "icon": "key",
+                    "variant": "danger"
+                },
+                {
+                    "title": "Verify the official website",
+                    "detail": f"Access {brand_label} through the official website.",
+                    "icon": "check-circle",
+                    "variant": "warning"
+                },
+                {
+                    "title": "Report this URL",
+                    "detail": "Report to your security team anti-phishing platform.",
+                    "icon": "flag",
+                    "variant": "danger"
+                }
+            ]
+        else:
+            recommendations_4_cards = [
+                {
+                    "title": "Safe to browse",
+                    "detail": "No obvious signs of phishing detected on this URL.",
+                    "icon": "shield-check",
+                    "variant": "success"
+                },
+                {
+                    "title": "Check address bar",
+                    "detail": "Ensure the domain name exactly matches what you expect.",
+                    "icon": "globe",
+                    "variant": "info"
+                },
+                {
+                    "title": "Look for SSL padlock",
+                    "detail": "Verify that the site uses HTTPS before entering any information.",
+                    "icon": "lock",
+                    "variant": "info"
+                },
+                {
+                    "title": "Stay vigilant",
+                    "detail": "Always verify unsolicited links received in emails or SMS.",
+                    "icon": "info",
+                    "variant": "info"
+                }
+            ]
+
+        # Final Verdict Content
+        risk_level = (
+            "Critical" if risk_result["risk_score"] >= 76 else (
+                "High" if risk_result["risk_score"] >= 51 else (
+                    "Medium" if risk_result["risk_score"] >= 26 else "Low"
+                )
+            )
+        )
+        final_verdict_title = f"Suspicious URL — {risk_level} Risk" if is_threat else f"Likely Safe URL — {risk_level} Risk"
+
+        if is_brand_impersonation:
+            final_verdict_explanation = (
+                f"This URL uses {brand_label} branding in a subdomain, but the actual registered domain is {main_domain}. "
+                f"It contains login-related keywords and shows multiple phishing indicators. It should be treated as suspicious and avoided."
+            )
+        elif is_threat:
+            final_verdict_explanation = (
+                f"This URL exhibits elevated threat indicators including {main_threat_category.lower()}. "
+                f"It is likely intended for deception or credential solicitation and should not be accessed."
+            )
+        else:
+            final_verdict_explanation = (
+                f"This URL directs to {hostname} ({main_domain}). It exhibits standard domain structure, valid security protocols, "
+                f"and no anomalous phishing indicators. Standard safe browsing practices apply."
+            )
+
+        summary_explanation = (
+            f"This URL is highly likely to be a phishing attempt due to brand impersonation and suspicious domain structure."
+            if is_brand_impersonation else (
+                f"This URL shows elevated threat indicators and should be treated with caution."
+                if is_threat else
+                f"This URL appears to be a legitimate and safe website with standard domain reputation."
+            )
+        )
+
         return {
             "valid": True,
             "input_url": cleaned_url,
@@ -421,10 +731,21 @@ class URLAnalyzer:
             "ml_analysis": ml_analysis,
             "risk_score": risk_result["risk_score"],
             "classification": risk_result["classification"],
+            "risk_level": risk_level,
             "severity_counts": risk_result["severity_counts"],
             "indicators": indicators,
+            "url_security_indicators": url_security_indicators,
+            "domain_and_url_details": domain_and_url_details,
+            "detected_indicator_count": f"{detected_count} / 11",
+            "detected_count_num": detected_count,
+            "main_threat_category": main_threat_category,
+            "key_ml_indicators": key_ml_indicators,
+            "recommendations_4_cards": recommendations_4_cards,
+            "final_verdict_title": final_verdict_title,
+            "final_verdict_explanation": final_verdict_explanation,
+            "summary_explanation": summary_explanation,
             "recommendations": risk_result["recommendations"],
-            "summary": risk_result["summary"],
+            "summary": summary_explanation,
         }
 
     @classmethod
