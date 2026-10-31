@@ -53,52 +53,468 @@ async function request(endpoint, options = {}) {
   }
 }
 
-// Baseline starting scans for initial dashboard demonstration
-export const DEFAULT_BASE_SCANS = [
-  {
-    id: 101,
-    scan_type: "url",
-    target_identifier: "http://192.168.1.45/paypal-login/verify.php",
-    risk_score: 85,
-    classification: "Critical",
-    indicator_count: 3,
-    is_sample: true,
-    created_at: new Date(Date.now() - 4 * 60 * 1000).toISOString().replace('T', ' ').slice(0, 19),
-    created_at_iso: new Date(Date.now() - 4 * 60 * 1000).toISOString()
-  },
-  {
-    id: 102,
-    scan_type: "email",
-    target_identifier: "URGENT: Your Account Has Been Suspended",
-    risk_score: 75,
-    classification: "Critical",
-    indicator_count: 4,
-    is_sample: true,
-    created_at: new Date(Date.now() - 15 * 60 * 1000).toISOString().replace('T', ' ').slice(0, 19),
-    created_at_iso: new Date(Date.now() - 15 * 60 * 1000).toISOString()
-  },
-  {
-    id: 103,
-    scan_type: "url",
-    target_identifier: "http://paypa1-security-update.com/signin",
-    risk_score: 65,
-    classification: "High",
-    indicator_count: 2,
-    is_sample: true,
-    created_at: new Date(Date.now() - 40 * 60 * 1000).toISOString().replace('T', ' ').slice(0, 19),
-    created_at_iso: new Date(Date.now() - 40 * 60 * 1000).toISOString()
-  },
-  {
-    id: 104,
-    scan_type: "url",
-    target_identifier: "https://www.google.com/search?q=cybersecurity",
-    risk_score: 5,
-    classification: "Low",
-    indicator_count: 0,
-    is_sample: true,
-    created_at: new Date(Date.now() - 90 * 60 * 1000).toISOString().replace('T', ' ').slice(0, 19),
-    created_at_iso: new Date(Date.now() - 90 * 60 * 1000).toISOString()
+// Helper to create fully populated 7-section URL mock scans matching PhishShield specification
+export function createMockUrlScan(id, url, score, classification, riskLevel, dateStr, overrides = {}) {
+  const isSuspicious = score >= 50 || classification === 'Suspicious' || classification === 'Phishing';
+  const u = url.toLowerCase();
+  let hostname = '';
+  let path = '/';
+  let scheme = 'https';
+  try {
+    const parsed = new URL(url.startsWith('http') ? url : `https://${url}`);
+    hostname = parsed.hostname;
+    path = parsed.pathname || '/';
+    scheme = parsed.protocol.replace(':', '');
+  } catch {
+    hostname = url.split('/')[0];
   }
+  const parts = hostname.split('.');
+  const tld = parts.length > 1 ? parts[parts.length - 1] : 'com';
+  const mainDomain = parts.length >= 2 ? parts.slice(-2).join('.') : hostname;
+  const subdomains = parts.length > 2 ? parts.slice(0, -2) : [];
+  const brand = ['microsoft', 'paypal', 'facebook', 'google', 'apple'].find(b => u.includes(b)) || (isSuspicious ? 'brand' : null);
+
+  const indicators = overrides.url_security_indicators || [
+    { id: 1, indicator: "Protocol (HTTPS)", result: scheme === 'https' ? "Present" : "Insecure", observation: scheme === 'https' ? "Uses HTTPS (does not guarantee safety)" : "Uses unencrypted HTTP protocol", severity: scheme === 'https' ? "Info" : "High", is_flagged: scheme !== 'https' },
+    { id: 2, indicator: "Brand Impersonation", result: isSuspicious && brand ? "Detected" : "Not detected", observation: isSuspicious && brand ? `Uses '${brand}' in hostname / subdomain` : "No brand impersonation detected", severity: isSuspicious && brand ? "High" : "Low", is_flagged: isSuspicious && brand },
+    { id: 3, indicator: "Suspicious Domain", result: isSuspicious ? "Detected" : "Not detected", observation: isSuspicious ? `Domain is not an official domain` : "Domain is registered with standard reputation", severity: isSuspicious ? "High" : "Low", is_flagged: isSuspicious },
+    { id: 4, indicator: "Registered Domain Mismatch", result: isSuspicious ? "Detected" : "Not detected", observation: isSuspicious ? `Actual registered domain: ${mainDomain}` : `Domain matches identity (${mainDomain})`, severity: isSuspicious ? "High" : "Low", is_flagged: isSuspicious },
+    { id: 5, indicator: "Typosquatting", result: overrides.typosquatting ? "Suspicious" : "Not detected", observation: overrides.typosquatting ? "Similar to official brand domain" : "No typosquatting detected", severity: overrides.typosquatting ? "Medium" : "Low", is_flagged: Boolean(overrides.typosquatting) },
+    { id: 6, indicator: "Suspicious Subdomains", result: subdomains.length >= 2 ? "Detected" : "Not detected", observation: subdomains.length > 0 ? subdomains.join('.') : "No subdomains used", severity: subdomains.length >= 3 ? "High" : (subdomains.length >= 2 ? "Medium" : "Low"), is_flagged: subdomains.length >= 2 },
+    { id: 7, indicator: "URL Shortener", result: hostname.includes('bit.ly') ? "Detected" : "Not detected", observation: hostname.includes('bit.ly') ? "Known URL shortener service (bit.ly)" : "No URL shortener used", severity: hostname.includes('bit.ly') ? "Medium" : "Low", is_flagged: hostname.includes('bit.ly') },
+    { id: 8, indicator: "Raw IP Address", result: overrides.is_ip ? "Detected" : "Not detected", observation: overrides.is_ip ? "Direct raw IPv4 address used" : "No IP address used", severity: overrides.is_ip ? "High" : "Low", is_flagged: Boolean(overrides.is_ip) },
+    { id: 9, indicator: "Suspicious Keywords", result: isSuspicious ? "Detected" : "Not detected", observation: isSuspicious ? "Contains login, verify, account, security" : "No suspicious keywords detected", severity: isSuspicious ? "High" : "Low", is_flagged: isSuspicious },
+    { id: 10, indicator: "Credential-related Path", result: isSuspicious && (path.includes('login') || path.includes('verify')) ? "Detected" : "Not detected", observation: isSuspicious && (path.includes('login') || path.includes('verify')) ? `Contains ${path} (login related)` : "No credential-related path detected", severity: isSuspicious && (path.includes('login') || path.includes('verify')) ? "High" : "Low", is_flagged: isSuspicious && (path.includes('login') || path.includes('verify')) },
+    { id: 11, indicator: "Unusual URL Structure", result: isSuspicious && subdomains.length >= 3 ? "Detected" : "Not detected", observation: isSuspicious && subdomains.length >= 3 ? "Uses multiple subdomains to look legitimate" : "Standard URL structure", severity: isSuspicious && subdomains.length >= 3 ? "High" : "Low", is_flagged: isSuspicious && subdomains.length >= 3 }
+  ];
+
+  const detectedCount = indicators.filter(i => i.is_flagged && i.indicator !== "Protocol (HTTPS)").length;
+
+  const anatomy = {
+    scheme,
+    hostname,
+    main_domain: mainDomain,
+    subdomains,
+    tld: `.${tld}`,
+    path,
+    query: null,
+    port: scheme === 'https' ? 443 : 80,
+    is_ip: Boolean(overrides.is_ip),
+    ip_version: overrides.is_ip ? 'IPv4' : '',
+    length: url.length
+  };
+
+  const domainAndUrlDetails = overrides.domain_and_url_details || {
+    full_url: url,
+    hostname,
+    registered_domain: mainDomain,
+    is_registered_domain_suspicious: isSuspicious,
+    subdomains: subdomains.length > 0 ? subdomains.join('.') : "None",
+    tld: `.${tld}`,
+    protocol: scheme === 'https' ? "HTTPS (443)" : "HTTP (80)",
+    port: scheme === 'https' ? "443" : "80",
+    url_path: path,
+    url_structure: overrides.url_structure || (isSuspicious && subdomains.length >= 2 ? "Multiple subdomains (Brand Impersonation)" : (overrides.is_ip ? "Direct numeric IP host" : "Standard domain structure"))
+  };
+
+  const mlProb = overrides.ml_probability !== undefined ? overrides.ml_probability : (isSuspicious ? (score > 90 ? 98.2 : 91.7) : (score > 10 ? 12.4 : 1.8));
+  const mlConfidence = overrides.ml_confidence !== undefined ? overrides.ml_confidence : (isSuspicious ? 89.5 : 98.3);
+
+  const mlAnalysis = {
+    ml_enabled: true,
+    model_architecture: "RandomForestClassifier",
+    phishing_probability: mlProb,
+    confidence_score: mlConfidence,
+    prediction: isSuspicious ? "Phishing" : "Legitimate"
+  };
+
+  const keyMlIndicators = isSuspicious ? [
+    "Brand impersonation patterns",
+    "Suspicious subdomain structure",
+    "Login related keywords",
+    "Domain mismatch",
+    "Potential credential harvesting"
+  ] : [
+    "Lexical patterns within legitimate statistical thresholds",
+    "Standard domain structure",
+    "No credential harvesting keywords",
+    "Domain matches authentic registry"
+  ];
+
+  const recommendations4Cards = isSuspicious ? [
+    { title: "Do not visit this URL", detail: "This URL may be a phishing site.", icon: "shield-alert", variant: "danger" },
+    { title: "Do not enter credentials", detail: "Never provide passwords or personal details.", icon: "key", variant: "danger" },
+    { title: "Verify the official website", detail: `Access the authentic website through official channels.`, icon: "check-circle", variant: "warning" },
+    { title: "Report this URL", detail: "Report to your security team anti-phishing platform.", icon: "flag", variant: "danger" }
+  ] : [
+    { title: "Safe to browse", detail: "No obvious signs of phishing detected on this URL.", icon: "shield-check", variant: "success" },
+    { title: "Check address bar", detail: "Ensure the domain name exactly matches what you expect.", icon: "globe", variant: "info" },
+    { title: "Look for SSL padlock", detail: "Verify that the site uses HTTPS before entering any information.", icon: "lock", variant: "info" },
+    { title: "Stay vigilant", detail: "Always verify unsolicited links received in emails or SMS.", icon: "info", variant: "info" }
+  ];
+
+  const mainThreatCategory = overrides.main_threat_category || (isSuspicious ? (brand ? "Brand Impersonation" : (overrides.is_ip ? "Raw IP Host" : "Credential Harvesting")) : "None");
+  const finalVerdictTitle = isSuspicious ? `Suspicious URL — ${riskLevel} Risk` : `Likely Safe URL — ${riskLevel} Risk`;
+  const finalVerdictExplanation = overrides.final_verdict_explanation || (
+    isSuspicious
+      ? `This URL uses deceptive branding patterns and contains login-related paths. The actual registered domain is ${mainDomain}. It should be treated as suspicious and avoided.`
+      : `This URL directs to ${hostname} (${mainDomain}). It exhibits standard domain structure, valid security protocols, and no anomalous phishing indicators. Standard safe browsing practices apply.`
+  );
+
+  return {
+    id,
+    scan_type: "url",
+    target_identifier: url,
+    input_url: url,
+    normalized_url: url,
+    risk_score: score,
+    classification,
+    risk_level: riskLevel,
+    verdict: finalVerdictTitle,
+    indicator_count: detectedCount,
+    indicators,
+    url_security_indicators: indicators,
+    domain_and_url_details: domainAndUrlDetails,
+    detected_indicator_count: `${detectedCount} / 11`,
+    detected_count_num: detectedCount,
+    main_threat_category: mainThreatCategory,
+    key_ml_indicators: keyMlIndicators,
+    recommendations_4_cards: recommendations4Cards,
+    final_verdict_title: finalVerdictTitle,
+    final_verdict_explanation: finalVerdictExplanation,
+    summary_explanation: isSuspicious ? "This URL is highly likely to be a phishing attempt due to brand impersonation and suspicious domain structure." : "This URL appears to be a legitimate and safe website with standard domain reputation.",
+    anatomy,
+    ml_analysis: mlAnalysis,
+    details: {
+      ...anatomy,
+      anatomy,
+      ml_analysis: mlAnalysis,
+      url_security_indicators: indicators,
+      domain_and_url_details: domainAndUrlDetails,
+      detected_indicator_count: `${detectedCount} / 11`,
+      main_threat_category: mainThreatCategory,
+      key_ml_indicators: keyMlIndicators,
+      recommendations_4_cards: recommendations4Cards,
+      final_verdict_title: finalVerdictTitle,
+      final_verdict_explanation: finalVerdictExplanation,
+      summary_explanation: isSuspicious ? "This URL is highly likely to be a phishing attempt due to brand impersonation and suspicious domain structure." : "This URL appears to be a legitimate and safe website with standard domain reputation.",
+      risk_level: riskLevel
+    },
+    is_sample: true,
+    created_at: dateStr,
+    created_at_iso: new Date(dateStr).toISOString()
+  };
+}
+
+// Baseline starting scans matching PhishShield specification and user reference mockup
+
+// Helper to create fully populated 7-section Email mock scans matching PhishShield specification and screenshots
+export function createMockEmailScan(id, from, subject, body, score, classification, riskLevel, dateStr, overrides = {}) {
+  const isPhish = score >= 50 || classification === 'Phishing' || classification === 'Suspicious' || classification === 'Critical';
+  const size = body.length + from.length + subject.length + 50;
+  const targetIdentifier = `[${subject}] - "${from}"`;
+
+  const securityIndicatorsTable = overrides.security_indicators_table || (isPhish ? [
+    { indicator: "Sender", result: "Suspicious", details: `${from} (untrusted domain)` },
+    { indicator: "Subject", result: "Suspicious", details: overrides.subject_detail || "Contains financial incentive or urgency" },
+    { indicator: "Email Language", result: "Suspicious", details: "Uses social engineering language" },
+    { indicator: "Urgency", result: "Detected", details: "Encourages immediate action" },
+    { indicator: "Financial Incentive", result: overrides.has_financial ? "Detected" : "Not detected", details: overrides.financial_detail || "Promises monetary gain or refund" },
+    { indicator: "Sensitive Information Request", result: "Detected", details: "Asks for personal identity and card details" },
+    { indicator: "Suspicious Keywords", result: "Detected", details: overrides.keywords_detail || "refund, tax, immediate, debit card, claim" },
+    { indicator: "Embedded URLs", result: overrides.embedded_url ? "Suspicious" : "Not detected", details: overrides.url_detail || (overrides.embedded_url ? `1 URL found: ${overrides.embedded_url}` : "No direct links in content") },
+    { indicator: "Attachments", result: "Not detected", details: "No attachments found" },
+    { indicator: "Sender Authentication", result: "Not available", details: "Email headers not provided (SPF/DKIM/DMARC not checked)" }
+  ] : [
+    { indicator: "Sender", result: "Legitimate", details: `${from} (official domain)` },
+    { indicator: "Subject", result: "Benign", details: "Standard corporate or service notification" },
+    { indicator: "Email Language", result: "Benign", details: "Professional and business-like language" },
+    { indicator: "Urgency", result: "Not detected", details: "No unusual urgency or threat language" },
+    { indicator: "Financial Incentive", result: "Not detected", details: "No financial lure or unexpected reward" },
+    { indicator: "Sensitive Information Request", result: "Not detected", details: "Does not ask for passwords or OTPs" },
+    { indicator: "Suspicious Keywords", result: "Not detected", details: "No suspicious keywords found" },
+    { indicator: "Embedded URLs", result: "Not detected", details: "No direct links in the provided content" },
+    { indicator: "Attachments", result: "Not detected", details: "No attachments mentioned" },
+    { indicator: "Sender Authentication", result: "Not available", details: "Email headers not provided (SPF/DKIM/DMARC not checked)" }
+  ]);
+
+  const whyBullets = overrides.why_bullets || (isPhish ? [
+    "Promises an unexpected financial or account benefit.",
+    "Requests personal identity and authentication credentials.",
+    "Uses an unverified sender domain.",
+    "Creates artificial urgency to force immediate action.",
+    "Contains embedded links to non-official external domains."
+  ] : [
+    `Uses an authentic domain for ${from}.`,
+    "Standard operational notification structure.",
+    "Professional and business-like language.",
+    "No request for passwords, OTPs, or payment information.",
+    "Mentions secure access only through official portal or app."
+  ]);
+
+  const urlAndAttachmentItems = overrides.url_and_attachment_analysis || (overrides.embedded_url ? [
+    { id: 1, type: "URL", url_or_filename: overrides.embedded_url, status: "Suspicious", threat_level: "High", details: "Non-official domain, potential credential harvesting" },
+    { id: 2, type: "Attachment", url_or_filename: "-", status: "Not found", threat_level: "-", details: "No attachments in email" }
+  ] : []);
+
+  const mlProb = overrides.ml_probability !== undefined ? overrides.ml_probability : (isPhish ? 96.4 : 5.2);
+  const mlConfidence = overrides.ml_confidence !== undefined ? overrides.ml_confidence : (isPhish ? 89.1 : 87.6);
+
+  const fullMlAnalysis = {
+    ml_enabled: true,
+    model_architecture: "TF-IDF + Logistic Regression",
+    phishing_probability: mlProb,
+    confidence_score: mlConfidence,
+    prediction: isPhish ? "Phishing" : "Legitimate",
+    predicted_class: isPhish ? "Phishing" : "Legitimate",
+    nlp_features: {
+      financial_bait: isPhish,
+      credential_request: isPhish,
+      urgency_coercion: isPhish,
+      suspicious_keywords: isPhish,
+      legitimate_structure: !isPhish,
+    }
+  };
+
+  const detectedCount = securityIndicatorsTable.filter(i => i.result === 'Detected' || i.result === 'Suspicious').length;
+  const mainThreat = overrides.main_threat_category || (isPhish ? (overrides.has_financial ? "Financial Phishing" : "Credential Phishing") : "None");
+  const finalTitle = overrides.final_verdict_title || (isPhish ? `Phishing — ${riskLevel} Risk` : `Likely Legitimate — ${riskLevel} Risk`);
+  const finalExplanation = overrides.final_verdict_explanation || (
+    isPhish
+      ? "This email exhibits strong financial phishing characteristics and social engineering tactics. It should be treated as malicious."
+      : "This email appears to be a legitimate banking or corporate notification with no obvious phishing indicators. Follow standard security practices."
+  );
+
+  return {
+    id,
+    scan_type: "email",
+    target_identifier: targetIdentifier,
+    input_text: `From: ${from}\nSubject: ${subject}\n\n${body}`,
+    raw_text: `From: ${from}\nSubject: ${subject}\n\n${body}`,
+    risk_score: score,
+    classification,
+    risk_level: riskLevel,
+    verdict: finalTitle,
+    email_size_chars: size,
+    body_snippet: body.slice(0, 180),
+    indicator_count: detectedCount,
+    detected_indicators_count: `${detectedCount} / 10`,
+    main_threat_category: mainThreat,
+    why_is_suspicious: isPhish,
+    why_bullets: whyBullets,
+    security_indicators_table: securityIndicatorsTable,
+    url_and_attachment_analysis: urlAndAttachmentItems,
+    important_notes: overrides.important_notes || [
+      "The sender address alone does not prove the email is authentic.",
+      "Email header authentication could not be verified (SPF/DKIM/DMARC not checked).",
+      "This analysis is based only on the submitted email content."
+    ],
+    final_verdict_title: finalTitle,
+    final_verdict_explanation: finalExplanation,
+    recommendations: overrides.recommendations || (isPhish ? [
+      { title: "Do not click links", description: "The links may lead to a credential harvesting website.", icon: "shield-alert" },
+      { title: "Do not provide personal info", description: "Never share identity or financial credentials.", icon: "alert-triangle" },
+      { title: "Verify through official channel", description: "Contact the organization through official published contact info.", icon: "check-circle" },
+      { title: "Report this email", description: "Forward this email to your organization's security operations team.", icon: "mail" }
+    ] : [
+      { title: "Continue with normal precautions", description: "The email appears to be legitimate.", icon: "shield-check" },
+      { title: "Access through official app or website", description: "Use the official portal rather than clicking direct links if unsure.", icon: "globe" },
+      { title: "Be cautious of unexpected requests", description: "Never share passwords or OTPs via email.", icon: "info" },
+      { title: "Verify if unsure", description: "Contact the purported sender directly if you have doubts.", icon: "phone" }
+    ]),
+    post_compromise_advice: isPhish ? "If you already shared information, immediately change your passwords, monitor accounts, and contact your bank or IT security team." : null,
+    headers: {
+      From: from,
+      Subject: subject,
+      from: from,
+      subject: subject
+    },
+    sender_summary: {
+      from,
+      subject,
+      has_headers: true
+    },
+    extracted_urls: overrides.extracted_urls || (overrides.embedded_url ? [{ url: overrides.embedded_url, classification: 'Suspicious', risk_score: 85 }] : []),
+    ml_analysis: fullMlAnalysis,
+    details: {
+      headers: { From: from, Subject: subject },
+      sender_summary: { from, subject },
+      extracted_urls: overrides.extracted_urls || [],
+      security_indicators_table: securityIndicatorsTable,
+      ml_analysis: fullMlAnalysis,
+      risk_level: riskLevel,
+      final_verdict_title: finalTitle,
+      final_verdict_explanation: finalExplanation
+    },
+    is_sample: true,
+    created_at: dateStr,
+    created_at_iso: new Date(dateStr).toISOString()
+  };
+}
+
+export const DEFAULT_BASE_SCANS = [
+  createMockUrlScan(
+    1733489152,
+    "https://login.microsoft.com.account.security-portal.example.net/verify",
+    88,
+    "Suspicious",
+    "High",
+    "2026-10-30 18:29:31",
+    {
+      main_threat_category: "Brand Impersonation",
+      ml_probability: 91.7,
+      ml_confidence: 89.5,
+      url_structure: "Multiple subdomains (Brand Impersonation)",
+      final_verdict_explanation: "This URL uses Microsoft branding in a subdomain, but the actual registered domain is example.net. It contains login-related keywords and shows multiple phishing indicators. It should be treated as suspicious and avoided."
+    }
+  ),
+  createMockUrlScan(
+    1733489021,
+    "http://bit.ly/secure-login",
+    95,
+    "Phishing",
+    "Critical",
+    "2026-10-30 16:45:12",
+    {
+      main_threat_category: "URL Shortener",
+      ml_probability: 98.4,
+      ml_confidence: 96.1,
+      final_verdict_explanation: "This link uses an anonymizing URL shortener (bit.ly) combined with an insecure protocol (HTTP) to mask a credential harvesting destination."
+    }
+  ),
+  createMockEmailScan(
+    264,
+    "ebanking-alerts@chase.com",
+    "Your monthly e-Statement is ready to view",
+    "Your monthly account statement for account ending in ...4012 is now available. Log in to your Chase online banking app or visit our official site to securely view or download your document.",
+    8,
+    "Likely Safe",
+    "Low",
+    "2026-10-30 16:24:59",
+    {
+      main_threat_category: "None",
+      ml_probability: 5.2,
+      ml_confidence: 87.6
+    }
+  ),
+  createMockEmailScan(
+    262,
+    "refund-agent@tax-refund-portal.example.org",
+    "Tax Refund Notification: Pending amount $1,420.50",
+    "After the final annual calculation of your fiscal earnings, we determined that you are eligible for an immediate tax refund of $1,420.50. To receive your refund directly to your debit card, click here to fill in your personal identity and card details: hxxp://tax-department-refund.example.com/claim",
+    92,
+    "Phishing",
+    "Critical",
+    "2026-10-30 16:22:21",
+    {
+      has_financial: true,
+      embedded_url: "hxxp://tax-department-refund.example.com/claim",
+      main_threat_category: "Financial Phishing",
+      ml_probability: 96.4,
+      ml_confidence: 89.1
+    }
+  ),
+  createMockUrlScan(
+    1733488766,
+    "https://update-paypal-security.com",
+    82,
+    "Suspicious",
+    "High",
+    "2026-10-30 14:22:08",
+    {
+      main_threat_category: "Brand Impersonation",
+      ml_probability: 88.5,
+      ml_confidence: 85.2,
+      final_verdict_explanation: "This domain uses PayPal brand keywords in an unauthorized registration to impersonate an authentic security portal."
+    }
+  ),
+  createMockEmailScan(
+    192,
+    "doc-notifications@cloud-file-share.top",
+    "Project Lead shared a confidential PDF document with you",
+    "\"Q4 Bonus and Salary Revision Sheet.xlsx\" has been shared with you via Cloud Drive. The document contains sensitive corporate data and requires you to authenticate with your corporate domain email credentials to decrypt and view: hxxps://drive.google.com.secure-auth-node.example.org/doc",
+    28,
+    "Suspicious",
+    "Medium",
+    "2026-10-30 14:02:14",
+    {
+      embedded_url: "hxxps://drive.google.com.secure-auth-node.example.org/doc",
+      main_threat_category: "Credential Phishing",
+      ml_probability: 32.5,
+      ml_confidence: 84.0
+    }
+  ),
+  createMockUrlScan(
+    1733488120,
+    "https://github.com/torvalds/linux",
+    2,
+    "Likely Safe",
+    "Low",
+    "2026-10-30 11:18:55",
+    {
+      main_threat_category: "None",
+      ml_probability: 1.0,
+      ml_confidence: 99.3,
+      final_verdict_explanation: "This URL directs to GitHub (github.com). It exhibits standard domain structure, valid SSL certificate, and no phishing indicators."
+    }
+  ),
+  createMockUrlScan(
+    1733487905,
+    "https://www.google.com/search?q=cybersecurity",
+    5,
+    "Likely Safe",
+    "Low",
+    "2026-10-29 17:04:11",
+    {
+      main_threat_category: "None",
+      ml_probability: 2.1,
+      ml_confidence: 98.8,
+      final_verdict_explanation: "This URL directs to Google Search (google.com). It exhibits authentic infrastructure and valid HTTPS security."
+    }
+  ),
+  createMockUrlScan(
+    1733487603,
+    "http://192.168.1.1/login",
+    56,
+    "Suspicious",
+    "Medium",
+    "2026-10-29 15:22:42",
+    {
+      is_ip: true,
+      main_threat_category: "Raw IP Host",
+      ml_probability: 62.0,
+      ml_confidence: 78.4,
+      final_verdict_explanation: "This URL directs to a raw numeric IP address over unencrypted HTTP protocol."
+    }
+  ),
+  createMockUrlScan(
+    1733487301,
+    "https://facebook.security-check.net",
+    78,
+    "Suspicious",
+    "High",
+    "2026-10-29 12:11:09",
+    {
+      main_threat_category: "Brand Impersonation",
+      ml_probability: 84.1,
+      ml_confidence: 86.7,
+      final_verdict_explanation: "This URL uses Facebook branding on an unofficial host (security-check.net) to solicit account verification."
+    }
+  ),
+  createMockUrlScan(
+    1733487012,
+    "https://docs.microsoft.com",
+    4,
+    "Likely Safe",
+    "Low",
+    "2026-10-29 09:33:21",
+    {
+      main_threat_category: "None",
+      ml_probability: 1.5,
+      ml_confidence: 99.1,
+      final_verdict_explanation: "This URL belongs to official Microsoft infrastructure (microsoft.com). It exhibits verified encryption and valid domain reputation."
+    }
+  )
 ];
 
 const STORAGE_KEY_USER_SCANS = 'phishshield_live_user_scans';
@@ -116,7 +532,15 @@ export function getLocalUserScans() {
     if (raw !== null) {
       try {
         const parsed = JSON.parse(raw);
-        if (Array.isArray(parsed)) {
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          // If stored scans lack email scans, merge default email records so Email Scan History is restored
+          const hasEmail = parsed.some(s => s.scan_type === 'email');
+          if (!hasEmail) {
+            const emailDefaults = DEFAULT_BASE_SCANS.filter(s => s.scan_type === 'email');
+            const merged = [...parsed, ...emailDefaults].sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
+            localStorage.setItem(STORAGE_KEY_USER_SCANS, JSON.stringify(merged));
+            return merged;
+          }
           return parsed;
         }
       } catch {
@@ -673,6 +1097,81 @@ export function clientAnalyzeUrl(url) {
       : ['Normal lexical entropy distribution', 'Standard URI token ratios verified']
   };
 
+  // Build the 11 indicators table
+  const isSuspicious = finalScore >= 50 || classification === 'Suspicious' || classification === 'High' || classification === 'Critical';
+  const detectedBrand = Object.keys(AUTHENTIC_BRAND_DOMAINS).find(b => hostname.includes(b));
+  const isBrandImpersonation = detectedBrand && !isAuthenticDomain(detectedBrand, hostname);
+  const domainMismatch = isBrandImpersonation;
+  const isShortener = KNOWN_SHORTENERS.some(s => hostname.includes(s));
+  const isIp = Boolean(anatomy?.is_ip);
+  const credInPath = ['login', 'verify', 'signin', 'auth', 'account', 'password', 'security', 'update'].some(k => path.toLowerCase().includes(k));
+  const suspiciousSubdomains = (anatomy?.subdomains?.length || 0) >= 2 || isBrandImpersonation;
+  const isUnusualStructure = (anatomy?.subdomains?.length || 0) >= 3 || rawUrl.includes('@') || isBrandImpersonation;
+  const typosquatDetected = foundBrandTyposquat;
+
+  const urlSecurityIndicators = [
+    { id: 1, indicator: "Protocol (HTTPS)", result: protocol === 'https:' ? "Present" : "Insecure", observation: protocol === 'https:' ? "Uses HTTPS (does not guarantee safety)" : "Uses unencrypted HTTP protocol", severity: protocol === 'https:' ? "Info" : "High", is_flagged: protocol !== 'https:' },
+    { id: 2, indicator: "Brand Impersonation", result: isBrandImpersonation ? "Detected" : "Not detected", observation: isBrandImpersonation ? `Uses '${detectedBrand}' in hostname / subdomain` : "No brand impersonation detected", severity: isBrandImpersonation ? "High" : "Low", is_flagged: isBrandImpersonation },
+    { id: 3, indicator: "Suspicious Domain", result: isSuspicious ? "Detected" : "Not detected", observation: isSuspicious ? (isBrandImpersonation ? `Domain is not an official ${detectedBrand} domain` : "Domain exhibits untrusted reputation traits") : "Domain is registered with standard reputation", severity: isSuspicious ? "High" : "Low", is_flagged: isSuspicious },
+    { id: 4, indicator: "Registered Domain Mismatch", result: domainMismatch ? "Detected" : "Not detected", observation: domainMismatch ? `Actual registered domain: ${anatomy?.main_domain}` : `Domain matches identity (${anatomy?.main_domain})`, severity: domainMismatch ? "High" : "Low", is_flagged: domainMismatch },
+    { id: 5, indicator: "Typosquatting", result: typosquatDetected ? "Suspicious" : "Not detected", observation: typosquatDetected ? "Similar to official brand domain" : "No typosquatting detected", severity: typosquatDetected ? "Medium" : "Low", is_flagged: typosquatDetected },
+    { id: 6, indicator: "Suspicious Subdomains", result: suspiciousSubdomains ? "Detected" : "Not detected", observation: (anatomy?.subdomains || []).join('.') || "No subdomains used", severity: (anatomy?.subdomains?.length || 0) >= 3 ? "High" : (suspiciousSubdomains ? "Medium" : "Low"), is_flagged: suspiciousSubdomains },
+    { id: 7, indicator: "URL Shortener", result: isShortener ? "Detected" : "Not detected", observation: isShortener ? `URL shortener detected (${hostname})` : "No URL shortener used", severity: isShortener ? "Medium" : "Low", is_flagged: isShortener },
+    { id: 8, indicator: "Raw IP Address", result: isIp ? "Detected" : "Not detected", observation: isIp ? "Direct raw IP address used" : "No IP address used", severity: isIp ? "High" : "Low", is_flagged: isIp },
+    { id: 9, indicator: "Suspicious Keywords", result: indicators.some(i => i.id === 'phishing_keywords') ? "Detected" : "Not detected", observation: indicators.find(i => i.id === 'phishing_keywords')?.evidence || "No suspicious keywords detected", severity: indicators.some(i => i.id === 'phishing_keywords') ? "High" : "Low", is_flagged: indicators.some(i => i.id === 'phishing_keywords') },
+    { id: 10, indicator: "Credential-related Path", result: credInPath ? "Detected" : "Not detected", observation: credInPath ? `Contains ${path} (login related)` : "No credential-related path detected", severity: credInPath ? "High" : "Low", is_flagged: credInPath },
+    { id: 11, indicator: "Unusual URL Structure", result: isUnusualStructure ? "Detected" : "Not detected", observation: isUnusualStructure ? "Uses multiple subdomains to look legitimate" : "Standard URL structure", severity: isUnusualStructure ? "High" : "Low", is_flagged: isUnusualStructure }
+  ];
+
+  const detectedCount = urlSecurityIndicators.filter(i => i.is_flagged && i.indicator !== "Protocol (HTTPS)").length;
+  const riskLevel = finalScore >= 76 ? 'Critical' : (finalScore >= 51 ? 'High' : (finalScore >= 26 ? 'Medium' : 'Low'));
+
+  const domainAndUrlDetails = {
+    full_url: url,
+    hostname,
+    registered_domain: anatomy?.main_domain || hostname,
+    is_registered_domain_suspicious: isSuspicious,
+    subdomains: (anatomy?.subdomains || []).join('.') || "None",
+    tld: `.${anatomy?.tld || 'com'}`,
+    protocol: protocol === 'https:' ? "HTTPS (443)" : "HTTP (80)",
+    port: protocol === 'https:' ? "443" : "80",
+    url_path: path,
+    url_structure: isBrandImpersonation && (anatomy?.subdomains?.length || 0) >= 2 ? "Multiple subdomains (Brand Impersonation)" : ((anatomy?.subdomains?.length || 0) >= 3 ? "Multiple nested subdomains" : (isIp ? "Direct numeric IP host" : "Standard domain structure"))
+  };
+
+  const mainThreatCategory = isBrandImpersonation ? "Brand Impersonation" : (isIp ? "Raw IP Host" : (isShortener ? "URL Shortener" : (isSuspicious ? "Credential Harvesting" : "None")));
+  const finalVerdictTitle = isSuspicious ? `Suspicious URL — ${riskLevel} Risk` : `Likely Safe URL — ${riskLevel} Risk`;
+  const finalVerdictExplanation = isBrandImpersonation
+    ? `This URL uses ${detectedBrand || 'brand'} branding in a subdomain, but the actual registered domain is ${anatomy?.main_domain}. It contains login-related keywords and shows multiple phishing indicators. It should be treated as suspicious and avoided.`
+    : (isSuspicious
+      ? `This URL exhibits elevated threat indicators including ${mainThreatCategory.toLowerCase()}. It should be treated as suspicious and avoided.`
+      : `This URL directs to ${hostname} (${anatomy?.main_domain}). It exhibits standard domain structure, valid security protocols, and no anomalous phishing indicators. Standard safe browsing practices apply.`);
+
+  const recommendations4Cards = isSuspicious ? [
+    { title: "Do not visit this URL", detail: "This URL may be a phishing site.", icon: "shield-alert", variant: "danger" },
+    { title: "Do not enter credentials", detail: "Never provide passwords or personal details.", icon: "key", variant: "danger" },
+    { title: "Verify the official website", detail: `Access the official website through authentic channels.`, icon: "check-circle", variant: "warning" },
+    { title: "Report this URL", detail: "Report to your security team anti-phishing platform.", icon: "flag", variant: "danger" }
+  ] : [
+    { title: "Safe to browse", detail: "No obvious signs of phishing detected on this URL.", icon: "shield-check", variant: "success" },
+    { title: "Check address bar", detail: "Ensure the domain name exactly matches what you expect.", icon: "globe", variant: "info" },
+    { title: "Look for SSL padlock", detail: "Verify that the site uses HTTPS before entering any information.", icon: "lock", variant: "info" },
+    { title: "Stay vigilant", detail: "Always verify unsolicited links received in emails or SMS.", icon: "info", variant: "info" }
+  ];
+
+  const keyMlIndicators = isSuspicious ? [
+    "Brand impersonation patterns",
+    "Suspicious subdomain structure",
+    "Login related keywords",
+    "Domain mismatch",
+    "Potential credential harvesting"
+  ] : [
+    "Lexical patterns within legitimate statistical thresholds",
+    "Standard domain structure",
+    "No credential harvesting keywords",
+    "Domain matches authentic registry"
+  ];
+
   const resultData = {
     id: Date.now(),
     target_identifier: url,
@@ -681,14 +1180,36 @@ export function clientAnalyzeUrl(url) {
     scan_type: 'url',
     risk_score: finalScore,
     classification: classification,
-    verdict: verdict,
-    indicator_count: indicators.length,
+    risk_level: riskLevel,
+    verdict: finalVerdictTitle,
+    indicator_count: detectedCount,
     indicators: indicators,
+    url_security_indicators: urlSecurityIndicators,
+    domain_and_url_details: domainAndUrlDetails,
+    detected_indicator_count: `${detectedCount} / 11`,
+    detected_count_num: detectedCount,
+    main_threat_category: mainThreatCategory,
+    key_ml_indicators: keyMlIndicators,
+    recommendations_4_cards: recommendations4Cards,
+    final_verdict_title: finalVerdictTitle,
+    final_verdict_explanation: finalVerdictExplanation,
+    summary_explanation: isSuspicious ? "This URL is highly likely to be a phishing attempt due to brand impersonation and suspicious domain structure." : "This URL appears to be a legitimate and safe website with standard domain reputation.",
     severity_counts: severityCounts,
     anatomy: anatomy,
     details: {
       ...anatomy,
-      ml_analysis: mlAnalysis
+      anatomy,
+      ml_analysis: mlAnalysis,
+      url_security_indicators: urlSecurityIndicators,
+      domain_and_url_details: domainAndUrlDetails,
+      detected_indicator_count: `${detectedCount} / 11`,
+      main_threat_category: mainThreatCategory,
+      key_ml_indicators: keyMlIndicators,
+      recommendations_4_cards: recommendations4Cards,
+      final_verdict_title: finalVerdictTitle,
+      final_verdict_explanation: finalVerdictExplanation,
+      summary_explanation: isSuspicious ? "This URL is highly likely to be a phishing attempt due to brand impersonation and suspicious domain structure." : "This URL appears to be a legitimate and safe website with standard domain reputation.",
+      risk_level: riskLevel
     },
     created_at: new Date().toISOString().replace('T', ' ').slice(0, 19),
     created_at_iso: new Date().toISOString(),

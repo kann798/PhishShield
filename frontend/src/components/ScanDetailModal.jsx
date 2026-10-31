@@ -3,6 +3,7 @@ import { X, Download, Trash2, Calendar, Hash, Shield, CheckCircle } from 'lucide
 import RiskBadge from './RiskBadge';
 import IndicatorCard from './IndicatorCard';
 import MLTelemetryCard from './MLTelemetryCard';
+import AnalysisResultView from './AnalysisResultView';
 import { api } from '../services/api';
 import { generateScanPdf } from '../utils/pdfGenerator';
 import { exportScanAsJson, exportScanAsCsv } from '../utils/exportUtils';
@@ -58,6 +59,10 @@ export default function ScanDetailModal({ scan, onClose, onDelete }) {
 
         {/* Content Body */}
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
+          {isUrl ? (
+            <AnalysisResultView type="url" result={scan} />
+          ) : (
+            <>
           {/* Target Identifier & Summary */}
           <div className="bg-[#F4F7F4] rounded-xl p-4 shadow-sm border border-[#404E3B]/10">
             <span className="text-[11px] font-mono uppercase text-[#6C8480] font-bold block mb-1">
@@ -211,6 +216,8 @@ export default function ScanDetailModal({ scan, onClose, onDelete }) {
                 ))}
               </div>
             </div>
+          )}
+            </>
           )}
         </div>
 

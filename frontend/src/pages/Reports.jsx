@@ -2,484 +2,446 @@ import React, { useEffect, useState } from 'react';
 import {
   FileText,
   Download,
-  Printer,
-  Shield,
-  ShieldAlert,
-  AlertTriangle,
-  AlertCircle,
-  CheckCircle,
-  RefreshCw,
   Calendar,
-  Clock,
-  Link as LinkIcon,
-  Lock,
-  Mail,
+  Search,
+  RefreshCw,
+  ChevronLeft,
+  ChevronRight,
   Globe,
-  Tag,
+  Mail,
+  CheckCircle2,
+  Filter,
 } from 'lucide-react';
-import RiskBadge from '../components/RiskBadge';
-import { api } from '../services/api';
+import AnalysisResultView from '../components/AnalysisResultView';
+import AlertBanner from '../components/AlertBanner';
+import { api, getLocalUserScans } from '../services/api';
 import { generateScanPdf } from '../utils/pdfGenerator';
-import { exportScanAsJson, exportScanAsCsv } from '../utils/exportUtils';
 
 export default function Reports() {
-  const [scans, setScans] = useState([]);
-  const [selectedScanId, setSelectedScanId] = useState('');
-  const [currentScan, setCurrentScan] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [reports, setReports] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [selectedFilter, setSelectedFilter] = useState('all'); // 'all' | 'url' | 'email'
+  const [previewScan, setPreviewScan] = useState(null);
+  const [actionMessage, setActionMessage] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [dateRangeOpen, setDateRangeOpen] = useState(false);
+  const [selectedDateRange, setSelectedDateRange] = useState('All Time');
+  const itemsPerPage = 10;
+
+  const loadReports = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const res = await api.getScans({
+        type: selectedFilter !== 'all' ? selectedFilter : undefined,
+        limit: 100,
+      });
+
+      let list = [];
+      if (res && res.success && Array.isArray(res.data)) {
+        list = res.data;
+      } else {
+        list = getLocalUserScans();
+      }
+
+      if (selectedFilter !== 'all') {
+        list = list.filter(s => s.scan_type === selectedFilter);
+      }
+
+      setReports(list);
+    } catch (err) {
+      setError(err.message || 'Unable to load analysis reports');
+      let local = getLocalUserScans();
+      if (selectedFilter !== 'all') {
+        local = local.filter(s => s.scan_type === selectedFilter);
+      }
+      setReports(local);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    loadScanOptions();
+    loadReports();
 
     const handleScanEvent = () => {
-      loadScanOptions();
+      loadReports();
     };
 
     window.addEventListener('phishshield:new-scan', handleScanEvent);
     return () => {
       window.removeEventListener('phishshield:new-scan', handleScanEvent);
     };
-  }, []);
+  }, [selectedFilter]);
 
-  const loadScanOptions = async () => {
+  const handleDownloadPdf = (scan) => {
     try {
-      const res = await api.getScans({ limit: 30 });
-      if (res.success && res.data && res.data.length > 0) {
-        setScans(res.data);
-        setSelectedScanId(res.data[0].id);
-        fetchScanDetail(res.data[0].id);
-      } else {
-        setScans([]);
-        setSelectedScanId('');
-        setCurrentScan(null);
-      }
-    } catch {
-      setError('Unable to load scan list for report preview.');
-    }
-  };
-
-  const fetchScanDetail = async (id) => {
-    if (!id) return;
-    try {
-      setLoading(true);
-      setError(null);
-      const res = await api.getScan(id);
-      if (res.success) {
-        setCurrentScan(res.data);
-      }
+      generateScanPdf(scan);
+      const targetName = scan.scan_type === 'email'
+        ? (scan.target_identifier || 'Email')
+        : (scan.target_identifier || scan.input_url || 'URL');
+      setActionMessage(`Generated PDF report for ${targetName}`);
+      setTimeout(() => setActionMessage(null), 3000);
     } catch (err) {
-      setError(err.message || 'Error loading report details');
-    } finally {
-      setLoading(false);
+      setError(`Failed to generate PDF: ${err.message}`);
     }
   };
 
-  const handleSelectChange = (e) => {
-    const id = e.target.value;
-    setSelectedScanId(id);
-    fetchScanDetail(id);
+  const handleExportAll = () => {
+    if (reports.length === 0) {
+      setError('No reports available to export.');
+      return;
+    }
+    // Download PDF for the first report
+    generateScanPdf(reports[0]);
+    setActionMessage(`Exported PDF analysis report.`);
+    setTimeout(() => setActionMessage(null), 3000);
   };
 
-  const handlePrint = () => {
-    window.print();
+  // Helper to format Report ID like REP-20261030-001
+  const formatReportId = (scan, index) => {
+    const rawDate = scan.created_at || '2026-10-30';
+    const dateCompact = rawDate.slice(0, 10).replace(/-/g, '');
+    const num = String(index + 1).padStart(3, '0');
+    return `REP-${dateCompact}-${num}`;
   };
 
-  // Severity classification helpers for the report document
-  const classification = currentScan?.classification || 'Low';
-  const score = currentScan?.risk_score ?? 0;
-  const isCritical = classification.toLowerCase() === 'critical' || score >= 85;
-  const isHigh = classification.toLowerCase() === 'high' || (score >= 65 && score < 85);
-  const isCriticalOrHigh = isCritical || isHigh || score >= 65;
-  const isMedium = classification.toLowerCase() === 'medium' || (score >= 35 && score < 65);
+  // If user clicked "View", display the complete 7-section report preview!
+  if (previewScan) {
+    const isEmailScan = previewScan.scan_type === 'email';
+    return (
+      <div className="w-full pb-8 space-y-4 animate-fadeIn">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#404E3B]/15 pb-3">
+          <button
+            onClick={() => setPreviewScan(null)}
+            className="inline-flex items-center gap-1.5 text-xs font-mono font-bold text-[#6C8480] hover:text-[#16794B] transition-colors cursor-pointer group"
+          >
+            <ChevronLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
+            <span>Back to Reports &amp; Exports</span>
+          </button>
+
+          <button
+            onClick={() => handleDownloadPdf(previewScan)}
+            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#16794B] hover:bg-[#13623D] text-white text-xs font-mono font-bold transition-all shadow-xs cursor-pointer self-start sm:self-auto"
+          >
+            <Download className="w-3.5 h-3.5" />
+            <span>Download PDF Report</span>
+          </button>
+        </div>
+
+        <AnalysisResultView
+          type={isEmailScan ? 'email' : 'url'}
+          result={previewScan}
+          onBack={() => setPreviewScan(null)}
+        />
+      </div>
+    );
+  }
+
+  // Pagination
+  const totalResults = reports.length;
+  const totalPages = Math.max(1, Math.ceil(totalResults / itemsPerPage));
+  const paginatedReports = reports.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+  const renderClassificationBadge = (cls, score) => {
+    const c = (cls || '').toLowerCase();
+    const s = Math.round(score || 0);
+    if (c === 'critical' || c.includes('phishing') || s >= 76) {
+      return (
+        <span className="inline-block px-2.5 py-0.5 rounded-full text-[11px] font-mono font-bold bg-[#DC2626] text-white">
+          Phishing
+        </span>
+      );
+    }
+    if (c === 'high' || c.includes('suspicious') || s >= 51) {
+      return (
+        <span className="inline-block px-2.5 py-0.5 rounded-full text-[11px] font-mono font-bold bg-[#EF4444] text-white">
+          Suspicious
+        </span>
+      );
+    }
+    if (c === 'medium' || s >= 26) {
+      return (
+        <span className="inline-block px-2.5 py-0.5 rounded-full text-[11px] font-mono font-bold bg-[#F59E0B] text-white">
+          Suspicious
+        </span>
+      );
+    }
+    return (
+      <span className="inline-block px-2.5 py-0.5 rounded-full text-[11px] font-mono font-bold bg-[#16794B] text-white">
+        Likely Safe
+      </span>
+    );
+  };
+
+  const renderRiskLevelBadge = (lvl, score) => {
+    let level = lvl;
+    if (!level) {
+      if (score >= 76) level = 'Critical';
+      else if (score >= 51) level = 'High';
+      else if (score >= 26) level = 'Medium';
+      else level = 'Low';
+    }
+    const l = level.toLowerCase();
+    if (l === 'critical') {
+      return (
+        <span className="inline-block px-2.5 py-0.5 rounded-full text-[11px] font-mono font-bold bg-[#FEE2E2] text-[#991B1B] border border-[#FECACA]">
+          Critical
+        </span>
+      );
+    }
+    if (l === 'high') {
+      return (
+        <span className="inline-block px-2.5 py-0.5 rounded-full text-[11px] font-mono font-bold bg-[#FEE2E2] text-[#DC2626] border border-[#FECACA]">
+          High
+        </span>
+      );
+    }
+    if (l === 'medium') {
+      return (
+        <span className="inline-block px-2.5 py-0.5 rounded-full text-[11px] font-mono font-bold bg-[#FEF3C7] text-[#B45309] border border-[#FDE68A]">
+          Medium
+        </span>
+      );
+    }
+    return (
+      <span className="inline-block px-2.5 py-0.5 rounded-full text-[11px] font-mono font-bold bg-[#DCFCE7] text-[#15803D] border border-[#BBF7D0]">
+        Low
+      </span>
+    );
+  };
 
   return (
-    <div className="space-y-6 w-full pb-8">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-[#404E3B]/15 pb-5 no-print print:hidden">
+    <div className="space-y-5 w-full pb-8 font-sans">
+      {/* Top Header Card */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-[#404E3B]/15 pb-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-[#1C2518] dark:text-white font-heading flex items-center gap-3">
-            <div className="p-3 bg-[#7B9669]/20 border border-[#7B9669]/40 rounded-2xl text-[#404E3B] dark:text-[#BAC8B1] shadow-sm">
-              <FileText className="w-5 h-5 text-[#404E3B] dark:text-[#BAC8B1]" />
-            </div>
-            <span>EXECUTIVE SECURITY <span className="text-[#7B9669] dark:text-[#9FC48A]">REPORTS</span></span>
+          <h1 className="text-xl sm:text-2xl font-black tracking-tight text-[#1C2518] dark:text-white font-heading">
+            Reports &amp; Exports
           </h1>
-          <p className="text-xs sm:text-sm text-[#404E3B]/80 dark:text-[#BAC8B1] mt-1 font-sans font-medium page-subtitle">
-            Generate, preview, and download structured PDF, JSON, and CSV security audit documentation
+          <p className="text-xs sm:text-sm text-[#6C8480] mt-0.5 font-sans">
+            View, download and manage your URL and Email analysis reports.
           </p>
         </div>
 
-        {currentScan && (
-          <div className="flex flex-wrap items-center gap-2.5 self-start sm:self-auto">
-            <button
-              onClick={() => generateScanPdf(currentScan)}
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-white border border-[#404E3B]/15 hover:bg-[#EEF3EC] text-[#404E3B] text-xs font-mono font-semibold transition-all shadow-sm cursor-pointer"
-              title="Download Executive Security Audit Report (PDF)"
-            >
-              <Download className="w-3.5 h-3.5 text-[#7B9669]" />
-              <span>Download PDF</span>
-            </button>
+        {/* Top Actions */}
+        <div className="flex flex-wrap items-center gap-2.5 self-start sm:self-auto">
+          {/* Select Date Range Button */}
+          <div className="relative">
             <button
               type="button"
-              onClick={() => exportScanAsJson(currentScan)}
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-white border border-[#404E3B]/15 hover:bg-[#EEF3EC] text-[#404E3B] text-xs font-mono font-semibold transition-all shadow-sm cursor-pointer"
-              title="Download structured JSON report"
+              onClick={() => setDateRangeOpen(!dateRangeOpen)}
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white dark:bg-[#1E271D] border border-[#404E3B]/20 text-xs font-mono font-semibold text-[#2C3527] dark:text-[#E6ECE1] hover:bg-[#F4F7F4] transition-all shadow-2xs cursor-pointer"
             >
-              <Download className="w-3.5 h-3.5 text-[#7B9669]" />
-              <span>Export JSON</span>
+              <Calendar className="w-3.5 h-3.5 text-[#16794B]" />
+              <span>{selectedDateRange === 'All Time' ? 'Select Date Range' : selectedDateRange}</span>
             </button>
-            <button
-              type="button"
-              onClick={() => exportScanAsCsv(currentScan)}
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-white border border-[#404E3B]/15 hover:bg-[#EEF3EC] text-[#404E3B] text-xs font-mono font-semibold transition-all shadow-sm cursor-pointer"
-              title="Download structured CSV report"
-            >
-              <Download className="w-3.5 h-3.5 text-[#7B9669]" />
-              <span>Export CSV</span>
-            </button>
-            <button
-              onClick={handlePrint}
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-white border border-[#404E3B]/15 hover:bg-[#EEF3EC] text-[#404E3B] text-xs font-mono font-semibold transition-all shadow-sm cursor-pointer"
-            >
-              <Printer className="w-3.5 h-3.5 text-[#7B9669]" />
-              <span>Print Memo</span>
-            </button>
-          </div>
-        )}
-      </div>
 
-      {/* Select Scan Dropdown Bar */}
-      <div className="bg-white rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-center gap-3 shadow-sm border border-[#404E3B]/15 relative overflow-hidden no-print print:hidden">
-        <label htmlFor="scan-selector" className="text-xs font-mono text-[#243D2E] font-bold uppercase shrink-0 tracking-wider flex items-center gap-2">
-          <Tag className="w-4 h-4 text-[#7B9669]" />
-          <span>Select Scan Report:</span>
-        </label>
-        <select
-          id="scan-selector"
-          value={selectedScanId}
-          onChange={handleSelectChange}
-          className="flex-1 w-full rounded-xl bg-[#F4F7F4] border border-[#404E3B]/20 px-3.5 py-2.5 text-xs text-[#202B21] font-mono focus:outline-none focus:border-[#7B9669] focus:ring-2 focus:ring-[#7B9669]/25 font-semibold"
-        >
-          {scans.map((s) => (
-            <option key={s.id} value={s.id}>
-              #{s.id} — [{s.scan_type.toUpperCase()}] {s.target_identifier} ({s.classification} - {s.risk_score}/100)
-            </option>
-          ))}
-        </select>
-        <button
-          onClick={() => fetchScanDetail(selectedScanId)}
-          className="p-2.5 rounded-xl bg-[#EEF3EC] hover:bg-[#7B9669] hover:text-white text-[#404E3B] transition-colors border border-[#404E3B]/15 shadow-sm cursor-pointer"
-          title="Reload Report"
-          aria-label="Reload Selected Report"
-        >
-          <RefreshCw className={`w-4 h-4 text-[#7B9669] ${loading ? 'animate-spin' : ''}`} />
-        </button>
-      </div>
-
-      {error && (
-        <div className="rounded-xl border border-rose-300 bg-rose-50 p-4 text-xs text-rose-800 font-mono no-print print:hidden">
-          {error}
-        </div>
-      )}
-
-      {/* Report Preview Document */}
-      {currentScan ? (
-        <div id="incident-memo-report" className="bg-white rounded-2xl border border-[#404E3B]/15 p-6 sm:p-8 space-y-6 shadow-sm relative overflow-hidden printable-memo-report print:p-0 print:border-none print:shadow-none print:rounded-none">
-          {/* Formal Print-Only Executive Header */}
-          <div className="hidden print:flex items-center justify-between border-b-2 border-[#1C2518] pb-4 mb-6">
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg bg-[#404E3B] text-white flex items-center justify-center font-bold">
-                <Shield className="w-5 h-5 text-white" />
-              </div>
-              <div>
-                <div className="font-heading font-black text-xl tracking-tight text-[#1C2518]">
-                  PHISH<span className="text-[#53654E]">SHIELD</span>
-                </div>
-                <div className="text-[10px] font-mono font-bold text-[#52665A] uppercase tracking-wider">
-                  Cybersecurity & Threat Defense Platform
-                </div>
-              </div>
-            </div>
-            <div className="text-right text-[10px] font-mono text-[#52665A]">
-              <div className="font-bold uppercase tracking-wider text-[#1C2518]">Executive Threat Forensics Advisory</div>
-              <div className="text-[#B42332] font-bold">CONFIDENTIAL &bull; INCIDENT RECORD</div>
-            </div>
-          </div>
-
-          {/* Memo Header */}
-          <div className="border-b border-[#404E3B]/15 pb-6 flex flex-col sm:flex-row justify-between items-start gap-4">
-            <div>
-              <div className="flex items-center gap-2 mb-1.5">
-                <span className="text-xs font-mono uppercase tracking-widest text-[#7B9669] font-bold">
-                  PHISHSHIELD SECURITY ADVISORY
-                </span>
-                {currentScan.is_sample && (
-                  <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-[#7B9669]/15 border border-[#7B9669]/30 text-[#404E3B] font-bold">
-                    Synthetic Demonstration Sample
-                  </span>
-                )}
-              </div>
-              <h2 className="text-xl sm:text-2xl font-black text-[#1C2518] tracking-tight font-sans">
-                Threat Inspection Incident Memo #{currentScan.id}
-              </h2>
-              <div className="text-xs text-[#6C8480] mt-1.5 flex flex-wrap items-center gap-4 font-mono font-medium">
-                <span className="inline-flex items-center gap-1">
-                  <Calendar className="w-3.5 h-3.5 text-[#7B9669]" />
-                  <span>Date: {currentScan.created_at}</span>
-                </span>
-                <span className="inline-flex items-center gap-1">
-                  {currentScan.scan_type === 'email' ? (
-                    <Mail className="w-3.5 h-3.5 text-[#7B9669]" />
-                  ) : (
-                    <Globe className="w-3.5 h-3.5 text-[#7B9669]" />
-                  )}
-                  <span>Type: {currentScan.scan_type.toUpperCase()} ANALYSIS</span>
-                </span>
-              </div>
-            </div>
-
-            {/* Threat Score Card - Dynamically colored by severity */}
-            <div className={`flex items-center gap-3.5 rounded-2xl p-4 shadow-xs border ${
-              isCriticalOrHigh
-                ? 'bg-[#FEECEC] border-[#F5B7BD]'
-                : isMedium
-                ? 'bg-[#FFF1DB] border-[#F5D08A]'
-                : 'bg-[#E8F6ED] border-[#B7E3C7]'
-            }`}>
-              <div className="text-right">
-                <span className={`text-[10px] font-mono uppercase font-bold block ${
-                  isCriticalOrHigh ? 'text-[#B42332]' : isMedium ? 'text-[#B54708]' : 'text-[#16794B]'
-                }`}>
-                  Threat Score
-                </span>
-                <span className={`text-2xl font-black font-mono tracking-tight ${
-                  isCriticalOrHigh ? 'text-[#D92D20]' : isMedium ? 'text-[#B54708]' : 'text-[#16794B]'
-                }`}>
-                  {currentScan.risk_score}
-                  <span className="text-xs font-normal text-[#6C8480]">/100</span>
-                </span>
-              </div>
-              <RiskBadge classification={currentScan.classification} size="md" />
-            </div>
-          </div>
-
-          {/* Section 1: Executive Assessment Summary */}
-          <div className="space-y-2.5">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-[#243D2E] dark:text-[#E6ECE1] font-mono flex items-center gap-2">
-              <span className="w-5 h-5 rounded-md bg-[#7B9669]/20 text-[#243D2E] flex items-center justify-center text-[10px] font-mono font-bold">1</span>
-              <span>EXECUTIVE ASSESSMENT SUMMARY</span>
-            </h3>
-            <div className={`p-4 sm:p-5 rounded-xl border text-xs leading-relaxed font-mono flex items-start gap-3.5 shadow-2xs ${
-              isCriticalOrHigh
-                ? 'bg-[#FEECEC] border-[#F5B7BD]'
-                : isMedium
-                ? 'bg-[#FFF1DB] border-[#F5D08A]'
-                : 'bg-[#E8F6ED] border-[#B7E3C7]'
-            }`}>
-              <div className={`p-2.5 rounded-xl border shrink-0 mt-0.5 shadow-2xs ${
-                isCriticalOrHigh
-                  ? 'bg-white text-[#D92D20] border-[#F5B7BD]'
-                  : isMedium
-                  ? 'bg-white text-[#B54708] border-[#F5D08A]'
-                  : 'bg-white text-[#16794B] border-[#B7E3C7]'
-              }`}>
-                {isCriticalOrHigh ? (
-                  <AlertTriangle className="w-4.5 h-4.5" />
-                ) : isMedium ? (
-                  <AlertCircle className="w-4.5 h-4.5" />
-                ) : (
-                  <CheckCircle className="w-4.5 h-4.5" />
-                )}
-              </div>
-              <div className="space-y-1.5 flex-1">
-                <div>
-                  <span className="text-[#202B21] font-bold">Target Identifier: </span>
-                  <span className={`font-bold break-all ${
-                    isCriticalOrHigh ? 'text-[#D92D20]' : isMedium ? 'text-[#B54708]' : 'text-[#16794B]'
-                  }`}>
-                    {currentScan.target_identifier}
-                  </span>
-                </div>
-                <p className="text-[#52665A] font-sans text-xs">
-                  Evaluation determined a{' '}
-                  <span className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-mono font-black uppercase border ${
-                    isCriticalOrHigh
-                      ? 'bg-[#FDEBEC] text-[#B42332] border-[#F5B7BD]'
-                      : isMedium
-                      ? 'bg-[#FFF1DB] text-[#B54708] border-[#F5D08A]'
-                      : 'bg-[#E8F6ED] text-[#16794B] border-[#B7E3C7]'
-                  }`}>
-                    {currentScan.classification}
-                  </span>{' '}
-                  threat classification with{' '}
-                  <strong className={isCriticalOrHigh ? 'text-[#D92D20]' : isMedium ? 'text-[#B54708]' : 'text-[#16794B]'}>
-                    {currentScan.indicator_count || currentScan.indicators?.length || 0} triggering heuristic indicators
-                  </strong>.
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Section 2: Detailed Indicators Table */}
-          <div className="space-y-2.5">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-[#243D2E] dark:text-[#E6ECE1] font-mono flex items-center gap-2">
-              <span className="w-5 h-5 rounded-md bg-[#7B9669]/20 text-[#243D2E] flex items-center justify-center text-[10px] font-mono font-bold">2</span>
-              <span>IDENTIFIED TECHNICAL INDICATORS</span>
-            </h3>
-            {currentScan.indicators?.length > 0 ? (
-              <div className="overflow-x-auto rounded-xl border border-[#BAC8B1]/40 shadow-2xs">
-                <table className="w-full text-left text-xs">
-                  <thead className="bg-[#BAC8B1]/30 text-[#243D2E] uppercase text-[10px] border-b border-[#BAC8B1] font-mono font-bold tracking-wider">
-                    <tr>
-                      <th className="py-3 px-4">Indicator</th>
-                      <th className="py-3 px-4 text-center">Severity</th>
-                      <th className="py-3 px-4">Evidence</th>
-                      <th className="py-3 px-4">Technical Explanation</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-[#D7E0D5] bg-white font-sans">
-                    {currentScan.indicators.map((ind, idx) => {
-                      const sev = (ind.severity || 'low').toLowerCase();
-
-                      let sevBadge = 'bg-[#E8F6ED] text-[#16794B] border-[#B7E3C7] font-semibold';
-                      let sevIconBg = 'bg-[#E8F6ED] text-[#16794B] border-[#B7E3C7]';
-                      let sevDot = 'bg-[#16794B]';
-                      if (sev === 'critical') {
-                        sevBadge = 'bg-[#FEECEC] text-[#D92D20] border-[#F5B7BD] font-bold';
-                        sevIconBg = 'bg-[#FEECEC] text-[#D92D20] border-[#F5B7BD]';
-                        sevDot = 'bg-[#D92D20]';
-                      } else if (sev === 'high') {
-                        sevBadge = 'bg-[#FEF2F2] text-[#DC2626] border-[#FECACA] font-bold';
-                        sevIconBg = 'bg-[#FEF2F2] text-[#DC2626] border-[#FECACA]';
-                        sevDot = 'bg-[#DC2626]';
-                      } else if (sev === 'medium') {
-                        sevBadge = 'bg-[#FFF1DB] text-[#B54708] border-[#F5D08A] font-bold';
-                        sevIconBg = 'bg-[#FFF1DB] text-[#B54708] border-[#F5D08A]';
-                        sevDot = 'bg-[#B54708]';
-                      } else if (sev === 'low') {
-                        sevBadge = 'bg-[#EAF4FC] text-[#1D6FA5] border-[#B8DDF5] font-semibold';
-                        sevIconBg = 'bg-[#EAF4FC] text-[#1D6FA5] border-[#B8DDF5]';
-                        sevDot = 'bg-[#1D6FA5]';
-                      }
-
-                      return (
-                        <tr key={idx} className="hover:bg-[#F4F7F4] transition-colors">
-                          <td className="py-3 px-4 font-bold text-[#202B21]">
-                            <div className="flex items-center gap-2.5">
-                              <div className={`w-7 h-7 rounded-lg border flex items-center justify-center shrink-0 shadow-2xs ${sevIconBg}`}>
-                                <ShieldAlert className="w-3.5 h-3.5" />
-                              </div>
-                              <span className="font-sans font-bold text-xs">{ind.name}</span>
-                            </div>
-                          </td>
-                          <td className="py-3 px-4 text-center">
-                            <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-mono uppercase border ${sevBadge}`}>
-                              <span className={`w-1.5 h-1.5 rounded-full ${sevDot}`}></span>
-                              <span>{ind.severity || 'Low'}</span>
-                            </span>
-                          </td>
-                          <td className="py-3 px-4 text-xs font-mono max-w-xs">
-                            {ind.evidence ? (
-                              <span className="inline-block px-2.5 py-1 rounded-md bg-[#FFF1DB] border border-[#F5D08A] text-[#B54708] font-mono font-bold text-[11px] truncate max-w-full shadow-2xs">
-                                {ind.evidence}
-                              </span>
-                            ) : (
-                              <span className="text-[#6C8480] text-[11px]">N/A</span>
-                            )}
-                          </td>
-                          <td className="py-3 px-4 text-[#52665A] font-sans text-xs max-w-md leading-relaxed">
-                            {ind.description}
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            ) : (
-              <div className="p-4 rounded-xl bg-[#E8F6ED] border border-[#B7E3C7] text-xs text-[#16794B] flex items-center gap-2">
-                <CheckCircle className="w-4 h-4" />
-                <span>No malicious indicators detected. Clean inspection record.</span>
+            {dateRangeOpen && (
+              <div className="absolute right-0 mt-1 w-44 rounded-xl bg-white dark:bg-[#1E271D] border border-[#404E3B]/20 shadow-lg p-1.5 z-20 text-xs font-mono">
+                {['All Time', 'Today', 'Last 7 Days', 'Last 30 Days'].map((range) => (
+                  <button
+                    key={range}
+                    onClick={() => {
+                      setSelectedDateRange(range);
+                      setDateRangeOpen(false);
+                    }}
+                    className={`w-full text-left px-3 py-1.5 rounded-lg transition-colors cursor-pointer ${
+                      selectedDateRange === range ? 'bg-[#16794B] text-white font-bold' : 'hover:bg-[#F4F7F4] dark:hover:bg-[#283526] text-[#2C3527] dark:text-gray-200'
+                    }`}
+                  >
+                    {range}
+                  </button>
+                ))}
               </div>
             )}
           </div>
 
-          {/* Section 3: Recommendations with 4 distinct colored cards */}
-          <div className="space-y-2.5">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-[#243D2E] dark:text-[#E6ECE1] font-mono flex items-center gap-2">
-              <span className="w-5 h-5 rounded-md bg-[#7B9669]/20 text-[#243D2E] flex items-center justify-center text-[10px] font-mono font-bold">3</span>
-              <span>RECOMMENDED MITIGATION ACTIONS</span>
-            </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-              {currentScan.recommendations?.map((rec, idx) => {
-                // Card Color Variations: Card 0 = Red, Card 1 = Amber, Card 2 = Blue, Card 3 = Green
-                const colorSchemes = [
-                  {
-                    cardBg: 'bg-[#FEECEC] border-[#F5B7BD]',
-                    iconBg: 'bg-white border-[#F5B7BD] text-[#D92D20]',
-                    titleColor: 'text-[#B42332]',
-                    icon: <ShieldAlert className="w-4 h-4" />,
-                  },
-                  {
-                    cardBg: 'bg-[#FFF1DB] border-[#F5D08A]',
-                    iconBg: 'bg-white border-[#F5D08A] text-[#B54708]',
-                    titleColor: 'text-[#B54708]',
-                    icon: <LinkIcon className="w-4 h-4" />,
-                  },
-                  {
-                    cardBg: 'bg-[#EAF4FC] border-[#B8DDF5]',
-                    iconBg: 'bg-white border-[#B8DDF5] text-[#1D6FA5]',
-                    titleColor: 'text-[#1D6FA5]',
-                    icon: <Globe className="w-4 h-4" />,
-                  },
-                  {
-                    cardBg: 'bg-[#E8F6ED] border-[#B7E3C7]',
-                    iconBg: 'bg-white border-[#B7E3C7] text-[#16794B]',
-                    titleColor: 'text-[#16794B]',
-                    icon: <CheckCircle className="w-4 h-4" />,
-                  },
-                ];
+          {/* Reports Filter Dropdown */}
+          <select
+            value={selectedFilter}
+            onChange={(e) => {
+              setSelectedFilter(e.target.value);
+              setCurrentPage(1);
+            }}
+            className="rounded-xl bg-white dark:bg-[#1E271D] border border-[#404E3B]/20 px-3 py-2 text-xs font-mono font-semibold text-[#2C3527] dark:text-[#E6ECE1] shadow-2xs focus:outline-none focus:border-[#16794B]"
+          >
+            <option value="all">All Reports</option>
+            <option value="url">URL Reports</option>
+            <option value="email">Email Reports</option>
+          </select>
 
-                const scheme = colorSchemes[idx % colorSchemes.length];
-
-                return (
-                  <div
-                    key={idx}
-                    className={`p-4 rounded-xl border ${scheme.cardBg} flex items-start gap-3.5 shadow-2xs transition-all`}
-                  >
-                    <div className={`p-2 rounded-xl border ${scheme.iconBg} shrink-0 mt-0.5 shadow-2xs`}>
-                      {scheme.icon}
-                    </div>
-                    <div className="space-y-1">
-                      <h4 className={`font-bold font-sans text-xs tracking-wide ${scheme.titleColor}`}>
-                        {rec.action}
-                      </h4>
-                      <p className="text-[#52665A] leading-relaxed text-[11px] font-sans">
-                        {rec.detail}
-                      </p>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Formal Print-Only Executive Footer */}
-          <div className="hidden print:flex items-center justify-between border-t border-[#404E3B]/30 pt-4 mt-8 text-[9px] font-mono text-[#52665A]">
-            <div>
-              <span className="font-semibold text-[#1C2518]">PhishShield Automated Forensics Engine</span>
-              <span> &bull; Zero-SSRF Offline Analysis &bull; Confidential Incident Memorandum</span>
-            </div>
-            <div className="text-right">
-              <span>Report #{currentScan.id} &bull; Generated: {currentScan.created_at || new Date().toLocaleString()}</span>
-            </div>
-          </div>
+          {/* Export All (PDF) Green Button */}
+          <button
+            onClick={handleExportAll}
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#16794B] hover:bg-[#13623D] text-white font-mono font-bold text-xs uppercase tracking-wider transition-all shadow-xs cursor-pointer"
+          >
+            <Download className="w-3.5 h-3.5" />
+            <span>Export All (PDF)</span>
+          </button>
         </div>
-      ) : (
-        <div className="p-12 text-center text-xs font-mono text-[#6C8480] rounded-2xl border border-[#404E3B]/15 bg-white shadow-sm">
-          No scan selected. Choose a scan from the dropdown above.
-        </div>
+      </div>
+
+      {actionMessage && (
+        <AlertBanner
+          type="success"
+          message={actionMessage}
+          onDismiss={() => setActionMessage(null)}
+        />
       )}
+
+      {error && (
+        <AlertBanner
+          type="danger"
+          title="Notice"
+          message={error}
+          onDismiss={() => setError(null)}
+        />
+      )}
+
+      {/* Main Table Card */}
+      <div className="rounded-2xl border border-[#404E3B]/15 bg-white dark:bg-[#1E271D] overflow-hidden shadow-xs">
+        {loading ? (
+          <div className="p-12 text-center text-xs font-mono text-[#6C8480]">
+            <RefreshCw className="w-6 h-6 text-[#16794B] animate-spin mx-auto mb-2" />
+            <span>Loading analysis reports...</span>
+          </div>
+        ) : paginatedReports.length > 0 ? (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs font-sans">
+              <thead className="bg-[#EEF3EC] dark:bg-[#283526] text-[#404E3B] dark:text-[#E6ECE1] font-mono uppercase text-[11px] font-bold border-b border-[#404E3B]/15">
+                <tr>
+                  <th className="py-3 px-3 w-10 text-center">#</th>
+                  <th className="py-3 px-3 w-20 text-center font-bold">Type</th>
+                  <th className="py-3 px-3.5 w-36 font-bold">Report ID</th>
+                  <th className="py-3 px-3.5 w-36">Date &amp; Time</th>
+                  <th className="py-3 px-3.5">Scanned Target</th>
+                  <th className="py-3 px-3 w-28 text-center">Classification</th>
+                  <th className="py-3 px-3 w-24 text-center">Risk Level</th>
+                  <th className="py-3 px-3 w-20 text-center">Risk Score</th>
+                  <th className="py-3 px-3 w-20 text-center">Format</th>
+                  <th className="py-3 px-4 w-32 text-center font-bold">Action</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#404E3B]/10">
+                {paginatedReports.map((scan, index) => {
+                  const displayIndex = (currentPage - 1) * itemsPerPage + index + 1;
+                  const score = Math.round(scan.risk_score || 0);
+                  const isEmailScan = scan.scan_type === 'email';
+                  const targetDisplay = isEmailScan
+                    ? (scan.target_identifier || scan.headers?.Subject || 'Email Content')
+                    : (scan.target_identifier || scan.input_url || 'Unknown URL');
+                  const repId = formatReportId(scan, displayIndex - 1);
+
+                  return (
+                    <tr key={scan.id || index} className="hover:bg-[#F4F7F4]/60 dark:hover:bg-[#283526]/50 transition-colors">
+                      <td className="py-3 px-3 text-center font-mono text-[#6C8480] text-xs font-semibold">
+                        {displayIndex}
+                      </td>
+                      <td className="py-3 px-3 text-center">
+                        {isEmailScan ? (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-mono font-bold bg-[#FEF3C7] text-[#92400E] border border-[#FDE68A]">
+                            <Mail className="w-3 h-3 text-[#B45309]" />
+                            <span>EMAIL</span>
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-mono font-bold bg-[#E0F2FE] text-[#0369A1] border border-[#BAE6FD]">
+                            <Globe className="w-3 h-3 text-[#0284C7]" />
+                            <span>URL</span>
+                          </span>
+                        )}
+                      </td>
+                      <td className="py-3 px-3.5 font-mono text-xs font-bold text-[#2C3527] dark:text-[#E6ECE1] whitespace-nowrap">
+                        {repId}
+                      </td>
+                      <td className="py-3 px-3.5 font-mono text-xs text-[#52665A] dark:text-gray-300 whitespace-nowrap">
+                        {scan.created_at}
+                      </td>
+                      <td className="py-3 px-3.5 font-mono text-xs text-[#2C3527] dark:text-[#E6ECE1] max-w-xs sm:max-w-sm truncate" title={targetDisplay}>
+                        {targetDisplay}
+                      </td>
+                      <td className="py-3 px-3 text-center">
+                        {renderClassificationBadge(scan.classification)}
+                      </td>
+                      <td className="py-3 px-3 text-center">
+                        {renderRiskLevelBadge(scan.risk_level, score)}
+                      </td>
+                      <td className="py-3 px-3 text-center font-mono font-bold text-xs text-[#2C3527] dark:text-[#E6ECE1]">
+                        {score}
+                      </td>
+                      <td className="py-3 px-3 text-center">
+                        <span className="inline-block px-2 py-0.5 rounded-md text-[10px] font-mono font-bold bg-[#F4F7F4] dark:bg-[#283526] text-[#404E3B] dark:text-gray-300 border border-[#404E3B]/20">
+                          PDF
+                        </span>
+                      </td>
+                      <td className="py-3 px-4 text-center whitespace-nowrap">
+                        <div className="inline-flex items-center gap-1.5 font-mono text-xs font-bold">
+                          <button
+                            onClick={() => setPreviewScan(scan)}
+                            className="text-[#0284C7] hover:text-[#0369A1] hover:underline cursor-pointer"
+                          >
+                            View
+                          </button>
+                          <span className="text-[#6C8480]">|</span>
+                          <button
+                            onClick={() => handleDownloadPdf(scan)}
+                            className="text-[#0284C7] hover:text-[#0369A1] hover:underline cursor-pointer"
+                          >
+                            Download
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <div className="p-12 text-center text-xs font-mono text-[#6C8480] space-y-2">
+            <CheckCircle2 className="w-8 h-8 text-[#16794B] mx-auto" />
+            <p className="font-bold text-[#404E3B] dark:text-[#E6ECE1]">No reports available</p>
+            <p className="text-[#6C8480] max-w-sm mx-auto">
+              Run a scan on any URL or Email to generate downloadable reports.
+            </p>
+          </div>
+        )}
+
+        {/* Pagination */}
+        <div className="p-3.5 bg-[#F9FAF9] dark:bg-[#202B20] border-t border-[#404E3B]/10 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs font-mono text-[#6C8480]">
+          <div>
+            Showing {totalResults === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1} to{' '}
+            {Math.min(currentPage * itemsPerPage, totalResults)} of {totalResults} reports
+          </div>
+
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1">
+              <button
+                disabled={currentPage <= 1}
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                className="p-1 rounded-lg border border-[#404E3B]/20 bg-white dark:bg-[#1E271D] disabled:opacity-40 cursor-pointer"
+                aria-label="Previous Page"
+              >
+                <ChevronLeft className="w-3.5 h-3.5" />
+              </button>
+              <span className="px-2.5 py-0.5 rounded-md bg-[#16794B] text-white font-bold">
+                {currentPage}
+              </span>
+              <button
+                disabled={currentPage >= totalPages}
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                className="p-1 rounded-lg border border-[#404E3B]/20 bg-white dark:bg-[#1E271D] disabled:opacity-40 cursor-pointer"
+                aria-label="Next Page"
+              >
+                <ChevronRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
+
+            <span className="text-[11px] text-[#6C8480]">10 / page</span>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
