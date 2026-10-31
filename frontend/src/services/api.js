@@ -1102,7 +1102,7 @@ export function clientAnalyzeUrl(url) {
   const detectedBrand = Object.keys(AUTHENTIC_BRAND_DOMAINS).find(b => hostname.includes(b));
   const isBrandImpersonation = detectedBrand && !isAuthenticDomain(detectedBrand, hostname);
   const domainMismatch = isBrandImpersonation;
-  const isShortener = KNOWN_SHORTENERS.some(s => hostname.includes(s));
+  const isShortener = KNOWN_SHORTENERS.has(hostname) || Array.from(KNOWN_SHORTENERS).some(s => hostname.includes(s));
   const isIp = Boolean(anatomy?.is_ip);
   const credInPath = ['login', 'verify', 'signin', 'auth', 'account', 'password', 'security', 'update'].some(k => path.toLowerCase().includes(k));
   const suspiciousSubdomains = (anatomy?.subdomains?.length || 0) >= 2 || isBrandImpersonation;
@@ -2044,6 +2044,9 @@ export const api = {
     } catch (err) {
       console.warn('Backend unavailable, running client-side heuristic engine:', err);
       const fallbackResult = clientAnalyzeUrl(url);
+      if (fallbackResult && fallbackResult.data) {
+        saveLocalUserScan(fallbackResult.data);
+      }
       return fallbackResult;
     }
   },
@@ -2062,6 +2065,9 @@ export const api = {
     } catch (err) {
       console.warn('Backend unavailable, running client-side heuristic engine:', err);
       const fallbackResult = clientAnalyzeEmail(emailContent);
+      if (fallbackResult && fallbackResult.data) {
+        saveLocalUserScan(fallbackResult.data);
+      }
       return fallbackResult;
     }
   },
